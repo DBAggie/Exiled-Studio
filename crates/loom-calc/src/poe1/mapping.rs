@@ -189,6 +189,13 @@ pub const HIT_ROWS: &[HitRow] = &[
         "active_skill_area_damage_+%_final",
         &[(Quantity::Damage, Op::More, 1.0, Flags::AREA, NONE)],
     ),
+    // The agent list (2026-11-27): a skill's "#% more Damage with Bleeding"
+    // (`SkillStatMap.lua` 1157: `Damage` MORE, `KeywordFlag.Bleed`; Perforate
+    // of Bloodshed's).
+    (
+        "active_skill_bleeding_damage_+%_final",
+        &[(Quantity::Damage, Op::More, 1.0, Flags::BLEED, NONE)],
+    ),
     // PoB `SkillStatMap.lua` 1729: `Speed` MORE with `ModFlag.Cast`
     // (P6-7c3, the Flame Golem's Immolate).
     (
@@ -200,6 +207,20 @@ pub const HIT_ROWS: &[HitRow] = &[
     (
         "active_skill_ignite_damage_+%_final",
         &[(Quantity::Damage, Op::More, 1.0, Flags::IGNITE, NONE)],
+    ),
+    // The agent list (2026-11-27): Kinetic Blast of Clustering's "Adds #% of
+    // your maximum Mana as Physical Damage to Attacks" (`PhysicalMin` and
+    // `PhysicalMax` BASE, `ModFlag.Attack`, `PercentStat` `Mana` percent 1,
+    // `act_int.lua`): `hit::mana_added`.
+    (
+        "added_physical_damage_to_attacks_equal_to_%_maximum_mana",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AddedDamagePercentOfMana(DamageType::Physical)),
+            Op::Base,
+            1.0,
+            Flags::ATTACK,
+            NONE,
+        )],
     ),
     (
         "additional_base_critical_strike_chance",
@@ -253,6 +274,68 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    // The agent list (2026-11-27): "#% chance to inflict an additional
+    // Poison on the same Target when you inflict Poison"
+    // (`AdditionalPoisonChance` BASE), read by the poison's stacks.
+    (
+        "additional_poison_chance_%_when_inflicting_poison",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AdditionalPoisonChance),
+            Op::Base,
+            1.0,
+            NONE,
+            NONE,
+        )],
+    ),
+    // The agent list (2026-11-27): "All Damage can Ignite" (Shaper of
+    // Flames; PoB `ModParser.lua` 2800: `PhysicalCanIgnite`,
+    // `ColdCanIgnite`, `LightningCanIgnite`, `ChaosCanIgnite` flags), each
+    // type's hit damage in the ignite's source (`poe1::ailment`).
+    (
+        "all_damage_can_ignite",
+        &[
+            (
+                Quantity::Poe1(Poe1Quantity::CanInflictWith(
+                    Ailment::Ignite,
+                    DamageType::Physical,
+                )),
+                Op::Flag,
+                1.0,
+                NONE,
+                NONE,
+            ),
+            (
+                Quantity::Poe1(Poe1Quantity::CanInflictWith(
+                    Ailment::Ignite,
+                    DamageType::Cold,
+                )),
+                Op::Flag,
+                1.0,
+                NONE,
+                NONE,
+            ),
+            (
+                Quantity::Poe1(Poe1Quantity::CanInflictWith(
+                    Ailment::Ignite,
+                    DamageType::Lightning,
+                )),
+                Op::Flag,
+                1.0,
+                NONE,
+                NONE,
+            ),
+            (
+                Quantity::Poe1(Poe1Quantity::CanInflictWith(
+                    Ailment::Ignite,
+                    DamageType::Chaos,
+                )),
+                Op::Flag,
+                1.0,
+                NONE,
+                NONE,
+            ),
+        ],
+    ),
     // PoB `SkillStatMap.lua` 1033: `EnemyIgniteChance` BASE 100 (P6-2b).
     (
         "always_ignite",
@@ -262,6 +345,19 @@ pub const HIT_ROWS: &[HitRow] = &[
             0.01,
             NONE,
             NONE,
+        )],
+    ),
+    // The agent list (2026-11-28): Arc's "#% more Damage for each remaining
+    // Chain" (`act_int.lua`: `Damage` MORE, `KeywordFlag.Hit` and `Ailment`,
+    // `PerStat` `ChainRemaining`), turned by `hit::chain_damage`.
+    (
+        "arc_damage_+%_final_for_each_remaining_chain",
+        &[(
+            Quantity::Poe1(Poe1Quantity::PerChainDamage(true)),
+            Op::More,
+            1.0,
+            NONE,
+            Flags::HIT.union(Flags::AILMENT),
         )],
     ),
     // PoB `SkillStatMap.lua` 779: `Damage` INC with `ModFlag.Area` (P3-8e).
@@ -296,6 +392,19 @@ pub const HIT_ROWS: &[HitRow] = &[
     (
         "attack_and_cast_speed_+%",
         &[(Quantity::Speed, Op::Increased, 1.0, NONE, NONE)],
+    ),
+    // The agent list (a game-truth line PoB reads): "#% increased Attack and
+    // Cast Speed with Physical Skills" (`Speed` INC, `KeywordFlag.Physical`,
+    // `ModParser.lua` 1053: the skill's `Physical` type, P3-8h's keyword).
+    (
+        "attack_and_cast_speed_+%_with_physical_skills",
+        &[(
+            Quantity::Speed,
+            Op::Increased,
+            1.0,
+            Flags::SKILL_PHYSICAL,
+            NONE,
+        )],
     ),
     // P6-11n: "#% increased Critical Strike Chance with Attacks" (`CritChance`
     // INC, `ModFlag.Attack`).
@@ -401,6 +510,18 @@ pub const HIT_ROWS: &[HitRow] = &[
         "attack_maximum_added_cold_damage",
         &[(added(COLD_T, MAX), Op::Base, 1.0, Flags::ATTACK, NONE)],
     ),
+    // The agent list (2026-11-27): Elemental Hit's added damage (its stat
+    // map: `ColdMin` and `Max` BASE, `KeywordFlag.Attack`).
+    (
+        "attack_maximum_added_cold_damage_for_elemental_hit",
+        &[(
+            Quantity::AddedDamage(DamageType::Cold, Bound::Max),
+            Op::Base,
+            1.0,
+            Flags::KEYWORD_ATTACK,
+            NONE,
+        )],
+    ),
     // P6-11ay: "# to # Added ... Damage with Axe Attacks": BASE,
     // `ModFlag.Axe` and `Hit` (PoB's "with ... attacks").
     (
@@ -501,6 +622,18 @@ pub const HIT_ROWS: &[HitRow] = &[
         "attack_maximum_added_fire_damage",
         &[(added(FIRE_T, MAX), Op::Base, 1.0, Flags::ATTACK, NONE)],
     ),
+    // The agent list (2026-11-27): Elemental Hit's added damage (its stat
+    // map: `FireMin` and `Max` BASE, `KeywordFlag.Attack`).
+    (
+        "attack_maximum_added_fire_damage_for_elemental_hit",
+        &[(
+            Quantity::AddedDamage(DamageType::Fire, Bound::Max),
+            Op::Base,
+            1.0,
+            Flags::KEYWORD_ATTACK,
+            NONE,
+        )],
+    ),
     // P6-11ay: "# to # Added ... Damage with Axe Attacks": BASE,
     // `ModFlag.Axe` and `Hit` (PoB's "with ... attacks").
     (
@@ -598,6 +731,18 @@ pub const HIT_ROWS: &[HitRow] = &[
     (
         "attack_maximum_added_lightning_damage",
         &[(added(LIGHTNING_T, MAX), Op::Base, 1.0, Flags::ATTACK, NONE)],
+    ),
+    // The agent list (2026-11-27): Elemental Hit's added damage (its stat
+    // map: `LightningMin` and `Max` BASE, `KeywordFlag.Attack`).
+    (
+        "attack_maximum_added_lightning_damage_for_elemental_hit",
+        &[(
+            Quantity::AddedDamage(DamageType::Lightning, Bound::Max),
+            Op::Base,
+            1.0,
+            Flags::KEYWORD_ATTACK,
+            NONE,
+        )],
     ),
     // P6-11ay: "# to # Added ... Damage with Axe Attacks": BASE,
     // `ModFlag.Axe` and `Hit` (PoB's "with ... attacks").
@@ -838,6 +983,18 @@ pub const HIT_ROWS: &[HitRow] = &[
         "attack_minimum_added_cold_damage",
         &[(added(COLD_T, MIN), Op::Base, 1.0, Flags::ATTACK, NONE)],
     ),
+    // The agent list (2026-11-27): Elemental Hit's added damage (its stat
+    // map: `ColdMin` and `Max` BASE, `KeywordFlag.Attack`).
+    (
+        "attack_minimum_added_cold_damage_for_elemental_hit",
+        &[(
+            Quantity::AddedDamage(DamageType::Cold, Bound::Min),
+            Op::Base,
+            1.0,
+            Flags::KEYWORD_ATTACK,
+            NONE,
+        )],
+    ),
     // P6-11ay: "# to # Added ... Damage with Axe Attacks": BASE,
     // `ModFlag.Axe` and `Hit` (PoB's "with ... attacks").
     (
@@ -938,6 +1095,18 @@ pub const HIT_ROWS: &[HitRow] = &[
         "attack_minimum_added_fire_damage",
         &[(added(FIRE_T, MIN), Op::Base, 1.0, Flags::ATTACK, NONE)],
     ),
+    // The agent list (2026-11-27): Elemental Hit's added damage (its stat
+    // map: `FireMin` and `Max` BASE, `KeywordFlag.Attack`).
+    (
+        "attack_minimum_added_fire_damage_for_elemental_hit",
+        &[(
+            Quantity::AddedDamage(DamageType::Fire, Bound::Min),
+            Op::Base,
+            1.0,
+            Flags::KEYWORD_ATTACK,
+            NONE,
+        )],
+    ),
     // P6-11ay: "# to # Added ... Damage with Axe Attacks": BASE,
     // `ModFlag.Axe` and `Hit` (PoB's "with ... attacks").
     (
@@ -1035,6 +1204,18 @@ pub const HIT_ROWS: &[HitRow] = &[
     (
         "attack_minimum_added_lightning_damage",
         &[(added(LIGHTNING_T, MIN), Op::Base, 1.0, Flags::ATTACK, NONE)],
+    ),
+    // The agent list (2026-11-27): Elemental Hit's added damage (its stat
+    // map: `LightningMin` and `Max` BASE, `KeywordFlag.Attack`).
+    (
+        "attack_minimum_added_lightning_damage_for_elemental_hit",
+        &[(
+            Quantity::AddedDamage(DamageType::Lightning, Bound::Min),
+            Op::Base,
+            1.0,
+            Flags::KEYWORD_ATTACK,
+            NONE,
+        )],
     ),
     // P6-11ay: "# to # Added ... Damage with Axe Attacks": BASE,
     // `ModFlag.Axe` and `Hit` (PoB's "with ... attacks").
@@ -1763,6 +1944,13 @@ pub const HIT_ROWS: &[HitRow] = &[
         "cast_on_damage_taken_damage_+%_final",
         &[(Quantity::Damage, Op::More, 1.0, NONE, NONE)],
     ),
+    // Open items S3: Cast on Death's more damage (`Damage` MORE, no flag,
+    // `Data/Skills/sup_dex.lua` 764: PoB applies it unconditionally, the
+    // skill being computed as cast on death).
+    (
+        "cast_on_death_damage_+%_final_while_dead",
+        &[(Quantity::Damage, Op::More, 1.0, NONE, NONE)],
+    ),
     // PoB `Data/Skills/sup_dex.lua` 841 (Cast on Ward Break): `Damage`
     // MORE with `ModFlag.Spell` (P6-8a part 2).
     (
@@ -1999,6 +2187,18 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    // The agent list (2026-11-28): "#% increased Damage for each time it has
+    // Chained" (`SkillStatMap.lua`: `Damage` INC, `PerStat` `Chain`).
+    (
+        "damage_+%_per_chain",
+        &[(
+            Quantity::Poe1(Poe1Quantity::PerChainDamage(false)),
+            Op::Increased,
+            1.0,
+            NONE,
+            NONE,
+        )],
+    ),
     // P6-11b: "#% increased Damage with Bow Skills": `Damage` INC, `KeywordFlag.Bow`.
     (
         "damage_+%_with_bow_skills",
@@ -2038,6 +2238,20 @@ pub const HIT_ROWS: &[HitRow] = &[
     (
         "damage_over_time_+%",
         &[(Quantity::Damage, Op::Increased, 1.0, Flags::DOT, NONE)],
+    ),
+    // The agent list (a game-truth line PoB reads): "Deal #% increased Damage
+    // Over Time per 100 Player Maximum Life" (`Damage` INC, `ModFlag.Dot`,
+    // `PerStat` `Life` `div` 100 of the player): the computed term
+    // (`hit::DAMAGE_PER_STAT`).
+    (
+        "damage_over_time_+%_per_100_max_life",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DotDamagePer100Life),
+            Op::Base,
+            1.0,
+            NONE,
+            NONE,
+        )],
     ),
     // P6-11b: "#% increased Damage Over Time with Bow Skills": `Damage` INC, `ModFlag.Dot`, `KeywordFlag.Bow`.
     (
@@ -2152,6 +2366,55 @@ pub const HIT_ROWS: &[HitRow] = &[
             Flags::ELEMENTAL,
         )],
     ),
+    // The agent list (2026-11-27): Elemental Hit's "Deals no Physical or
+    // Chaos Damage" (`DealNoPhysical`, `DealNoChaos` FLAG, its stat map).
+    (
+        "elemental_hit_no_physical_chaos_damage",
+        &[
+            (
+                Quantity::Poe1(Poe1Quantity::DealNo(DamageType::Physical)),
+                Op::Flag,
+                1.0,
+                NONE,
+                NONE,
+            ),
+            (
+                Quantity::Poe1(Poe1Quantity::DealNo(DamageType::Chaos)),
+                Op::Flag,
+                1.0,
+                NONE,
+                NONE,
+            ),
+        ],
+    ),
+    // The agent list (2026-11-27): "Exerted Attacks deal #% increased
+    // Damage" (`ModParser.lua` 2494: `ExertIncrease` INC, `ModFlag.Attack`;
+    // Overexertion's own, `sup_str.lua`, without the flag), read by
+    // `hit::exerted_attacks`.
+    (
+        "empowered_attack_damage_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ExertDamage),
+            Op::Increased,
+            1.0,
+            Flags::ATTACK,
+            NONE,
+        )],
+    ),
+    // The agent list (a game-truth line PoB reads): "Overwhelm #% Physical
+    // Damage Reduction" (PoB `SkillStatMap.lua` 1273:
+    // `EnemyPhysicalDamageReduction` BASE, `mult = -1`), read by a
+    // physical hit's armour reduction alone.
+    (
+        "enemy_phys_reduction_%_penalty_vs_hit",
+        &[(
+            Quantity::Poe1(Poe1Quantity::HitEnemyPhysicalDamageReduction),
+            Op::Base,
+            -1.0,
+            NONE,
+            NONE,
+        )],
+    ),
     // PoB `SkillStatMap.lua` 1011: `BleedFaster` INC (P6-2c).
     (
         "faster_bleed_%",
@@ -2222,6 +2485,19 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    // The agent list (S8): "Intelligence is added to Accuracy Rating with
+    // Wands" (`Accuracy` BASE 1 per intelligence with `ModFlag.Wand`,
+    // `ModParser.lua` 5228): `hit`'s accuracy adds it in a wand's context.
+    (
+        "gain_wand_accuracy_rating_equal_to_intelligence",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AccuracyFromIntelligence),
+            Op::Flag,
+            1.0,
+            Flags::WAND,
+            NONE,
+        )],
+    ),
     // PoB `SkillStatMap.lua` 998: `BleedChance` BASE 100 (P6-2c).
     (
         "global_bleed_on_hit",
@@ -2233,6 +2509,13 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    // The agent list: "Adds # to # Chaos Damage" (PoB `SkillStatMap.lua`
+    // 867 to 872: `ChaosMin` and `ChaosMax` BASE, no flag), as the cold and
+    // lightning rows.
+    (
+        "global_maximum_added_chaos_damage",
+        &[(added(CHAOS_T, MAX), Op::Base, 1.0, NONE, NONE)],
+    ),
     (
         "global_maximum_added_cold_damage",
         &[(added(COLD_T, MAX), Op::Base, 1.0, NONE, NONE)],
@@ -2240,6 +2523,10 @@ pub const HIT_ROWS: &[HitRow] = &[
     (
         "global_maximum_added_lightning_damage",
         &[(added(LIGHTNING_T, MAX), Op::Base, 1.0, NONE, NONE)],
+    ),
+    (
+        "global_minimum_added_chaos_damage",
+        &[(added(CHAOS_T, MIN), Op::Base, 1.0, NONE, NONE)],
     ),
     (
         "global_minimum_added_cold_damage",
@@ -2315,6 +2602,20 @@ pub const HIT_ROWS: &[HitRow] = &[
             1.0,
             NONE,
             NONE,
+        )],
+    ),
+    // Open items S7: "#% chance to Impale Enemies on Hit with Axes or
+    // Swords", PoB's `ImpaleChance` BASE with `ModFlag.Hit` and
+    // `ModFlagOr` Axe or Sword (`ModParser.lua` 917; its `ModCache`
+    // parse).
+    (
+        "impale_on_hit_%_chance_with_axes_swords",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ImpaleChance),
+            Op::Base,
+            1.0,
+            Flags::HIT,
+            Flags::AXE.union(Flags::SWORD),
         )],
     ),
     // PoB: `ImpaleStacksMax` BASE (the character template's stat, also on
@@ -2653,12 +2954,39 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    // The agent list (2026-11-28): "Skills fire # additional Projectiles"
+    // (`SkillStatMap.lua` 1409: `ProjectileCount` BASE), read by
+    // `hit::ice_spear` (P6-11u's `NoEffect` row and its guards before;
+    // Barrage's and the chaining one stay reasons).
+    (
+        "number_of_additional_projectiles",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ProjectileCount),
+            Op::Base,
+            1.0,
+            NONE,
+            NONE,
+        )],
+    ),
     // P6-11fa: "+# Traps thrown" (`SkillStatMap.lua` 1810: `TrapThrowCount`
     // BASE).
     (
         "number_of_additional_traps_to_throw",
         &[(
             Quantity::Poe1(Poe1Quantity::TrapThrowCount),
+            Op::Base,
+            1.0,
+            NONE,
+            NONE,
+        )],
+    ),
+    // The agent list (2026-11-28): the skill's chains (`SkillStatMap.lua`
+    // 1420: `ChainCountMax` BASE), read by `hit::chain_damage` (P6-11u's
+    // `NoEffect` row and its guards before).
+    (
+        "number_of_chains",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ChainCountMax),
             Op::Base,
             1.0,
             NONE,
@@ -2839,6 +3167,43 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    // The agent list (2026-11-28): "Projectiles deal #% increased Damage with
+    // Hits and Ailments for each time they have Chained" (`ModParser.lua`
+    // 4586: `Damage` INC, `KeywordFlag.Hit` and `Ailment`, `PerStat`
+    // `Chain`, `SkillType.Projectile`, read as the pass's projectile flag).
+    (
+        "projectile_damage_+%_per_chain",
+        &[(
+            Quantity::Poe1(Poe1Quantity::PerChainDamage(false)),
+            Op::Increased,
+            1.0,
+            Flags::PROJECTILE,
+            Flags::HIT.union(Flags::AILMENT),
+        )],
+    ),
+    // The agent list (2026-11-28): "Projectiles deal #% increased Damage for
+    // each remaining Chain" (`SkillStatMap.lua`: `Damage` INC with
+    // `ModFlag.Projectile`, and with `ModFlag.Ailment`, `PerStat`
+    // `ChainRemaining`).
+    (
+        "projectile_damage_+%_per_remaining_chain",
+        &[
+            (
+                Quantity::Poe1(Poe1Quantity::PerChainDamage(true)),
+                Op::Increased,
+                1.0,
+                Flags::PROJECTILE,
+                NONE,
+            ),
+            (
+                Quantity::Poe1(Poe1Quantity::PerChainDamage(true)),
+                Op::Increased,
+                1.0,
+                Flags::AILMENT,
+                NONE,
+            ),
+        ],
+    ),
     // P6-11cf: "Projectiles deal #% increased Damage with Hits against nearby
     // Enemies": PoB's parser keeps no condition for "nearby" (`Damage` INC,
     // `ModFlag.Projectile`, `KeywordFlag.Hit`).
@@ -2852,6 +3217,28 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ), // P6-11b review: "Damage with Weapons Penetrates #% Elemental
+    // The agent list (2026-11-27): "Damage Penetrates #% Chaos Resistance"
+    // (`SkillStatMap.lua` 812: `ChaosPenetration` BASE).
+    (
+        "reduce_enemy_chaos_resistance_%",
+        &[(Quantity::Penetration(CHAOS_T), Op::Base, 1.0, NONE, NONE)],
+    ),
+    // The same: "Damage Penetrates #% Elemental Resistances" (815:
+    // `ElementalPenetration` BASE).
+    (
+        "reduce_enemy_elemental_resistance_%",
+        &[
+            (Quantity::Penetration(FIRE_T), Op::Base, 1.0, NONE, NONE),
+            (Quantity::Penetration(COLD_T), Op::Base, 1.0, NONE, NONE),
+            (
+                Quantity::Penetration(LIGHTNING_T),
+                Op::Base,
+                1.0,
+                NONE,
+                NONE,
+            ),
+        ],
+    ),
     // Resistances": `ElementalPenetration` BASE with `ModFlag.Weapon`
     // (each hand's weapon flag).
     (
@@ -3075,6 +3462,19 @@ pub const HIT_ROWS: &[HitRow] = &[
     (
         "spell_damage_+%",
         &[(Quantity::Damage, Op::Increased, 1.0, Flags::SPELL, NONE)],
+    ),
+    // The agent list (2026-11-27): "#% increased Spell Damage per 100 Player
+    // Maximum Life" (`Damage` INC, `ModFlag.Spell`, `PerStat` `Life` `div`
+    // 100): the computed term (`hit::DAMAGE_PER_STAT`).
+    (
+        "spell_damage_+%_per_100_max_life",
+        &[(
+            Quantity::Poe1(Poe1Quantity::SpellDamagePer100Life),
+            Op::Base,
+            1.0,
+            NONE,
+            NONE,
+        )],
     ),
     // P6-11bw: "#% increased Spell Damage per 100 Maximum Mana, up to 40%"
     // (P6-11cw: `hit::DAMAGE_PER_STAT`, with the attack damage per 450
@@ -3320,6 +3720,18 @@ pub const HIT_ROWS: &[HitRow] = &[
         "support_attack_totem_attack_speed_+%_final",
         &[(Quantity::Speed, Op::More, 1.0, Flags::ATTACK, NONE)],
     ),
+    // Agent list, review of S9: Deadly Ailments' own `statMap`
+    // (`Data/Skills/sup_dex.lua` 1619 to 1626): less hit damage (`Damage`
+    // MORE with `ModFlag.Hit`) and more damage with damaging ailments
+    // (`Damage` MORE with `KeywordFlag.Bleed`, `Poison`, or `Ignite`).
+    (
+        "support_better_ailments_ailment_damage_+%_final",
+        &[(Quantity::Damage, Op::More, 1.0, NONE, DAMAGING_AILMENTS)],
+    ),
+    (
+        "support_better_ailments_hit_damage_+%_final",
+        &[(Quantity::Damage, Op::More, 1.0, Flags::HIT, NONE)],
+    ),
     // P6-7c2: Brutality's own `statMap` (`Data/Skills/sup_str.lua` 802):
     // `PhysicalDamage` MORE.
     (
@@ -3349,6 +3761,18 @@ pub const HIT_ROWS: &[HitRow] = &[
     (
         "support_cast_on_melee_kill_spell_damage_+%_final",
         &[(Quantity::Damage, Op::More, 1.0, Flags::SPELL, NONE)],
+    ),
+    // The agent list (2026-11-28): a support's more chains
+    // (`SkillStatMap.lua` 1423: `ChainCountMax` MORE).
+    (
+        "support_chain_count_+%_final",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ChainCountMax),
+            Op::More,
+            1.0,
+            NONE,
+            NONE,
+        )],
     ),
     // P6-11hr: Combustion's more fire damage (`sup_int.lua` 928:
     // `FireDamage` MORE), as "#% more Elemental Damage" below; its fire
@@ -3382,6 +3806,19 @@ pub const HIT_ROWS: &[HitRow] = &[
         "support_efficacy_spell_damage_+%_final",
         &[(Quantity::Damage, Op::More, 1.0, Flags::SPELL, NONE)],
     ),
+    // The agent list (2026-11-28): Focussed Channelling's "#% more Damage
+    // for each second you've been Channelling, up to 60%" (`sup_int.lua`
+    // 2553), turned by `hit::channelling_damage`.
+    (
+        "support_focus_channel_damage_+%_final_per_second_channelling_up_to_60%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ChannellingDamage),
+            Op::More,
+            1.0,
+            NONE,
+            NONE,
+        )],
+    ),
     // P6-11hs: Focused Ballista's more attack speed and less damage
     // (`sup_dex.lua` 1929 to 1934: `Speed` MORE with `ModFlag.Attack`,
     // `Damage` MORE).
@@ -3392,6 +3829,12 @@ pub const HIT_ROWS: &[HitRow] = &[
     (
         "support_focused_ballista_totem_damage_+%_final",
         &[(Quantity::Damage, Op::More, 1.0, NONE, NONE)],
+    ),
+    // The agent list (2026-11-27): Fork's less projectile damage
+    // (`sup_dex.lua`: `Damage` MORE, `ModFlag.Projectile`).
+    (
+        "support_fork_projectile_damage_+%_final",
+        &[(Quantity::Damage, Op::More, 1.0, Flags::PROJECTILE, NONE)],
     ),
     // P6-11hq: Fortify Support's more damage with hits and ailments from
     // melee hits (`sup_str.lua` 2631 to 2636: `Damage` MORE with
@@ -3429,6 +3872,12 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    // The agent list (2026-11-27): Greater Volley's less projectile damage
+    // (`sup_dex.lua`: `Damage` MORE, `ModFlag.Projectile`).
+    (
+        "support_greater_volley_projectile_damage_+%_final",
+        &[(Quantity::Damage, Op::More, 1.0, Flags::PROJECTILE, NONE)],
+    ),
     // P6-11hq: Hypothermia's more cold damage over time (`sup_dex.lua`
     // 2349: `ColdDamage` MORE with `KeywordFlag.ColdDot`), as Burning
     // Damage's row; its more damage against a chilled enemy is a `ROWS`
@@ -3440,6 +3889,29 @@ pub const HIT_ROWS: &[HitRow] = &[
             Op::More,
             1.0,
             Flags::COLD.union(Flags::COLD_DOT),
+            NONE,
+        )],
+    ),
+    // The agent list (2026-11-28): Lesser Multiple Projectiles' less damage
+    // (`sup_dex.lua`: `Damage` MORE, `ModFlag.Projectile`).
+    (
+        "support_lesser_multiple_projectile_damage_+%_final",
+        &[(Quantity::Damage, Op::More, 1.0, Flags::PROJECTILE, NONE)],
+    ),
+    // Open items S3: Manaforged Arrows' more damage (`Damage` MORE) and its
+    // more damage per mana spent (`PerStat` `ManaCost`): the attack path
+    // reads the cost field (`hit::attack_hit`).
+    (
+        "support_manaforged_arrows_damage_+%_final",
+        &[(Quantity::Damage, Op::More, 1.0, NONE, NONE)],
+    ),
+    (
+        "support_manaforged_arrows_damage_+%_final_per_mana_spent",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DamageMorePerManaCost),
+            Op::Base,
+            1.0,
+            NONE,
             NONE,
         )],
     ),
@@ -3501,6 +3973,37 @@ pub const HIT_ROWS: &[HitRow] = &[
                 Flags::NONE,
             ),
         ],
+    ),
+    // The agent list (2026-11-27): Overexertion's "#% more Damage if
+    // Exerted" (`sup_str.lua`: `ExertIncrease` MORE).
+    (
+        "support_overexertion_damage_+%_final_if_exerted",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ExertDamage),
+            Op::More,
+            1.0,
+            NONE,
+            NONE,
+        )],
+    ),
+    // The agent list (2026-11-27): Overexertion's more damage per warcry
+    // exerting the attack (`sup_str.lua`: `OverexertionExertAverageIncrease`
+    // MORE).
+    (
+        "support_overexertion_damage_+%_final_per_warcry_exerting_action",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ExertAverageDamage),
+            Op::More,
+            1.0,
+            NONE,
+            NONE,
+        )],
+    ),
+    // The agent list (2026-11-27): Volley's less projectile damage
+    // (`sup_dex.lua`: `Damage` MORE, `ModFlag.Projectile`).
+    (
+        "support_parallel_projectiles_damage_+%_final",
+        &[(Quantity::Damage, Op::More, 1.0, Flags::PROJECTILE, NONE)],
     ),
     // P6-11dn: Vicious Projectiles (PoB `sup_dex.lua` 4360 to 4372): chaos
     // damage over time MORE (`ChaosDamage` with `KeywordFlag.ChaosDot`).
@@ -3645,6 +4148,12 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
             Flags::HIT.union(Flags::AILMENT),
         )],
+    ),
+    // The agent list (S5, 2026-11-27): General's Cry Support's less damage
+    // (`act_str.lua`: `Damage` MORE).
+    (
+        "support_spiritual_cry_damage_+%_final",
+        &[(Quantity::Damage, Op::More, 1.0, NONE, NONE)],
     ),
     // P6-11aa: Infused Channelling's "#% more Damage" (`Damage` MORE,
     // `sup_int.lua` 3895).
@@ -4148,6 +4657,19 @@ pub const HIT_ROWS: &[HitRow] = &[
             Flags::HIT.union(Flags::AILMENT),
         )],
     ),
+    // The agent list (2026-11-27): "Exerted Attacks deal #% increased
+    // Damage" from a warcry's stats (`SkillStatMap.lua` 2097:
+    // `ExertIncrease` INC, `ModFlag.Attack`).
+    (
+        "warcry_grant_damage_+%_to_exerted_attacks",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ExertDamage),
+            Op::Increased,
+            1.0,
+            Flags::ATTACK,
+            NONE,
+        )],
+    ),
 ];
 
 /// Whether `quantity` is read only by the main skill's hit: an effect of
@@ -4169,7 +4691,9 @@ pub const fn is_hit_quantity(quantity: Quantity) -> bool {
             | Quantity::Poe1(
                 Poe1Quantity::AilmentChance(..)
                     | Poe1Quantity::CannotInflict(..)
+                    | Poe1Quantity::CanInflictWith(..)
                     | Poe1Quantity::ImpaleChance
+                    | Poe1Quantity::AdditionalPoisonChance
                     | Poe1Quantity::ImpaleEffect
                     | Poe1Quantity::ImpaleStacksMax
                     | Poe1Quantity::AilmentDuration
@@ -4183,6 +4707,18 @@ pub const fn is_hit_quantity(quantity: Quantity) -> bool {
                     | Poe1Quantity::BoundDamage(..)
                     // Ruthless (P6-11bt).
                     | Poe1Quantity::Ruthless(_)
+                    // Exerted attacks (the agent list, 2026-11-27:
+                    // Overexertion's).
+                    | Poe1Quantity::ExertDamage
+                    | Poe1Quantity::ExertAverageDamage
+                    // A skill's triggered damage (the agent list,
+                    // 2026-11-28).
+                    | Poe1Quantity::NewModDamage
+                    // Chains (the agent list, 2026-11-28: Arc's own).
+                    | Poe1Quantity::ChainCountMax
+                    | Poe1Quantity::ProjectileCount
+                    | Poe1Quantity::ChannellingDamage
+                    | Poe1Quantity::PerChainDamage(_)
                     // Bear Trap's debuff as the main skill (P6-11hp).
                     | Poe1Quantity::EnemyTrapMineDamageTaken
                     // Trap and mine speeds (P6-11cy).
@@ -4204,6 +4740,10 @@ pub const fn is_hit_quantity(quantity: Quantity) -> bool {
                     // Arcane Might (P6-11hk).
                     | Poe1Quantity::SpellDamageToAttacks
                     | Poe1Quantity::ShieldAddedDamage(..)
+                    | Poe1Quantity::AddedDamagePercentOfMana(..)
+                    // The agent list (2026-11-27): Point Blank and Far Shot,
+                    // PoB's flags on the skill (the Point Blank support's).
+                    | Poe1Quantity::DistanceFlag(_)
                     | Poe1Quantity::RepeatDamage(_)
                     | Poe1Quantity::RepeatPerRepeatDamage
                     | Poe1Quantity::RepeatFinalDoubleDamageChance
@@ -4253,6 +4793,12 @@ pub const fn is_hit_quantity(quantity: Quantity) -> bool {
                     // Damage by melee proximity (P6-11ht: Shield Crush's,
                     // Close Combat's), `Damage` once `collect` scales it.
                     | Poe1Quantity::MeleeProximityDamage
+                    // A brand's activation frequency (open items S3), read
+                    // in Arcanist Brand's own context by `poe1::triggers`.
+                    | Poe1Quantity::BrandActivationFrequency
+                    // Manaforged Arrows' more damage per mana spent (open
+                    // items S3), read by the attack path.
+                    | Poe1Quantity::DamageMorePerManaCost
             )
     )
 }
@@ -4380,6 +4926,7 @@ impl StatMapping for SkillMapping {
                                 | Poe1Quantity::EnemyHitReason(_)
                                 | Poe1Quantity::PoolReason(_)
                                 | Poe1Quantity::EhpReason(_)
+                                | Poe1Quantity::NetRegenReason(_)
                                 | Poe1Quantity::DotTakenReason(_)
                         )
                     )
@@ -4483,6 +5030,20 @@ pub const STATE_ROWS: &[StateRow] = &[
             Op::Base,
             NONE,
             conditions::BLOCKED_RECENTLY,
+        )],
+    ),
+    // The agent list (2026-11-27): Lacerate's "#% more Damage with Bleeding
+    // while in Blood Stance" (`Damage` MORE, `KeywordFlag.Bleed`,
+    // `SkillStatMap.lua` 1160) and "#% chance to cause Bleeding while in
+    // Blood Stance" (`BleedChance` BASE, `ModFlag.Attack`, 1005), in the
+    // settled stance (`conditions::BLOOD_STANCE`).
+    (
+        "active_skill_bleeding_damage_+%_final_in_blood_stance",
+        &[(
+            Quantity::Damage,
+            Op::More,
+            Flags::BLEED,
+            conditions::BLOOD_STANCE,
         )],
     ),
     // P6-11ec: "+#% Chance to Block Attack Damage if you've dealt a Critical
@@ -4642,6 +5203,18 @@ pub const STATE_ROWS: &[StateRow] = &[
             states::USING_SHIELD,
         )],
     ),
+    // The agent list (2026-11-27): Lacerate's quality "#% increased Attack
+    // Speed if you've changed Stance recently" (`Speed` INC, `ModFlag.Attack`,
+    // `ChangedStanceRecently`, the config's `changedStance`).
+    (
+        "attack_speed_+%_if_changed_stance_recently",
+        &[(
+            Quantity::Speed,
+            Op::Increased,
+            Flags::ATTACK,
+            conditions::CHANGED_STANCE_RECENTLY,
+        )],
+    ),
     // P6-11ec: "#% increased Attack Speed if you've dealt a Critical Strike
     // Recently" (`Speed` INC with `ModFlag.Attack`, `CritRecently`).
     (
@@ -4734,6 +5307,25 @@ pub const STATE_ROWS: &[StateRow] = &[
     (
         "block_chance_on_damage_taken_%",
         &[(BLOCK, Op::Base, NONE, conditions::BEEN_HIT_RECENTLY)],
+    ),
+    // The agent list (2026-11-27): Perforate's and Blood Spears' "#% more
+    // Damage in Blood Stance" (`Damage` MORE, `Condition:BloodStance`, their
+    // stat maps), in the settled stance.
+    (
+        "blood_spears_damage_+%_final_in_blood_stance",
+        &[(Quantity::Damage, Op::More, NONE, conditions::BLOOD_STANCE)],
+    ),
+    // The agent list (a game-truth line PoB reads; the Warden's): "Defences
+    // from Equipped Body Armour are doubled if it has no Socketed Gems"
+    // (`Defences` MORE 100, the body armour's, at most once): `phases`.
+    (
+        "body_armour_defences_doubled_while_no_gems_in_body_armour",
+        &[(
+            Quantity::Poe1(Poe1Quantity::BodyArmourDefencesDoubled),
+            Op::Flag,
+            NONE,
+            states::NO_GEMS_IN_BODY_ARMOUR,
+        )],
     ), // Close-out: "#% increased Cast Speed if you've dealt a Critical Strike
     // Recently" (`Speed` INC, `ModFlag.Cast`, `Condition` `CritRecently`,
     // ModParser.lua 1785), from the config (`poe1::conditions`).
@@ -4744,6 +5336,15 @@ pub const STATE_ROWS: &[StateRow] = &[
             Op::Increased,
             Flags::CAST,
             conditions::CRIT_RECENTLY,
+        )],
+    ),
+    (
+        "chance_to_bleed_on_hit_%_chance_in_blood_stance",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AilmentChance(Ailment::Bleed)),
+            Op::Base,
+            Flags::ATTACK,
+            conditions::BLOOD_STANCE,
         )],
     ),
     // P6-11em: "+#% Chance to Block Spell Damage if you've Cast a Spell
@@ -5271,6 +5872,76 @@ pub const STATE_ROWS: &[StateRow] = &[
             conditions::NOT_HIT_RECENTLY,
         )],
     ),
+    // The agent list (a game-truth line PoB reads; the Warden's): "+#% to all
+    // Elemental Resistances if you have an Equipped Helmet with no Socketed
+    // Gems" (`ElementalResist` BASE, `SocketedGemsInHelmet` at most 0 with
+    // `UsingHelmet`).
+    (
+        "elemental_resistance_%_while_no_gems_in_helmet",
+        &[
+            (FIRE, Op::Base, NONE, states::NO_GEMS_IN_HELMET),
+            (COLD, Op::Base, NONE, states::NO_GEMS_IN_HELMET),
+            (LIGHTNING, Op::Base, NONE, states::NO_GEMS_IN_HELMET),
+        ],
+    ),
+    // The agent list (a game-truth line PoB reads): the boots enchantment
+    // "#% increased Attack and Cast Speed if you've Killed Recently"
+    // (`Speed` INC for attacks and casts, `KilledRecently`).
+    (
+        "enchantment_boots_attack_and_cast_speed_+%_for_4_seconds_on_kill",
+        &[(
+            Quantity::Speed,
+            Op::Increased,
+            NONE,
+            conditions::KILLED_RECENTLY,
+        )],
+    ),
+    // The agent list (2026-11-27): "Enemies Ignited by you have #% of
+    // Physical Damage they deal converted to Fire" and its shocked and
+    // poisoned forms (PoB's `EnemyModifier` of `PhysicalDamageConvertTo
+    // <Type>` BASE under the enemy's condition, `ModParser.lua` 3485 to
+    // 3487): the enemy's hit (`poe1::enemy_hit`).
+    (
+        "enemies_ignited_by_you_have_physical_damage_%_converted_to_fire",
+        &[(
+            Quantity::Poe1(Poe1Quantity::EnemyPhysicalConvert(DamageType::Fire)),
+            Op::Base,
+            NONE,
+            conditions::ENEMY_IGNITED,
+        )],
+    ),
+    (
+        "enemies_poisoned_by_you_have_physical_damage_%_converted_to_chaos",
+        &[(
+            Quantity::Poe1(Poe1Quantity::EnemyPhysicalConvert(DamageType::Chaos)),
+            Op::Base,
+            NONE,
+            conditions::ENEMY_POISONED,
+        )],
+    ),
+    (
+        "enemies_shocked_by_you_have_physical_damage_%_converted_to_lightning",
+        &[(
+            Quantity::Poe1(Poe1Quantity::EnemyPhysicalConvert(DamageType::Lightning)),
+            Op::Base,
+            NONE,
+            conditions::ENEMY_SHOCKED,
+        )],
+    ),
+    // The agent list (2026-11-27): "Enemies Taunted by your Warcries are
+    // Intimidated" (`ModParser.lua` 5023: an `EnemyModifier` of
+    // `Condition:Intimidated` under the enemy's `Taunted`, itself under
+    // `UsedWarcryRecently`; `poe1::damage_taken` reads the flag as the
+    // config's).
+    (
+        "enemies_taunted_by_your_warcies_are_intimidated",
+        &[(
+            Quantity::Poe1(Poe1Quantity::EnemyIntimidated),
+            Op::Flag,
+            NONE,
+            conditions::ENEMY_TAUNTED_BY_WARCRY,
+        )],
+    ),
     // P6-10b: "Regenerate # Energy Shield per second while a Rare or Unique
     // Enemy is Nearby" (`EnergyShieldRegen` BASE, the stat per minute; PoB's
     // enemy `ActorCondition` on `NearbyRareOrUniqueEnemy` or `RareOrUnique`).
@@ -5377,6 +6048,18 @@ pub const STATE_ROWS: &[StateRow] = &[
             Op::Base,
             NONE,
             conditions::ENEMY_BURNING,
+        )],
+    ),
+    // Open items S1: Ground Slam's more damage to close targets (its own stat
+    // map: `Damage` MORE with `ModFlag.Hit` and `Condition:AtCloseRange`,
+    // `act_str.lua` 2086 to 2088), at close range as the config says.
+    (
+        "groundslam_damage_to_close_targets_+%_final",
+        &[(
+            Quantity::Damage,
+            Op::More,
+            Flags::HIT,
+            conditions::AT_CLOSE_RANGE,
         )],
     ),
     // P6-11hu: "You have Onslaught if you've Summoned a Totem Recently"
@@ -5508,6 +6191,19 @@ pub const STATE_ROWS: &[StateRow] = &[
             conditions::STATIONARY,
         )],
     ),
+    // The agent list (2026-11-28): "Hits with this Weapon have Culling
+    // Strike against Bleeding Enemies" (PoB: `CullPercent` MAX 10 with the
+    // enemy's `Bleeding`, every hit's; the weapon's hits in the game, the same
+    // with one weapon).
+    (
+        "local_culling_strike_vs_bleeding_enemies",
+        &[(
+            Quantity::Poe1(Poe1Quantity::CullingStrike),
+            Op::Flag,
+            NONE,
+            conditions::ENEMY_BLEEDING,
+        )],
+    ),
     // Close-out M1: a flask's "#% increased Critical Strike Chance against
     // Enemies on Consecrated Ground during Effect" (`CritChance` INC, the
     // enemy's `OnConsecratedGround`; `poe1::flasks::FLASK_ROWS`).
@@ -5518,6 +6214,18 @@ pub const STATE_ROWS: &[StateRow] = &[
             Op::Increased,
             NONE,
             conditions::ENEMY_ON_CONSECRATED_GROUND,
+        )],
+    ),
+    // The agent list (a game-truth line PoB reads): "#% increased Mana Cost
+    // of Skills while on Full Energy Shield" (`ManaCost` INC,
+    // `FullEnergyShield`; a cost reason since P6-10b).
+    (
+        "mana_cost_+%_while_on_full_energy_shield",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ManaCost),
+            Op::Increased,
+            NONE,
+            conditions::FULL_ENERGY_SHIELD,
         )],
     ),
     // P6-11fb: "#% increased Mana Regeneration Rate while moving" (`ManaRegen` INC,
@@ -5574,6 +6282,19 @@ pub const STATE_ROWS: &[StateRow] = &[
             Op::Increased,
             NONE,
             states::NO_LIFE_MODIFIERS_ON_BODY_ARMOUR,
+        )],
+    ),
+    // The agent list (a game-truth line PoB reads; the Warden's): "#%
+    // increased Maximum Life if you have Equipped Gloves with no Socketed
+    // Gems" (`Life` INC, `SocketedGemsInGloves` at most 0 with
+    // `UsingGloves`).
+    (
+        "maximum_life_+%_while_no_gems_in_gloves",
+        &[(
+            Quantity::Life,
+            Op::Increased,
+            NONE,
+            states::NO_GEMS_IN_GLOVES,
         )],
     ),
     // P3-8n: "Melee Damage with Hits at Close Range": `Damage` INC with
@@ -5715,6 +6436,19 @@ pub const STATE_ROWS: &[StateRow] = &[
             Op::Increased,
             NONE,
             conditions::IGNITED,
+        )],
+    ),
+    // The agent list (a game-truth line PoB reads; the Warden's): "#%
+    // increased Movement Speed if you have Equipped Boots with no Socketed
+    // Gems" (`MovementSpeed` INC, `SocketedGemsInBoots` at most 0 with
+    // `UsingBoots`); a movement reason since P6-10b.
+    (
+        "movement_velocity_+%_while_no_gems_in_boots",
+        &[(
+            Quantity::Poe1(Poe1Quantity::MovementSpeed),
+            Op::Increased,
+            NONE,
+            states::NO_GEMS_IN_BOOTS,
         )],
     ),
     // P6-11hc: "Nearby Enemy Monsters' Fire Resistance against Damage over
@@ -6320,6 +7054,21 @@ pub const STATE_ROWS: &[StateRow] = &[
             conditions::ARCANE_SURGE,
         )],
     ),
+    // Open items S3: Arcanist Brand's support part, `TriggeredDamage` MORE
+    // (`Data/Skills/act_int.lua` 635), which PoB turns into `Damage` MORE
+    // for the spells the brand triggers (`poe1::triggers`), with `NewMod` on
+    // the skill's own list (`CalcTriggers.lua` 23 to 30; the agent list,
+    // 2026-11-28: `Poe1Quantity::NewModDamage`, rounded apart from the
+    // gems').
+    (
+        "support_brand_damage_+%_final",
+        &[(
+            Quantity::Poe1(Poe1Quantity::NewModDamage),
+            Op::More,
+            NONE,
+            super::triggers::TRIGGERED_DAMAGE,
+        )],
+    ),
     // P6-8a part 2: Cast while Channelling's triggered part,
     // `TriggeredDamage` MORE with `SkillType.Triggered`
     // (`Data/Skills/sup_int.lua` 759), which PoB turns into `Damage` MORE
@@ -6327,7 +7076,7 @@ pub const STATE_ROWS: &[StateRow] = &[
     (
         "support_cast_while_channelling_triggered_skill_damage_+%_final",
         &[(
-            Quantity::Damage,
+            Quantity::Poe1(Poe1Quantity::NewModDamage),
             Op::More,
             NONE,
             super::triggers::TRIGGERED_DAMAGE,
@@ -6361,6 +7110,31 @@ pub const STATE_ROWS: &[StateRow] = &[
             Op::Base,
             NONE,
             states::DUAL_WIELDING,
+        )],
+    ),
+    // The agent list (a game-truth line PoB reads): "Toxic Rain deals #%
+    // increased Damage" (`Damage` INC, `SkillName` "Toxic Rain" with
+    // `includeTransfigured`): the main skill's, by its state.
+    (
+        "toxic_rain_damage_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            NONE,
+            states::MAIN_SKILL_TOXIC_RAIN,
+        )],
+    ),
+    // Open items S3: Arcanist Brand's more damage against the branded enemy
+    // (`TriggeredDamage` MORE with `Condition:TargetingBrandedEnemy`,
+    // `act_int.lua` 641; the config's `targetBrandedEnemy`, on by default),
+    // settled with the triggered damage (`poe1::triggers`).
+    (
+        "trigger_brand_support_hit_damage_+%_final_vs_branded_enemy",
+        &[(
+            Quantity::Poe1(Poe1Quantity::NewModDamage),
+            Op::More,
+            NONE,
+            super::triggers::TRIGGERED_DAMAGE_BRANDED,
         )],
     ),
     // P6-11en: "#% increased Area Damage while wielding a Two Handed Melee
@@ -6607,6 +7381,16 @@ pub const ROWS: &[Row] = &[
         &[(DEX, Op::Base, 1.0), (INT, Op::Base, 1.0)],
     ),
     ("additional_intelligence", &[(INT, Op::Base, 1.0)]),
+    // The agent list (2026-11-28): "+# to maximum number of Summoned Mirage
+    // Archers" (`MirageArcherMaxCount` BASE), read by `combined`.
+    (
+        "additional_max_mirage_archers",
+        &[(
+            Quantity::Poe1(Poe1Quantity::MirageArcherCount),
+            Op::Base,
+            1.0,
+        )],
+    ),
     (
         "additional_maximum_all_elemental_resistances_%",
         &[
@@ -6614,6 +7398,17 @@ pub const ROWS: &[Row] = &[
             (MAX_COLD, Op::Base, 1.0),
             (MAX_LIGHTNING, Op::Base, 1.0),
         ],
+    ),
+    // The agent list: "... if Equipped Helmet, Body Armour, Gloves, and
+    // Boots all have Armour" (`ModParser.lua` 1648): `phases` reads the
+    // pieces.
+    (
+        "additional_maximum_all_elemental_resistances_%_if_all_equipment_grants_armour",
+        &[(
+            Quantity::Poe1(Poe1Quantity::MaxElementalResistIfAllPiecesArmour),
+            Op::Base,
+            1.0,
+        )],
     ),
     // P6-11ib: "+#% to all maximum Elemental Resistances if you have
     // Reserved Life and Mana" (`ElementalResistMax` BASE, `StatThreshold`
@@ -6737,6 +7532,30 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ), // Basalt Flask's buff, "20% more Armour" in PoB's base data: `Armour`
+    // The agent list (a game-truth line PoB reads): "#% increased Armour from
+    // Equipped Helmet and Gloves" (`Armour` INC with `SlotName` Helmet and
+    // Gloves, `ModParser.lua` 1092): each piece's armour increase.
+    (
+        "armour_from_helmet_and_gloves_+%",
+        &[
+            (
+                Quantity::Poe1(Poe1Quantity::SlotIncreased(
+                    ArmourSlot::Helmet,
+                    Defence::Armour,
+                )),
+                Op::Increased,
+                1.0,
+            ),
+            (
+                Quantity::Poe1(Poe1Quantity::SlotIncreased(
+                    ArmourSlot::Gloves,
+                    Defence::Armour,
+                )),
+                Op::Increased,
+                1.0,
+            ),
+        ],
+    ),
     // P6-11hb: "Increases and Reductions to Projectile Speed also apply to
     // Damage with Bows" (`ProjectileSpeedAppliesToBowDamage` FLAG).
     (
@@ -7278,6 +8097,24 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ),
+    // Open items S2: "+#% chance to Evade Attack Hits" (PoB's `EvadeChance`
+    // BASE, `ModParser.lua` 257; Vaal Grace's aura): `evade` reads it.
+    (
+        "chance_to_evade_attacks_%",
+        &[(Quantity::Poe1(Poe1Quantity::EvadeChance), Op::Base, 1.0)],
+    ),
+    // "Chaos Damage taken does not bypass Energy Shield" (the agent list;
+    // `ChaosNotBypassEnergyShield` FLAG, `ModParser.lua` 4671,
+    // `CalcDefence.lua` 2290 to 2295): chaos's bypass is 0, read by
+    // `enemy_hit`, `ehp`, and `degen`.
+    (
+        "chaos_damage_does_not_bypass_energy_shield",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ChaosNotBypassEs),
+            Op::Flag,
+            1.0,
+        )],
+    ),
     // P6-10b part 12: "+# Chaos Damage taken" (`ChaosDamageTaken` BASE).
     (
         "chaos_damage_taken_+",
@@ -7486,6 +8323,12 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ),
+    // The agent list (2026-11-28): "Critical Strikes have Culling Strike"
+    // (`CriticalCullPercent` MAX 10), read by `hit::critical_cull`.
+    (
+        "crits_have_culling_strike",
+        &[(Quantity::Poe1(Poe1Quantity::CriticalCulling), Op::Flag, 1.0)],
+    ),
     // P6-11bf: "#% increased Damage with Hits against Chilled Enemies"
     // (`Damage` INC, `KeywordFlag.Hit`, the enemy's `Chilled`):
     // `poe1::damage_taken` applies it while the enemy is chilled.
@@ -7622,6 +8465,16 @@ pub const ROWS: &[Row] = &[
         &[(
             Quantity::Poe1(Poe1Quantity::ElementalResistMaxIsHighest),
             Op::Flag,
+            1.0,
+        )],
+    ),
+    // The agent list: "#% increased Elusive Effect" (`ElusiveEffect` INC,
+    // `ModParser.lua` 684), read by `poe1::buffs`' Elusive.
+    (
+        "elusive_effect_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ElusiveEffect),
+            Op::Increased,
             1.0,
         )],
     ),
@@ -7909,6 +8762,17 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ),
+    // The agent list: "#% chance to gain Elusive on Critical Strike" and
+    // "on Kill" (`Condition:CanBeElusive` FLAG, `ModParser.lua` 2500 to
+    // 2507): with the `buffElusive` check, `poe1::buffs`' Elusive.
+    (
+        "gain_elusive_on_crit_%_chance",
+        &[(Quantity::Poe1(Poe1Quantity::CanBeElusive), Op::Flag, 1.0)],
+    ),
+    (
+        "gain_elusive_on_kill_chance_%",
+        &[(Quantity::Poe1(Poe1Quantity::CanBeElusive), Op::Flag, 1.0)],
+    ),
     // P6-11gj: "Strength provides no bonus to Maximum Life"
     // (`NoStrBonusToLife` FLAG, `ModParser.lua` 5430).
     (
@@ -7916,6 +8780,19 @@ pub const ROWS: &[Row] = &[
         &[(
             Quantity::Poe1(Poe1Quantity::NoStrBonusToLife),
             Op::Flag,
+            1.0,
+        )],
+    ),
+    // The agent list (S5, 2026-11-27): "General's Cry has +# to maximum
+    // number of Mirage Warriors" (`ModParser.lua` 5724:
+    // `GeneralsCryDoubleMaxCount` BASE), read by `hit::generals_cry`.
+    (
+        "generals_cry_maximum_warriors_+",
+        &[(
+            Quantity::Poe1(Poe1Quantity::GeneralsCry(
+                super::gems::GeneralsCryValue::Warriors,
+            )),
+            Op::Base,
             1.0,
         )],
     ),
@@ -8073,6 +8950,16 @@ pub const ROWS: &[Row] = &[
         )],
     ),
     ("intelligence_+%", &[(INT, Op::Increased, 1.0)]),
+    // The agent list (2026-11-27): Point Blank (PoB's `PointBlank` flag), the main
+    // skill's distance ramp (`collect::distance_flags`).
+    (
+        "keystone_point_blank",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DistanceFlag(false)),
+            Op::Flag,
+            1.0,
+        )],
+    ),
     // P6-10b part 11: Unwavering Stance (the keystone: "Cannot Evade enemy
     // Attacks", `CannotEvade`; its "Cannot be Stunned" reaches no field).
     (
@@ -8472,6 +9359,17 @@ pub const ROWS: &[Row] = &[
             Op::Base,
             1.0,
         )],
+    ),
+    // The agent list (2026-11-27): "Nearby Enemies Convert #% of their
+    // Physical Damage to Fire" (PoB's `EnemyModifier` of
+    // `PhysicalDamageConvertToFire` BASE, no condition): the enemy's hit.
+    (
+        "local_nearby_enemies_base_physical_damage_%_to_convert_to_fire",
+        &[(
+            Quantity::Poe1(Poe1Quantity::EnemyPhysicalConvert(DamageType::Fire)),
+            Op::Base,
+            1.0,
+        )],
     ), // reads 55% as 0.55). PoB also reads it for the `LowLife` condition
     // P6-11gy: a ring's covering of the enemy (`CoveredIn<Ash|Frost>Effect`
     // BASE 20, `SlotNumber`, the enemy's ailment): `damage_taken` reads it,
@@ -8502,6 +9400,16 @@ pub const ROWS: &[Row] = &[
         &[(
             Quantity::Poe1(Poe1Quantity::MagicUtilityFlaskEffect),
             Op::Increased,
+            1.0,
+        )],
+    ),
+    // The agent list (2026-11-27): "Gain #% of Maximum Mana as Extra Maximum
+    // Energy Shield" (`ManaGainAsEnergyShield` BASE), a row of energy shield.
+    (
+        "mana_%_to_add_as_energy_shield",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ManaAsEnergyShield),
+            Op::Base,
             1.0,
         )],
     ),
@@ -8589,6 +9497,17 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ), // P6-10b part 7: "#% increased Maximum Recovery per Energy Shield Leech"
+    // The agent list (2026-11-27): "Your Maximum Energy Shield is Equal to
+    // #% of Your Maximum Life" (`EnergyShield` OVERRIDE, `PercentStat`
+    // `Life`), read by the energy shield phase.
+    (
+        "maximum_energy_shield_is_x%_of_maximum_life",
+        &[(
+            Quantity::Poe1(Poe1Quantity::EnergyShieldFromLife),
+            Op::Base,
+            1.0,
+        )],
+    ),
     // (`MaxEnergyShieldLeechInstance` INC; PoB's skill map reads the life and
     // energy shield stats as the rate, items' lines as the instance).
     (
@@ -9170,6 +10089,16 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ),
+    // The agent list (2026-11-27): Far Shot (PoB's `FarShot` flag), the main
+    // skill's distance ramp (`collect::distance_flags`).
+    (
+        "player_far_shot",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DistanceFlag(true)),
+            Op::Flag,
+            1.0,
+        )],
+    ),
     // P6-11ha: projectile damage as the distance travelled increases
     // (`Damage` with PoB's `DistanceRamp`): `collect` scales it by the
     // skill's distance.
@@ -9296,6 +10225,18 @@ pub const ROWS: &[Row] = &[
             1.0,
         )],
     ),
+    // Open items S3: "Brands have #% increased Activation Frequency" and
+    // Arcanist Brand's quality (`BrandActivationFrequency` INC,
+    // `SkillStatMap.lua` 2165), read by `poe1::triggers` in the brand's own
+    // context.
+    (
+        "sigil_repeat_frequency_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::BrandActivationFrequency),
+            Op::Increased,
+            1.0,
+        )],
+    ),
     // Silver Flask's buff flag, "Onslaught" in PoB's base data (the line
     // PoB parses as the `Onslaught` condition, as the custom line); its
     // effect with flask effect is `poe1::flasks`' (P6-4b).
@@ -9306,6 +10247,13 @@ pub const ROWS: &[Row] = &[
     // P6-11t: "Non-Channelling Skills have +# to Total Mana Cost"
     // (`ManaCost` BASE, `SkillType` `Channel` negated) and the channelling
     // one; [`super::costs`] reads them for a main skill of that kind.
+    // Open items S3, part 8: "+# to Total Mana Cost of Skills" (PoB's
+    // `ManaCost` BASE, `ModParser.lua` 190, untagged): every skill's total,
+    // read by [`super::costs`].
+    (
+        "skill_mana_cost_+",
+        &[(Quantity::Poe1(Poe1Quantity::ManaCost), Op::Base, 1.0)],
+    ),
     (
         "skill_mana_cost_+_with_channelling_skills",
         &[(
@@ -9328,6 +10276,17 @@ pub const ROWS: &[Row] = &[
     (
         "spell_block_%_per_5_attack_block",
         &[(Quantity::Poe1(Poe1Quantity::BlockPer5(true)), Op::Base, 1.0)],
+    ),
+    // The agent list: "+#% chance to Suppress Spell Damage if Equipped
+    // Helmet, Body Armour, Gloves, and Boots all have Evasion Rating"
+    // (`ModParser.lua` 1653): `phases` reads the pieces.
+    (
+        "spell_suppression_chance_%_if_all_equipment_grants_evasion",
+        &[(
+            Quantity::Poe1(Poe1Quantity::SuppressionIfAllPiecesEvasion),
+            Op::Base,
+            1.0,
+        )],
     ),
     // P6-11al: "Your chance to Suppress Spell Damage is Lucky" (PoB's
     // `SpellSuppressionChanceIsLucky` FLAG); `enemy_hit` reads it.
@@ -9388,6 +10347,56 @@ pub const ROWS: &[Row] = &[
         &[(
             Quantity::Poe1(Poe1Quantity::TailwindEffect),
             Op::Increased,
+            1.0,
+        )],
+    ),
+    // The agent list (a game-truth line PoB reads): "You have Tailwind if
+    // you have dealt a Critical Strike Recently" (`Condition:Tailwind` FLAG
+    // with `CritRecently`; `poe1::buffs`).
+    (
+        "tailwind_if_have_crit_recently",
+        &[(Quantity::Poe1(Poe1Quantity::TailwindOnCrit), Op::Flag, 1.0)],
+    ),
+    // The agent list (2026-11-27): "Warcries Exert twice as many Attacks"
+    // (`ModParser.lua` 2577: `ExtraExertedAttacks` MORE 100).
+    (
+        "warcries_exert_twice_as_many_attacks",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ExtraExertedAttacks),
+            Op::More,
+            100.0,
+        )],
+    ),
+    // The agent list (2026-11-27): "Warcries have infinite Power"
+    // (`ModParser.lua` 4147: `WarcryInfinitePower`), read by
+    // `skill_modifiers` for `gems::warcry_power`.
+    (
+        "warcries_have_infinite_power",
+        &[(
+            Quantity::Poe1(Poe1Quantity::WarcryInfinitePower),
+            Op::Flag,
+            1.0,
+        )],
+    ),
+    // The agent list (2026-11-27): "Warcries have a minimum of 10 Power"
+    // (the Warcry mastery's, value 1; `ModParser.lua` 5457:
+    // `MinimumWarcryPower` BASE 10), read the same way.
+    (
+        "warcries_have_minimum_10_power",
+        &[(
+            Quantity::Poe1(Poe1Quantity::MinimumWarcryPower),
+            Op::Base,
+            10.0,
+        )],
+    ),
+    // The agent list (2026-11-27): "Warcries Exert # additional Attacks"
+    // (`ModParser.lua` 5235: `ExtraExertedAttacks` BASE), read by
+    // `hit::exerted_attacks`.
+    (
+        "warcry_empowers_next_x_melee_attacks",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ExtraExertedAttacks),
+            Op::Base,
             1.0,
         )],
     ),
@@ -9604,6 +10613,12 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "additional_stun_threshold_based_on_%_of_energy_shield",
         "stun",
     ),
+    // Open items S3: Arcanist Brand's activation and trigger markers, read by
+    // poe1::triggers in the brand's own context.
+    (
+        "additive_cast_speed_modifiers_apply_to_sigil_repeat_frequency",
+        "trigger",
+    ),
     // "All Damage can Shock" (PoB `<Type>CanShock` flags), "Hits always
     // Shock" (`EnemyShockChance` BASE 100): PoB reads them only for the
     // shock chance and the shock it shows (`CalcOffence.lua` 4108, 5208
@@ -9637,6 +10652,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // (`AreaOfEffect` INC per `EnduranceCharge`): area, as
     // `base_skill_area_of_effect_+%`.
     ("area_of_effect_+%_per_endurance_charge", "area"),
+    // Open items S3: Cast on Death's area while dead (AreaOfEffect INC): no
+    // slice field.
+    ("area_of_effect_+%_while_dead", "area"),
     // P6-11b: "#% increased Area of Effect while wielding a Bow" (PoB:
     // `AreaOfEffect` INC, `UsingBow`): area, as `base_skill_area_of_effect_+%`.
     ("area_of_effect_+%_while_wielding_bow", "area"),
@@ -9656,6 +10674,17 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // map has no entry; the melee flag is its skill data's, which the
     // engine reads.
     ("attack_is_melee_override", "skill-flags"),
+    // Open items S3, part 7: the trigger markers of the skills items grant
+    // (read by poe1::triggers through the item's line and PoB's config).
+    ("attack_trigger_on_hitting_bleeding_enemy_%", "trigger"),
+    ("attack_trigger_on_kill_%", "trigger"),
+    ("attack_trigger_on_melee_critical_hit_%", "trigger"),
+    ("attack_trigger_on_melee_hit_%", "trigger"),
+    (
+        "attack_trigger_on_melee_hit_with_atleast_150_strength_%",
+        "trigger",
+    ),
+    ("attack_unusable_if_triggerable", "trigger"),
     // P6-11ba: chances to blind, taunt, or hinder on hit (yours and your
     // minions'), the Abyss jewels' additions: PoB parses none of these lines,
     // and the enemy is Blinded only by the config's condition.
@@ -9717,6 +10746,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // Close-out M3: a chance not to consume a cooldown (PoB leaves the line
     // unparsed): no slice field reads a cooldown's use.
     ("base_cooldown_refresh_chance_%", "no-slice"),
+    // Open items S3: Arcanist Brand deals no damage of its own (its type has
+    // no Damage, so the hit path never computes it).
+    ("base_deal_no_damage", "skill type marker"),
     // Close-out M3: energy shield per enemy killed (`EnergyShieldOnKill`):
     // no recovery field reads a kill.
     ("base_energy_shield_gained_on_enemy_death", "recovery"),
@@ -9735,7 +10767,13 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // P6-11m: minion duration (`Duration` INC for minion skills): no slice
     // field reads a minion's duration.
     ("base_minion_duration_+%", "skill-duration"),
+    // Open items S3, part 7: Rain of Arrows' arrows (PoB's ProjectileCount BASE,
+    // base -1), as number_of_additional_arrows.
+    ("base_number_of_arrows", "projectile-count"),
     ("base_number_of_projectiles", "projectile-count"),
+    // Open items S3: a brand's own attach limit (PoB's BrandsAttachedLimit BASE),
+    // read from the gems by gems::brand_attach_limit and poe1::triggers.
+    ("base_number_of_sigils_allowed_per_target", "brand"),
     // P6-11cd: "+# to maximum number of Spectres" (`ActiveSpectreLimit`): a count
     // no slice field reads, as the zombies' and skeletons'.
     ("base_number_of_spectres_allowed", "minion-count"),
@@ -9743,6 +10781,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // P6-11em: ignite duration on you and the chance to be frozen, shocked,
     // and ignited (PoB parses neither): no slice field.
     ("base_self_ignite_duration_-%", "ailment-on-self"),
+    ("base_sigil_repeat_frequency_ms", "trigger"),
     // P3-8n: "You take #% reduced Extra Damage from Critical Strikes" on the
     // tree (`ReduceCritExtraDamage` BASE): the crits you take. A curse gem's
     // own copy is read by PoB's skill stat map as the enemy's
@@ -9792,6 +10831,17 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("blink_and_mirror_arrow_cooldown_speed_+%", "no-slice"),
     // P6-11f: "#% increased Block Recovery" (`BlockRecovery` INC): no slice field.
     ("block_recovery_+%", "block-recovery"),
+    // The agent list (2026-11-27): Perforate's spears (PoB's
+    // `Multiplier:<skill>MaxSpikes`), read from the skill's own stats by
+    // `hit::perforate_dps_multiplier` as its spike overlap's limit.
+    (
+        "blood_spears_additional_number_of_spears_if_changed_stance_recently",
+        "perforate-spikes",
+    ),
+    ("blood_spears_base_number_of_spears", "perforate-spikes"),
+    // The agent list (2026-11-28): Boneshatter's Trauma, read by
+    // `hit::trauma` (its self damage reaches no slice field).
+    ("boneshatter_trauma_base_duration_ms", "trauma"),
     // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
     // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
     ("boots_implicit_ground_brittle_duration_ms", "no-slice"),
@@ -9854,6 +10904,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // reflected damage taken.
     ("cannot_take_reflected_elemental_damage", "no-slice"),
     ("cannot_take_reflected_physical_damage", "no-slice"),
+    // The agent list (2026-11-28): "Can't use Flask in Fifth Slot", read by
+    // `flasks::active_flasks`.
+    ("cannot_use_flask_in_fifth_slot", "flask"),
     // P6-8a: read by `poe1::triggers` (Cast On Critical Strike's chance).
     ("cast_linked_spells_on_attack_crit_%", "trigger"),
     // P6-8a part 2: PoB's `chanceToTriggerOnMeleeKill`, which no module
@@ -9863,6 +10916,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("cast_on_damage_taken_%", "trigger"),
     // P6-8a: read by `poe1::triggers` (`triggeredByDamageTaken`).
     ("cast_on_damage_taken_threshold", "trigger"),
+    // Open items S3: Cast on Death's trigger and cost markers: poe1::triggers
+    // reads the support (PoB maps neither stat; the cost is its level's
+    // mana multiplier).
+    ("cast_on_death_%", "trigger"),
     // P6-8a: PoB's `triggeredByCoc` and `triggerOnCrit`, which
     // `poe1::triggers` reads from the support.
     ("cast_spell_on_linked_attack_crit", "trigger"),
@@ -9963,10 +11020,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("chilled_while_bleeding", "ailment-on-self"),
     ("cold_ailment_duration_+%", "ailment-duration"),
     ("cold_damage_to_return_to_melee_attacker", "no-slice"),
-    (
-        "consecrated_ground_allies_recover_es_as_well_as_life_from_life_regeneration",
-        "regeneration",
-    ),
     // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
     // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
     (
@@ -10021,6 +11074,13 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
     // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
     ("display_cast_commandment_of_frost_on_kill_%", "no-slice"),
+    // The agent list (2026-11-28): Winter Orb's display line and its stats,
+    // read by `hit::winter_orb` (the duration per stage reaches no slice
+    // field).
+    (
+        "display_frost_fury_additive_cast_speed_modifiers_apply_to_fire_speed",
+        "winter-orb",
+    ),
     // P6-11eh: Blight's stack limit shown on the item.
     ("display_max_blight_stacks", "display"),
     // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
@@ -10056,12 +11116,18 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "endurance_charge_on_kill_percent_chance_while_holding_shield",
         "charge-gain-chance",
     ),
-    // P6-11m: the enemy's own damage converted (`EnemyModifier`): what
-    // you take; no slice field.
+    // The agent list (S8): enemies that explode on death (PoB's `ExplodeMod`
+    // and `CanExplode`, `ModParser.lua` 2105 to 2140): PoB adds a socket
+    // group of its own, "On Kill Monster Explosion" (`CalcSetup.lua` 1405 to
+    // 1445: triggered, appended after the build's groups, not in full
+    // DPS), whose skill (`EnemyExplode`, `Data/Skills/other.lua` 6060) is
+    // the only reader; no slice field of another skill reads it.
     (
-        "enemies_ignited_by_you_have_physical_damage_%_converted_to_fire",
-        "enemy-damage",
+        "enemies_explode_on_death_by_attack_for_10%_life_as_physical_damage",
+        "explosion",
     ),
+    // P6-11m's "enemy-damage" row for the ignited enemy's conversion is a
+    // state row since the agent list (2026-11-27): the enemy's hit reads it.
     (
         "enemies_that_hit_you_with_attack_recently_attack_speed_+%",
         "enemy-speed",
@@ -10073,6 +11139,20 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // P6-11eh: "Recover #% of Energy Shield when you Block" (PoB does not
     // parse it): no recovery field reads a block.
     ("energy_shield_%_gained_on_block", "recovery"),
+    // Leeching at full life or energy shield (the agent list):
+    // `conditions::settle` sets the leeching conditions from them (PoB
+    // `CalcPerform.lua` 873 to 880); they change nothing else.
+    (
+        "energy_shield_leech_does_not_stop_on_full_energy_shield",
+        "leeching-condition",
+    ),
+    // Leeching at full life or energy shield (the agent list):
+    // `conditions::settle` sets the leeching conditions from them (PoB
+    // `CalcPerform.lua` 873 to 880); they change nothing else.
+    (
+        "energy_shield_leech_from_attacks_does_not_stop_on_full_energy_shield",
+        "leeching-condition",
+    ),
     // P6-11be: "Cursed Enemies you or your Minions Kill have a #% chance
     // to Explode" (PoB's `ExplodeMod`): read only by PoB's own explosion
     // skill (`EnemyExplode`), which reaches a field only as the main skill or
@@ -10129,6 +11209,14 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "frenzy_charge_duration_+%_per_frenzy_charge",
         "charge-duration",
     ),
+    ("frost_fury_base_fire_interval_ms", "winter-orb"),
+    ("frost_fury_duration_+%_per_stage", "no-slice"),
+    (
+        "frost_fury_fire_speed_+%_final_while_channelling",
+        "winter-orb",
+    ),
+    ("frost_fury_fire_speed_+%_per_stage", "winter-orb"),
+    ("frost_fury_max_number_of_stages", "winter-orb"),
     // P6-11ad: "You count as on Full Life while at #% of maximum Life or
     // above" (`FullLifePercentage` BASE): PoB reads it only for the config
     // option's tooltip (`CalcPerform.lua` 76, `ConfigOptions.lua` 68).
@@ -10153,9 +11241,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "gain_defiance_when_lose_life_to_hit_once_per_x_ms",
         "no-slice",
     ),
-    // Close-out M3: a support's chance to grant Elusive on crit (PoB leaves the
-    // line unparsed): Elusive's effect is the config's buff.
-    ("gain_elusive_on_crit_%_chance", "no-slice"),
     // P6-11m: endurance charges per second if hit recently (unparsed).
     (
         "gain_endurance_charge_per_second_if_have_been_hit_recently",
@@ -10228,6 +11313,60 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "has_avoid_shock_as_avoid_all_elemental_ailments",
         "ailment-on-self",
     ),
+    // Modifier magnitudes (the agent list): they scale the item's other
+    // lines, which the import adapter settles (`pob_item::values`: PoB
+    // scales them on an advanced copy or a crafted item, `Item.lua` 1377,
+    // and the lines are then `modifier-magnitude` reasons; otherwise the
+    // printed values carry them). The line itself is no mod in PoB
+    // (`ModParser.lua` 5874 to 5876).
+    (
+        "heist_enchantment_ailment_mod_effect_+%",
+        "modifier-magnitude",
+    ),
+    (
+        "heist_enchantment_attribute_mod_effect_+%",
+        "modifier-magnitude",
+    ),
+    (
+        "heist_enchantment_casterdamage_mod_effect_+%",
+        "modifier-magnitude",
+    ),
+    (
+        "heist_enchantment_chaos_mod_effect_+%",
+        "modifier-magnitude",
+    ),
+    ("heist_enchantment_cold_mod_effect_+%", "modifier-magnitude"),
+    (
+        "heist_enchantment_critical_mod_effect_+%",
+        "modifier-magnitude",
+    ),
+    (
+        "heist_enchantment_damage_mod_effect_+%",
+        "modifier-magnitude",
+    ),
+    (
+        "heist_enchantment_defence_mod_effect_+%",
+        "modifier-magnitude",
+    ),
+    ("heist_enchantment_fire_mod_effect_+%", "modifier-magnitude"),
+    ("heist_enchantment_life_mod_effect_+%", "modifier-magnitude"),
+    (
+        "heist_enchantment_lightning_mod_effect_+%",
+        "modifier-magnitude",
+    ),
+    ("heist_enchantment_mana_mod_effect_+%", "modifier-magnitude"),
+    (
+        "heist_enchantment_physical_mod_effect_+%",
+        "modifier-magnitude",
+    ),
+    (
+        "heist_enchantment_resistance_mod_effect_+%",
+        "modifier-magnitude",
+    ),
+    (
+        "heist_enchantment_speed_mod_effect_+%",
+        "modifier-magnitude",
+    ),
     // Close-out M2: area of effect per 50 unreserved mana (`AreaOfEffect`
     // INC per `ManaUnreserved`): area, no slice field.
     (
@@ -10237,6 +11376,20 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // Close-out M3: Hoarfrost (`HitsCanInflictHoarfrost`): no calc module of
     // PoB reads the flag.
     ("hoarfrost_on_non_freezing_freezing_hit", "no-slice"),
+    // The agent list (2026-11-28): Ice Spear's second form, read by
+    // `hit::ice_spear` (its crit), or no slice field (its projectile speed).
+    (
+        "ice_spear_second_form_critical_strike_chance_+%",
+        "ice-spear",
+    ),
+    (
+        "ice_spear_second_form_critical_strike_multiplier_+",
+        "ice-spear",
+    ),
+    (
+        "ice_spear_second_form_projectile_speed_+%_final",
+        "no-slice",
+    ),
     // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
     // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
     (
@@ -10274,6 +11427,13 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // P3-8n: the stats that add damage from a mana cost stay unmapped
     // ([`NO_EFFECT_DEPENDS_ON`]); the costs are rows since P6-10b.
     ("item_generation_can_have_multiple_crafted_mods", "crafting"),
+    // The agent list (2026-11-27): Kinetic Blast of Clustering's "Modifiers to number
+    // of Projectiles instead apply to the number of Explosions" (PoB's
+    // `NoAdditionalProjectiles`: `ProjectileCount` 1, CalcOffence.lua 1054).
+    (
+        "kinetic_blast_modifiers_to_number_of_projectiles_instead_apply_to_number_of_clusters",
+        "projectile-count",
+    ),
     ("kinetic_fusillade_subsequent_targeting_radius", "area"),
     // P6-11eg: item properties: the sell price, modification while corrupted,
     // the implicit limit, and a wand base's crafting rule.
@@ -10294,11 +11454,12 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ),
     // P6-11cz: life flask charges on suppressing a spell (PoB leaves the text unparsed; flask charges reach no slice field).
     ("life_flasks_gain_X_charges_on_suppressing_spell", "flask"),
-    // Close-out M2: life lost per second per rage (`LifeDegen` BASE): PoB
-    // shows it apart from regeneration; no slice field reads a degeneration.
+    // Leeching at full life or energy shield (the agent list):
+    // `conditions::settle` sets the leeching conditions from them (PoB
+    // `CalcPerform.lua` 873 to 880); they change nothing else.
     (
-        "life_loss_%_per_minute_per_rage_while_not_losing_rage",
-        "no-slice",
+        "life_leech_does_not_stop_at_full_life",
+        "leeching-condition",
     ),
     ("life_recovery_+%_from_flasks_while_on_low_life", "flask"),
     ("light_radius_+%", "light-radius"),
@@ -10351,6 +11512,17 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     (
         "local_display_nearby_enemies_flask_charges_granted_+%",
         "flask",
+    ),
+    ("local_enchant_stat_magnitude_+%", "modifier-magnitude"),
+    (
+        "local_explicit_elemental_damage_mod_effect_+%",
+        "modifier-magnitude",
+    ),
+    ("local_explicit_minion_mod_effect_+%", "modifier-magnitude"),
+    ("local_explicit_mod_effect_+%", "modifier-magnitude"),
+    (
+        "local_explicit_physical_and_chaos_damage_mod_effect_+%",
+        "modifier-magnitude",
     ),
     // P6-11m: a flask's amount recovered (`FlaskRecovery`): no slice field.
     ("local_flask_amount_to_recover_+%", "flask"),
@@ -10405,6 +11577,15 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("local_has_X_sockets", "sockets"),
     // Close-out M3: "Has no Sockets" (`NoSockets`): no slice field.
     ("local_has_no_sockets", "sockets"),
+    (
+        "local_implicit_modifier_magnitudes_doubled",
+        "modifier-magnitude",
+    ),
+    (
+        "local_implicit_modifier_magnitudes_tripled",
+        "modifier-magnitude",
+    ),
+    ("local_implicit_stat_magnitude_+%", "modifier-magnitude"),
     ("local_intelligence_requirement_+", "no-slice"),
     ("local_item_allow_modification_while_corrupted", "display"),
     ("local_item_implicit_modifier_limit", "display"),
@@ -10430,6 +11611,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
     // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
     ("local_maximum_quality_+", "no-slice"),
+    ("local_prefix_mod_effect_+%", "modifier-magnitude"),
     // P6-11m: a flask charge on crit (`FlaskChargeOnCritChance`).
     ("local_recharge_on_crit_%", "flask"),
     // P6-11ic: Kalandra's Touch's "Reflects your opposite Ring" (PoB: display only; `collect::items` copies the other ring).
@@ -10449,14 +11631,28 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // P6-11gi: the parent's "#% increased Effect of Socketed Abyss Jewels":
     // `collect` scales its abyss jewels' modifiers by it.
     ("local_socketed_abyss_jewel_effect_+%", "abyss-jewel-effect"),
+    ("local_suffix_mod_effect_+%", "modifier-magnitude"),
     // P6-8a: the gems a trigger support supports; PoB has no row.
     (
         "local_support_gem_max_skill_level_requirement_to_support",
         "support-limit",
     ),
+    // The agent list (S8): a flask's death explosions, as
+    // `enemies_explode_on_death_by_attack_for_10%_life_as_physical_damage`.
+    (
+        "local_unique_flask_explode_enemies_for_10%_life_as_random_element_on_kill_chance_%_during_flask_effect",
+        "explosion",
+    ),
     (
         "local_unique_jewel_disconnected_passives_can_be_allocated_around_keystone_hash",
         "tree-allocation",
+    ),
+    // The agent list (in-game check 2026-11-26): Energy From Within's life
+    // increases in its radius as energy shield, applied by the host to the
+    // nodes (`loom_pipeline::radius_jewels`, PoB's `getSimpleConv`).
+    (
+        "local_unique_jewel_life_increases_applies_to_energy_shield",
+        "radius-jewel",
     ),
     (
         "local_unique_jewel_nearby_disconnected_keystone_passives_can_be_allocated",
@@ -10540,7 +11736,11 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "lose_all_righteous_charges_on_mana_use_threshold",
         "charge-gain",
     ),
+    ("lose_all_trauma_at_X_trauma", "trauma"),
     ("magic_utility_flasks_cannot_be_removed", "flask"),
+    // Mageblood (the agent list): `poe1::flasks` reads the three lines
+    // from the items (which flasks apply), so they have no row here.
+    ("magic_utility_flasks_cannot_be_used", "flask"),
     ("maim_effect_+%", "no-slice"),
     ("maim_on_crit_%_with_attacks", "on-hit-debuff"),
     ("maim_on_hit_%", "on-hit-debuff"),
@@ -10641,12 +11841,21 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "monster",
     ),
     ("multi_trap_and_mine_support_flags", "no-slice"),
+    // Open items S3, part 7: Icicle Burst's never_freeze (PoB's CannotFreeze;
+    // no slice field reads freeze).
+    ("never_freeze", "freeze"),
     // P6-11dl: "Projectile Barrages have no spread" (unparsed in PoB): the
     // projectiles' geometry, no slice field.
     ("no_barrage_projectile_spread", "projectile-spread"),
+    // Open items S3: Cast on Death's no-cost marker (PoB's empty map; the
+    // level's mana multiplier of -100 makes the cost 0).
+    ("no_cost", "cost"),
     // Bleeding on you while moving (`NoExtraBleedDamageWhileMoving`): only
     // PoB's damage over time estimate reads it, no field here.
     ("no_extra_bleed_damage_while_moving", "damage-taken"),
+    // Mageblood (the agent list): read by `poe1::flasks` from the items.
+    ("num_magic_utility_flasks_always_apply", "flask"),
+    ("num_magic_utility_flasks_always_apply_rightmost", "flask"),
     // P6-11dg: "Bow Attacks fire an additional Arrow" (PoB's `ProjectileCount` BASE with
     // `ModFlag.Bow`): as the projectile count, read only with
     // `SequentialProjectiles` (Barrage's `projectiles_barrage`, a guard).
@@ -10654,15 +11863,18 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // P6-11u: the projectile count (PoB `ProjectileCount`): it reaches DPS
     // only with `SequentialProjectiles` (`CalcOffence.lua` 769 to 772), a
     // skill base mod (unvetted) or Barrage's `projectiles_barrage`, a guard.
-    ("number_of_additional_projectiles", "projectile-count"),
     // P6-11ef: the trap and mine limits (`ActiveTrapLimit`, `ActiveMineLimit`
     // BASE): PoB shows them and its "for each trap" and "for each mine" lines
     // read them; no slice field does.
     ("number_of_additional_remote_mines_allowed", "no-slice"),
     ("number_of_additional_traps_allowed", "no-slice"),
-    // P6-11u: the chain count (PoB `ChainCountMax`): read by the per-chain
-    // lines, each a guard.
-    ("number_of_chains", "chain-count"),
+    // The agent list (2026-11-28): Tornado's count, which no slice field
+    // reads, and its damage interval, read by `hit::tornado`.
+    ("number_of_tornados_allowed", "no-slice"),
+    // The agent list (S5, 2026-11-27): General's Cry Support's "Attacks with
+    // Supported Skills count as Exerted" (PoB's empty stat map; the
+    // exert copies are `hit::generals_cry`'s).
+    ("number_of_warcries_exerting_this_action", "exert"),
     // P6-11bd: stun on enemies with two handed melee weapons, and Occultist's
     // "Cannot Be Stunned while you have Energy Shield": no slice field.
     ("occultist_immune_to_stun_while_has_energy_shield", "stun"),
@@ -10727,12 +11939,21 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // `CannotSplit`): no slice field.
     ("projectile_behaviour_only_explode", "no-slice"),
     ("projectile_chain_from_terrain_chance_%", "no-slice"),
+    // Open items S3: Arcanist Brand's projectile range for the spells it
+    // triggers: no slice field.
+    ("projectile_maximum_range_override", "targeting"),
     ("projectile_remove_default_spread", "no-slice"),
     ("projectile_spread_radius", "no-slice"),
     ("projectile_uses_contact_position", "no-slice"),
+    // The agent list (2026-11-27): "Projectiles cannot Split" (`CannotSplit`,
+    // SkillStatMap.lua 1378): the split count's label alone, no slice field.
+    ("projectiles_cannot_split", "no-slice"),
     // Close-out M3: "Projectiles Fork" (`ForkOnce`, `ForkCountMax`): no slice
     // field.
     ("projectiles_fork", "projectile-count"),
+    // Open items S3, part 7: the nova pattern of Icicle Burst's and Bone Nova's
+    // projectiles and Starfall's art variation: no PoB stat map entry.
+    ("projectiles_nova", "no-slice"),
     // Close-out M3: projectiles return (PoB leaves the line unparsed): no slice
     // field counts a second hit.
     ("projectiles_return", "no-slice"),
@@ -10850,7 +12071,12 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("show_number_of_projectiles", "display"),
     // P6-11u: brands are not computed (`hit`).
     ("sigil_duration_+%", "skill-duration"),
+    // The agent list (2026-11-27): "#% more Area of Effect in Sand Stance"
+    // (`AreaOfEffect` MORE, `Condition:SandStance`): radius outputs alone, as
+    // `base_skill_area_of_effect_+%`.
+    ("skill_area_of_effect_+%_final_in_sand_stance", "area"),
     ("skill_area_of_effect_+%_per_power_charge", "area"),
+    ("skill_art_variation", "no-slice"),
     // P6-6a (the skill sweep): a skill's constant stat no stat map reads
     // (neither `SkillStatMap.lua` nor a skill's own `statMap`) and no
     // module names: PoB reads it into no output.
@@ -10862,6 +12088,11 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // (neither `SkillStatMap.lua` nor a skill's own `statMap`) and no
     // module names: PoB reads it into no output.
     ("skill_cannot_be_stunned_before_contact_point", "display"),
+    // Open items S3, part 5: the item trigger supports' markers (PoB's
+    // triggeredByUnique, triggeredByMjolner, triggeredByCospris, triggerOnCrit,
+    // the on-block and on-hit groups), read by poe1::triggers through the
+    // support itself, and PvP scaling.
+    ("skill_has_trigger_from_unique_item", "trigger"),
     // P6-11u: a skill effect duration (PoB `Duration`): read only by
     // skill functions, base mods, stages, brands, and ailments that are
     // skill effects, each a reason (`hit::pob_vetted`, `poe1::ailment`).
@@ -10869,6 +12100,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // (neither `SkillStatMap.lua` nor a skill's own `statMap`) and no
     // module names: PoB reads it into no output.
     ("skill_override_pvp_scaling_time_ms", "display"),
+    // Open items S3, part 8: Focus's and Kitava's Thirst's trigger supports'
+    // markers (PoB's chanceToTriggerOnFocus, no module reads it; triggeredByKitavaThirst),
+    // read by poe1::triggers through the support.
+    ("skill_triggered_when_you_focus_chance_%", "trigger"),
     // P6-11ht: Impact's area of effect per enemy killed recently (no slice field
     // reads area).
     (
@@ -10876,10 +12111,19 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "area",
     ),
     ("smite_lightning_target_range", "targeting"),
+    (
+        "socketed_triggered_skills_use_weapon_attack_time_for_pvp_scaling",
+        "trigger",
+    ),
     ("spell_area_of_effect_+%", "area"),
+    // The agent list: the crafted trigger's marker (PoB's `triggeredByCraft`),
+    // which `poe1::triggers` decides (`SkillUse`).
+    ("spell_has_trigger_from_crafted_item_mod", "trigger"),
+    ("spell_is_triggered_on_hit", "trigger"),
     // P6-7c3: a monster spell's range (the Flame Golem's Immolate): PoB's
     // stat map has no row for it.
     ("spell_maximum_action_distance_+%", "targeting"),
+    ("spell_only_castable_on_death", "trigger"),
     // Close-out M3: suppression applied to avoiding elemental ailments: no
     // slice field (a chill on you is the config's, guarded).
     (
@@ -10891,6 +12135,13 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("spells_chance_to_hinder_on_hit_%", "on-hit-debuff"),
     // Open items S3: PoB's `triggeredBySpellSlinger`, which `poe1::triggers` decides.
     ("spellslinger_trigger_on_wand_attack_%", "trigger"),
+    // Agent list: Static Strike's beams (its part 2): the zap period and speed
+    // (PoB's `repeatFrequency` and `StaticStrikeFrequency` INC, read only by
+    // its part 2's `preDamageFunc`) and the beams' less damage (`Damage` MORE
+    // tagged part 2), read by `hit::static_strike_beams` in that part.
+    ("static_strike_base_zap_frequency_ms", "skill-rate"),
+    ("static_strike_beam_damage_+%_final", "skill-part"),
+    ("static_strike_zap_speed_+%", "skill-rate"),
     // P6-11as: "#% increased Stun Duration on Enemies per Endurance
     // Charge" (`EnemyStunDuration` INC): no slice field.
     ("stun_duration_+%_per_endurance_charge", "stun"),
@@ -10908,6 +12159,17 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "support_arcane_surge_gain_buff_on_mana_use_threshold",
         "buff-gain",
     ),
+    // Agent list: Shockwave Support's chance to trigger its attack, 100 at every
+    // level (`constantStats`; PoB's stat map entry is empty), so the trigger's
+    // chance is the source's hit chance alone (`poe1::triggers`, `Shockwave`).
+    (
+        "support_blunt_chance_to_trigger_shockwave_on_hit_%",
+        "trigger",
+    ),
+    // Open items S3: Arcanist Brand's less area for the spells it triggers
+    // (AreaOfEffect MORE): no slice field.
+    ("support_brand_area_of_effect_+%_final", "area"),
+    ("support_cast_on_mana_spent", "trigger"),
     // P6-11gf: Concentrated Effect's less area of effect (`AreaOfEffect`
     // MORE, `sup_int.lua` 1101), as `active_skill_area_of_effect_+%_final`.
     (
@@ -10925,6 +12187,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ),
     ("support_makes_skill_mine_pvp_damage_+%_final", "pvp"),
     ("support_makes_skill_trap_pvp_damage_+%_final", "pvp"),
+    // Open items S3: Manaforged Arrows' threshold (read by poe1::triggers) and
+    // its chance to trigger (100, no PoB stat map entry).
+    ("support_manaforged_arrows_mana_cost_%_threshold", "trigger"),
     // P6-8b: the mirage's less attack speed, read by `poe1::combined` for
     // the mirage's copy alone.
     ("support_mirage_archer_attack_speed_+%_final", "mirage"),
@@ -10948,6 +12213,12 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     (
         "support_more_duration_skill_effect_duration_+%_final",
         "skill-duration",
+    ),
+    // The agent list (2026-11-27): Volley's and Greater Volley's parallel
+    // projectiles' placement (PoB maps neither): no slice field.
+    (
+        "support_parallel_projectile_number_of_points_per_side",
+        "no-slice",
     ),
     (
         "support_reduced_duration_skill_effect_duration_+%_final",
@@ -11028,6 +12299,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "thrown_shield_projectile_fire_random_directions",
         "no-slice",
     ),
+    ("tornado_base_damage_interval_ms", "tornado"),
     // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
     // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
     ("tornado_movement_speed_+%", "no-slice"),
@@ -11053,6 +12325,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("trap_trigger_radius_+%", "area"),
     // P6-11da: a trap skill's visual variant (PoB's skill data lists it with no stat map entry).
     ("trap_variation", "display"),
+    ("trauma_strike_damage_+%_final_per_trauma", "trauma"),
+    ("trauma_strike_damage_+%_final_per_trauma_capped", "trauma"),
+    ("trauma_strike_self_damage_per_trauma", "no-slice"),
     // Open items S8: "Warcries cannot Exert Travel Skills": PoB leaves the
     // line unparsed (ModCache: no mods), and exerted travel skills reach no
     // slice field (the guard in `poe1::gems` names it).
@@ -11061,9 +12336,19 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "travel_skills_cooldown_speed_+%_per_frenzy_charge",
         "no-slice",
     ),
+    ("trigger_effect_group_on_block", "trigger"),
+    ("trigger_on_hit_vs_frozen_enemy_%", "trigger"),
     // P6-8a part 2: Cast on Ward Break's chance; a global trigger's rate is
     // its cap (`CalcTriggers.lua` 793 to 804).
     ("trigger_on_ward_break_%_chance", "trigger"),
+    ("triggered_by_brand_support", "trigger"),
+    ("triggered_by_manaforged_arrows_support_%_chance", "trigger"),
+    // Agent list: Shockwave Support's attack marked triggered (PoB has no row;
+    // its config by the skill's name): `poe1::triggers` (`Shockwave`).
+    ("triggered_by_shockwave_support", "trigger"),
+    // The agent list (S5, 2026-11-27): the skill General's Cry's mirage warriors use, read by
+    // `hit::generals_cry_supported`.
+    ("triggered_by_spiritual_cry", "generals-cry"),
     // P6-8a: PvP scaling; PoB has no row.
     (
         "triggered_skill_uses_main_hand_or_averaged_attack_time_for_pvp_scaling",
@@ -11090,17 +12375,24 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "unaffected_by_vulnerability_while_affected_by_determination",
         "curse-on-self",
     ),
+    ("unique_cospris_malice_cold_spells_triggered", "trigger"),
+    ("unique_mjolner_lightning_spells_triggered", "trigger"),
     // Close-out N: a line PoB leaves unparsed (so applies nothing) that changes no
     // slice field in the game either (`docs/phase-6/stat-mop-up.md`, "Close-out N").
     (
         "unique_spread_poison_to_nearby_enemies_during_flask_effect",
         "no-slice",
     ),
+    ("unveiled_mod_effect_+%", "modifier-magnitude"),
     // Close-out M3: Vaal souls: no slice field.
     ("vaal_skill_soul_gain_preventation_duration_+%", "no-slice"),
     ("vaal_skill_soul_refund_chance_%", "no-slice"),
     ("vaal_souls_gained_per_minute", "no-slice"),
     ("visual_hit_effect_elemental_is_holy", "display"),
+    (
+        "volley_additional_projectiles_fire_parallel_x_dist",
+        "no-slice",
+    ),
     (
         "wand_attacks_fire_an_additional_projectile",
         "projectile-count",
@@ -11193,21 +12485,7 @@ pub const NO_EFFECT_DEPENDS_ON: &[(&str, &str)] = &[
     ),
     (
         "modifiers_to_number_of_projectiles_instead_apply_to_chaining",
-        "number_of_additional_projectiles",
-    ),
-    (
-        "modifiers_to_number_of_projectiles_instead_apply_to_chaining",
         "totem_number_of_additional_projectiles",
-    ),
-    // P6-11u: PoB's `PerStat` `Chain` and `ChainRemaining`.
-    ("projectile_damage_+%_per_chain", "number_of_chains"),
-    (
-        "projectile_damage_+%_per_remaining_chain",
-        "number_of_chains",
-    ),
-    (
-        "projectile_non_chaos_damage_to_add_as_chaos_damage_%_per_chain",
-        "number_of_chains",
     ),
     // P6-11dg: Barrage's, for the bows' additional arrows.
     ("projectiles_barrage", "chance_to_fork_extra_projectile_%"),
@@ -11217,8 +12495,6 @@ pub const NO_EFFECT_DEPENDS_ON: &[(&str, &str)] = &[
         "local_flask_number_of_additional_projectiles_during_flask_effect",
     ),
     ("projectiles_barrage", "number_of_additional_arrows"),
-    // P6-11u: Barrage's `SequentialProjectiles`.
-    ("projectiles_barrage", "number_of_additional_projectiles"),
     // Close-out M3: totems' additional projectiles, the same.
     (
         "projectiles_barrage",
@@ -11331,6 +12607,18 @@ pub const POOL_REASONS: &[&str] = &["take_half_area_damage_from_hit_%_chance"];
 /// so applies none of it.
 pub const EHP_REASONS: &[&str] = &["restore_ward_on_block_%"];
 
+/// Stats that change a pool's net regeneration alone in a way the engine
+/// does not model (open items S7, part 8), sorted: each maps to
+/// [`Poe1Quantity::NetRegenReason`], read by [`super::degen`]'s net fields
+/// alone. PoB's text: Pious Path's life regeneration that also recovers
+/// energy shield on consecrated ground (`LifeRegenerationRecoversEnergyShield`,
+/// an `EnergyShieldRecovery`), and life lost per second per rage (`LifeDegen`
+/// BASE); both `NoEffect` rows until then (Close-out M2 for the rage).
+pub const NET_REGEN_REASONS: &[&str] = &[
+    "consecrated_ground_allies_recover_es_as_well_as_life_from_life_regeneration",
+    "life_loss_%_per_minute_per_rage_while_not_losing_rage",
+];
+
 /// Stats that change damage taken over time in a way the engine does not
 /// model (P6-10b part 13), sorted: each maps to
 /// [`Poe1Quantity::DotTakenReason`]. None left: chaos damage taken over
@@ -11341,15 +12629,14 @@ pub const DOT_TAKEN_REASONS: &[&str] = &[];
 /// not model (P6-10b), sorted: each maps to [`Poe1Quantity::CostReason`],
 /// the mana cost field's reason alone. PoB's text for each
 /// (`ModParser.lua`): costs paid in life or energy shield instead
-/// (`CostLifeInsteadOfMana`, `HybridManaAndLifeCost_Life`), socketed
-/// attacks' total mana cost (`SocketedIn`), Manaweave's base cost from
-/// unreserved mana, and a flask's or full energy shield's condition.
+/// (`CostLifeInsteadOfMana`, `HybridManaAndLifeCost_Life`), and Manaweave's
+/// base cost from unreserved mana. (Full energy shield's condition is a
+/// [`STATE_ROWS`] row, and socketed attacks' total mana cost an
+/// [`super::gem_levels::InSlot`] row, since the agent list.)
 /// Channelling and non-channelling skills' total is
 /// [`Poe1Quantity::ManaCostChannelling`] (P6-11t).
 pub const COST_REASONS: &[&str] = &[
-    "local_display_socketed_attacks_mana_cost_+",
     "local_display_spend_energy_shield_for_costs_before_mana_for_socketed_skills",
-    "mana_cost_+%_while_on_full_energy_shield",
     "manaweave_cost_equals_%_unreserved_mana",
     "support_focus_channel_cost_+%_final_per_second_channelling_up_to_100%",
 ];
@@ -11363,8 +12650,9 @@ pub const COST_REASONS: &[&str] = &[
 /// since P6-11ie.) (The armour movement penalties ignored are a row since P6-11cp;
 /// during a flask's effect, on low life, and while ignited are
 /// [`STATE_ROWS`] since P6-11ei.) Momentum's Swiftness is
-/// `poe1::gems`'s (P6-11y).
-pub const MOVEMENT_REASONS: &[&str] = &["movement_velocity_+%_while_no_gems_in_boots"];
+/// `poe1::gems`'s (P6-11y). None left: with no gems in the boots is a
+/// [`STATE_ROWS`] row since the agent list.
+pub const MOVEMENT_REASONS: &[&str] = &[];
 
 /// Stats that change a pool's regeneration in a way the engine does not
 /// model (P6-10b), sorted: each maps to [`Poe1Quantity::RegenReason`], the
@@ -11404,6 +12692,9 @@ pub fn field_marker(stat: &str) -> Option<Poe1Quantity> {
     if let Ok(i) = EHP_REASONS.binary_search(&stat) {
         return Some(Poe1Quantity::EhpReason(EHP_REASONS[i]));
     }
+    if let Ok(i) = NET_REGEN_REASONS.binary_search(&stat) {
+        return Some(Poe1Quantity::NetRegenReason(NET_REGEN_REASONS[i]));
+    }
     if let Ok(i) = POOL_REASONS.binary_search(&stat) {
         return Some(Poe1Quantity::PoolReason(POOL_REASONS[i]));
     }
@@ -11436,6 +12727,8 @@ pub fn field_marker(stat: &str) -> Option<Poe1Quantity> {
 /// group is there.
 pub const GRANTS_SKILL_STATS: &[&str] = &[
     "curse_on_hit_level_conductivity",
+    // The agent list (a game-truth line PoB reads, as the other three).
+    "curse_on_hit_level_despair",
     "curse_on_hit_level_frostbite",
     "curse_on_hit_level_vulnerability",
     "local_display_grants_skill_accuracy_crits_aura_level",
@@ -11466,6 +12759,35 @@ impl StatMapping for Poe1Mapping {
                 divisor: 1.0,
                 conditions: Conditions::none(),
             }]);
+        }
+        // Open items S3, part 7: a line that grants a skill and triggers it:
+        // the skill acts through its group, and the trigger reads the
+        // line's chance (`poe1::triggers`).
+        // Open items S3, part 8: Kitava's Thirst's chance.
+        if stat.as_str() == super::item_supports::KITAVA_CHANCE_STAT {
+            return StatMap::Effects(vec![EffectTemplate {
+                quantity: Quantity::Poe1(Poe1Quantity::KitavaTriggerChance),
+                op: Op::Base,
+                scale: 1.0,
+                divisor: 1.0,
+                conditions: Conditions::none(),
+            }]);
+        }
+        if let Some(&(_, chance, _)) = super::triggers::granted_trigger(stat.as_str()) {
+            let template = |quantity, op| EffectTemplate {
+                quantity: Quantity::Poe1(quantity),
+                op,
+                scale: 1.0,
+                divisor: 1.0,
+                conditions: Conditions::none(),
+            };
+            return StatMap::Effects(vec![
+                template(Poe1Quantity::GrantsSkill, Op::Flag),
+                template(
+                    Poe1Quantity::GrantedTriggerChance,
+                    if chance { Op::Base } else { Op::Flag },
+                ),
+            ]);
         }
         if NO_EFFECT
             .binary_search_by(|(id, _)| (*id).cmp(stat.as_str()))
@@ -11750,6 +13072,15 @@ pub const CUSTOM_PATTERNS: &[(&str, Quantity, Op)] = &[
         Quantity::Poe1(Poe1Quantity::SpellBlockChance),
         Op::More,
     ),
+    // The agent list: "Punishment has #% increased/reduced Curse Effect",
+    // PoB's `CurseEffect` INC with the `SkillName` Punishment (`ModParser.lua`
+    // 466 and its "<skill> has" prefix), the game's
+    // `punishment_curse_effect_+%` ([`super::skill_modifiers`]).
+    (
+        "punishment-curse-effect",
+        Quantity::Poe1(Poe1Quantity::NamedSkillEffect(6)),
+        Op::Increased,
+    ),
 ];
 
 /// What an armour piece's local stat changes on the piece: `(stat,
@@ -11819,6 +13150,13 @@ pub const LOCAL_ROWS: &[LocalRow] = &[
     (
         "local_physical_damage_reduction_rating_+%",
         &[(ARMOUR, Op::Increased)],
+    ),
+    // The agent list (a game-truth line PoB reads): "Quality does not
+    // increase Defences" (PoB's `AlternateQualityArmour`, `ModParser.lua`
+    // 5761; `Item.lua` 2319).
+    (
+        "local_quality_does_not_increase_defences",
+        &[(PieceValue::AlternateQuality, Op::Flag)],
     ),
     ("local_ward", &[(WARD, Op::Base)]),
     ("local_ward_+%", &[(WARD, Op::Increased)]),
@@ -11899,9 +13237,30 @@ pub const WEAPON_ROWS: &[WeaponRow] = &[
         "local_attack_speed_+%_per_8%_quality",
         &[(weapon(WeaponValue::AttackSpeedPer8Quality), Op::Base)],
     ),
+    // The agent list (2026-11-27): "#% chance to Impale Enemies on Hit with
+    // Attacks" on a weapon, its hits alone (PoB applies it to every attack:
+    // the same with one weapon).
+    (
+        "local_attacks_impale_on_hit_%_chance",
+        &[(weapon(WeaponValue::ImpaleChance), Op::Base)],
+    ),
     (
         "local_critical_strike_chance_+%",
         &[(weapon(WeaponValue::CritChance), Op::Increased)],
+    ),
+    // The agent list (a game-truth line PoB reads): "#% increased Critical
+    // Strike Chance per 4% Quality" (PoB's
+    // `AlternateQualityLocalCritChancePer4Quality`, `ModParser.lua` 5754):
+    // `collect` scales it by the weapon's quality.
+    (
+        "local_critical_strike_chance_+%_per_4%_quality",
+        &[(weapon(WeaponValue::CritChancePer4Quality), Op::Base)],
+    ),
+    // The agent list (2026-11-27): "Attacks with this Weapon deal Double
+    // Damage" (PoB: `DoubleDamageChance` BASE 100, the hand's attacks).
+    (
+        "local_double_damage_with_attacks",
+        &[(weapon(WeaponValue::DoubleDamage), Op::Base)],
     ),
     // P3-8n: "Grants #% increased Elemental Damage per 2% Quality"
     // (`ElementalDamage` INC per `QualityOn{SlotName}`, `div` 2,
@@ -12078,6 +13437,15 @@ mod tests {
         assert!(REGEN_REASONS.windows(2).all(|w| w[0].0 < w[1].0));
         assert!(MOVEMENT_REASONS.windows(2).all(|w| w[0] < w[1]));
         assert!(COST_REASONS.windows(2).all(|w| w[0] < w[1]));
+        assert!(NET_REGEN_REASONS.windows(2).all(|w| w[0] < w[1]));
+        for stat in NET_REGEN_REASONS {
+            assert_eq!(
+                field_marker(stat),
+                Some(Poe1Quantity::NetRegenReason(stat)),
+                "{stat}"
+            );
+            assert!(NO_EFFECT.iter().all(|(s, _)| s != stat), "{stat}");
+        }
         // Each marker stat maps to its own field's marker, and to nothing
         // else: the three tables are disjoint (P6-10b review).
         for stat in COST_REASONS {
@@ -12522,6 +13890,12 @@ mod tests {
         assert_eq!(
             effects("evasion_rating_+%"),
             [(evasion, Op::Increased, 1.0)]
+        );
+        // Open items S2: the chance to evade, which `evade` subtracts from
+        // the enemy's chance to hit.
+        assert_eq!(
+            effects("chance_to_evade_attacks_%"),
+            [(Quantity::Poe1(Poe1Quantity::EvadeChance), Op::Base, 1.0)]
         );
         assert_eq!(
             effects("evasion_and_physical_damage_reduction_rating_+%"),
@@ -13041,11 +14415,24 @@ mod tests {
                         states::USING_ONE_HANDED_WEAPON,
                         states::USING_MELEE_WEAPON,
                         conditions::STATIONARY,
+                        // The agent list: the settled stance.
+                        conditions::BLOOD_STANCE,
+                        conditions::SAND_STANCE,
                         conditions::ENEMY_RARE_OR_UNIQUE_NEARBY,
                         states::SIX_LIFE_MASTERIES,
+                        // The agent list: the main skill by name, and the
+                        // armour slots with no socketed gem.
+                        states::MAIN_SKILL_TOXIC_RAIN,
+                        states::NO_GEMS_IN_HELMET,
+                        states::NO_GEMS_IN_GLOVES,
+                        states::NO_GEMS_IN_BOOTS,
+                        states::NO_GEMS_IN_BODY_ARMOUR,
                         // P6-8a part 2: settled by the spell path from the
                         // trigger before the damage.
                         super::super::triggers::TRIGGERED_DAMAGE,
+                        // Open items S3: Arcanist Brand's, with the config's
+                        // `targetBrandedEnemy`.
+                        super::super::triggers::TRIGGERED_DAMAGE_BRANDED,
                         // P6-10b part 13: the negation of a check's.
                         conditions::NOT_HIT_RECENTLY,
                         // P6-11eg: the negation of the blocked checks.
@@ -13095,6 +14482,73 @@ mod tests {
             (
                 "life_mastery_count_maximum_life_+%_final",
                 vec![(Quantity::Life, Op::More, NONE, states::SIX_LIFE_MASTERIES)],
+            ),
+            // The agent list (2026-11-27): Perforate's and Blood Spears'.
+            (
+                "blood_spears_damage_+%_final_in_blood_stance",
+                vec![config(
+                    Quantity::Damage,
+                    Op::More,
+                    NONE,
+                    conditions::BLOOD_STANCE,
+                )],
+            ),
+            // The agent list (2026-11-27): Lacerate's stance rows.
+            (
+                "attack_speed_+%_if_changed_stance_recently",
+                vec![config(
+                    Quantity::Speed,
+                    Op::Increased,
+                    Flags::ATTACK,
+                    conditions::CHANGED_STANCE_RECENTLY,
+                )],
+            ),
+            (
+                "active_skill_bleeding_damage_+%_final_in_blood_stance",
+                vec![config(
+                    Quantity::Damage,
+                    Op::More,
+                    Flags::BLEED,
+                    conditions::BLOOD_STANCE,
+                )],
+            ),
+            (
+                "chance_to_bleed_on_hit_%_chance_in_blood_stance",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::AilmentChance(Ailment::Bleed)),
+                    Op::Base,
+                    Flags::ATTACK,
+                    conditions::BLOOD_STANCE,
+                )],
+            ),
+            // The agent list (2026-11-27): the enemy's physical damage
+            // converted while ignited, poisoned, or shocked.
+            (
+                "enemies_ignited_by_you_have_physical_damage_%_converted_to_fire",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::EnemyPhysicalConvert(DamageType::Fire)),
+                    Op::Base,
+                    NONE,
+                    conditions::ENEMY_IGNITED,
+                )],
+            ),
+            (
+                "enemies_poisoned_by_you_have_physical_damage_%_converted_to_chaos",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::EnemyPhysicalConvert(DamageType::Chaos)),
+                    Op::Base,
+                    NONE,
+                    conditions::ENEMY_POISONED,
+                )],
+            ),
+            (
+                "enemies_shocked_by_you_have_physical_damage_%_converted_to_lightning",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::EnemyPhysicalConvert(DamageType::Lightning)),
+                    Op::Base,
+                    NONE,
+                    conditions::ENEMY_SHOCKED,
+                )],
             ),
             // P6-10b: energy shield regeneration near a rare or unique enemy.
             (
@@ -13218,6 +14672,15 @@ mod tests {
                     Quantity::Damage,
                     Op::Increased,
                     Flags::MELEE.union(Flags::HIT),
+                    conditions::AT_CLOSE_RANGE,
+                )],
+            ),
+            (
+                "groundslam_damage_to_close_targets_+%_final",
+                vec![config(
+                    Quantity::Damage,
+                    Op::More,
+                    Flags::HIT,
                     conditions::AT_CLOSE_RANGE,
                 )],
             ),
@@ -13539,10 +15002,29 @@ mod tests {
             (
                 "support_cast_while_channelling_triggered_skill_damage_+%_final",
                 vec![config(
-                    Quantity::Damage,
+                    Quantity::Poe1(Poe1Quantity::NewModDamage),
                     Op::More,
                     NONE,
                     super::super::triggers::TRIGGERED_DAMAGE,
+                )],
+            ),
+            // Open items S3: Arcanist Brand's triggered damage.
+            (
+                "support_brand_damage_+%_final",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::NewModDamage),
+                    Op::More,
+                    NONE,
+                    super::super::triggers::TRIGGERED_DAMAGE,
+                )],
+            ),
+            (
+                "trigger_brand_support_hit_damage_+%_final_vs_branded_enemy",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::NewModDamage),
+                    Op::More,
+                    NONE,
+                    super::super::triggers::TRIGGERED_DAMAGE_BRANDED,
                 )],
             ),
             // P6-11cc.
@@ -14195,6 +15677,16 @@ mod tests {
                     states::DUAL_WIELDING,
                 )],
             ),
+            // The agent list: the main skill by name.
+            (
+                "toxic_rain_damage_+%",
+                vec![config(
+                    Quantity::Damage,
+                    Op::Increased,
+                    NONE,
+                    states::MAIN_SKILL_TOXIC_RAIN,
+                )],
+            ),
             // P6-11ev: Onslaught for you and allies on a warcry.
             (
                 "you_and_nearby_allys_gain_onslaught_for_4_seconds_on_warcry",
@@ -14607,6 +16099,26 @@ mod tests {
                     conditions::ENEMY_TAUNTED_BY_WARCRY,
                 )],
             ),
+            // The agent list (2026-11-28).
+            (
+                "local_culling_strike_vs_bleeding_enemies",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::CullingStrike),
+                    Op::Flag,
+                    NONE,
+                    conditions::ENEMY_BLEEDING,
+                )],
+            ),
+            // The agent list (2026-11-27).
+            (
+                "enemies_taunted_by_your_warcies_are_intimidated",
+                vec![config(
+                    Quantity::Poe1(Poe1Quantity::EnemyIntimidated),
+                    Op::Flag,
+                    NONE,
+                    conditions::ENEMY_TAUNTED_BY_WARCRY,
+                )],
+            ),
             // Close-out M1.
             (
                 "bleeding_dot_multiplier_+_vs_poisoned_enemies",
@@ -14667,6 +16179,39 @@ mod tests {
                 vec![
                     config(Quantity::CritChance, Op::Increased, NONE, conditions::ENEMY_ON_CONSECRATED_GROUND),
                 ],
+            ),
+            // The agent list: a cost reason before.
+            (
+                "mana_cost_+%_while_on_full_energy_shield",
+                vec![
+                    config(Quantity::Poe1(Poe1Quantity::ManaCost), Op::Increased, NONE, conditions::FULL_ENERGY_SHIELD),
+                ],
+            ),
+            // The agent list: the boots enchantment.
+            (
+                "enchantment_boots_attack_and_cast_speed_+%_for_4_seconds_on_kill",
+                vec![config(Quantity::Speed, Op::Increased, NONE, conditions::KILLED_RECENTLY)],
+            ),
+            // The agent list: the Warden's lines with no socketed gems.
+            (
+                "body_armour_defences_doubled_while_no_gems_in_body_armour",
+                vec![config(Quantity::Poe1(Poe1Quantity::BodyArmourDefencesDoubled), Op::Flag, NONE, states::NO_GEMS_IN_BODY_ARMOUR)],
+            ),
+            (
+                "elemental_resistance_%_while_no_gems_in_helmet",
+                vec![
+                    config(FIRE, Op::Base, NONE, states::NO_GEMS_IN_HELMET),
+                    config(COLD, Op::Base, NONE, states::NO_GEMS_IN_HELMET),
+                    config(LIGHTNING, Op::Base, NONE, states::NO_GEMS_IN_HELMET),
+                ],
+            ),
+            (
+                "maximum_life_+%_while_no_gems_in_gloves",
+                vec![config(Quantity::Life, Op::Increased, NONE, states::NO_GEMS_IN_GLOVES)],
+            ),
+            (
+                "movement_velocity_+%_while_no_gems_in_boots",
+                vec![config(Quantity::Poe1(Poe1Quantity::MovementSpeed), Op::Increased, NONE, states::NO_GEMS_IN_BOOTS)],
             ),
             (
                 "number_of_additional_curses_allowed_while_affected_by_malevolence",

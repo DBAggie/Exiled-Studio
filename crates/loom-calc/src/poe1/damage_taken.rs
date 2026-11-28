@@ -313,8 +313,11 @@ type ShockRow = (&'static str, Poe1Quantity, Op);
 ///   taken come only from config inputs that stay reasons or from
 ///   guaranteed sources that are stats PoB reads otherwise (reasons);
 /// - "Shocks from your Hits always increase Damage taken by at least #%"
-///   (2768): `ShockMinimum` BASE.
-pub const SHOCK_STATS: [ShockRow; 4] = [
+///   (2768): `ShockMinimum` BASE;
+/// - "+#% to Maximum Effect of Shock" (3591) and "Maximum Effect of Shock
+///   is #% increased Damage taken" (3028): `ShockMax` BASE and OVERRIDE
+///   ([`shock_maximum`]; the agent list, 2026-11-28).
+pub const SHOCK_STATS: [ShockRow; 6] = [
     (
         "lightning_ailment_effect_+%",
         Poe1Quantity::ShockEffect,
@@ -325,7 +328,17 @@ pub const SHOCK_STATS: [ShockRow; 4] = [
         Poe1Quantity::ShockEffect,
         Op::Increased,
     ),
+    (
+        "raider_shock_maximum_effect_override_%",
+        Poe1Quantity::ShockMaximum,
+        Op::Override,
+    ),
     ("shock_effect_+%", Poe1Quantity::ShockEffect, Op::Increased),
+    (
+        "shock_maximum_magnitude_+",
+        Poe1Quantity::ShockMaximum,
+        Op::Base,
+    ),
     (
         "shock_minimum_damage_taken_increase_%",
         Poe1Quantity::ShockMinimum,
@@ -360,9 +373,7 @@ pub const SHOCK_DEPENDS_ON: &[&str] = &[
     "non_damaging_ailment_effect_+%_per_equipped_elder_item",
     "non_damaging_ailment_effect_+%_with_critical_strikes",
     "non_damaging_ailment_effect_+%_with_critical_strikes_per_100_max_player_life",
-    "raider_shock_maximum_effect_override_%",
     "raider_shocks_you_apply_can_stack_up_to_50_times",
-    "shock_maximum_magnitude_+",
 ];
 
 /// The check that chills the enemy.
@@ -521,6 +532,12 @@ pub const SAPPED_INPUT: &str = "conditionEnemySapped";
 pub const SAP_EFFECT_INPUT: &str = "conditionSapEffect";
 /// See [`SCORCHED_INPUT`].
 pub const CRUSHED_INPUT: &str = "conditionEnemyCrushed";
+/// The check that makes the enemy brittle (the agent list, 2026-11-27).
+pub const BRITTLE_INPUT: &str = "conditionEnemyBrittle";
+/// See [`BRITTLE_INPUT`].
+pub const BRITTLE_EFFECT_INPUT: &str = "conditionBrittleEffect";
+/// Brittle's maximum (`ailmentData`, `Modules/Data.lua` 423; precision 2).
+const BRITTLE_MAX: f64 = 6.0;
 
 /// PoB's `ailmentData` maxima (`Modules/Data.lua` 422, 424; precision 0).
 const SCORCH_MAX: f64 = 30.0;
@@ -598,6 +615,37 @@ fn alt_ailments(set: &ConfigSet, ingest: &mut Ingest<'_>) {
             input: input.to_owned(),
         }),
     }
+    // Brittle (the agent list, 2026-11-27; 3485 to 3489): the enemy's
+    // `SelfCritChance` BASE `num`, which PoB adds to the hit's crit chance
+    // (`CalcOffence.lua`), at precision 2 (`floor(x x 100) / 100`).
+    match last(set, BRITTLE_INPUT, ConfigInputKind::Input) {
+        None | Some(ConfigValue::Boolean(false)) => {}
+        Some(ConfigValue::Boolean(true)) => match count(set, BRITTLE_EFFECT_INPUT) {
+            Ok(v) => {
+                let v = crate::math::min(crate::math::max(0.0, v.unwrap_or(0.0)), BRITTLE_MAX);
+                let v = crate::math::floor(v * 100.0) / 100.0;
+                if v > 0.0 {
+                    ingest.effect(Effect {
+                        quantity: Quantity::CritChance,
+                        op: Op::Base,
+                        value: v,
+                        conditions: Conditions::none(),
+                        source: Source::Config {
+                            input: BRITTLE_EFFECT_INPUT.to_owned(),
+                        },
+                    });
+                }
+            }
+            Err(()) => ingest.reason(UnsupportedReason::UnmodelledConfig {
+                input: BRITTLE_EFFECT_INPUT.to_owned(),
+            }),
+        },
+        Some(ConfigValue::Number(_) | ConfigValue::String(_)) => {
+            ingest.reason(UnsupportedReason::UnmodelledConfig {
+                input: BRITTLE_INPUT.to_owned(),
+            });
+        }
+    }
     match last(set, CRUSHED_INPUT, ConfigInputKind::Input) {
         None | Some(ConfigValue::Boolean(false)) => {}
         Some(ConfigValue::Boolean(true)) => ingest.effect(Effect {
@@ -628,6 +676,8 @@ pub fn handles(input: &str, value: &ConfigValue) -> bool {
         | SAPPED_INPUT
         | SAP_EFFECT_INPUT
         | CRUSHED_INPUT
+        | BRITTLE_INPUT
+        | BRITTLE_EFFECT_INPUT
         | SHOCKED_INPUT
         | SHOCK_EFFECT_INPUT
         | CHILLED_INPUT
@@ -690,7 +740,11 @@ fn check(set: &ConfigSet, name: &str) -> Result<bool, ()> {
 }
 
 /// Intimidate, Unnerve, and Blind (module docs).
-fn conditions(set: &ConfigSet, ingest: &mut Ingest<'_>) {
+fn conditions(
+    set: &ConfigSet,
+    settled: &std::collections::BTreeMap<crate::condition::ConditionKey, bool>,
+    ingest: &mut Ingest<'_>,
+) {
     let checks = [
         (INTIMIDATED_INPUT, Flags::ATTACK),
         (UNNERVED_INPUT, Flags::SPELL),
@@ -699,7 +753,10 @@ fn conditions(set: &ConfigSet, ingest: &mut Ingest<'_>) {
     // "Nearby Enemies are Intimidated while you have Rage" (P3-8n,
     // `poe1::stacks`): the same flag as the config's, so once.
     let rage = super::stacks::intimidates(Some(set), ingest);
-    // "Nearby Enemies are Intimidated" (close-out M5): the same flag.
+    // "Nearby Enemies are Intimidated" (close-out M5): the same flag;
+    // also under settled conditions that all hold (the agent list,
+    // 2026-11-27: "Enemies Taunted by your Warcries are Intimidated", PoB's
+    // `EnemyModifier` under `UsedWarcryRecently`).
     let rage = rage.or_else(|| {
         ingest
             .effects()
@@ -708,7 +765,12 @@ fn conditions(set: &ConfigSet, ingest: &mut Ingest<'_>) {
                 e.quantity == Quantity::Poe1(Poe1Quantity::EnemyIntimidated)
                     && e.op == Op::Flag
                     && e.value != 0.0
-                    && e.conditions == Conditions::none()
+                    && e.conditions.all == Flags::NONE
+                    && e.conditions.any == Flags::NONE
+                    && e.conditions
+                        .states
+                        .iter()
+                        .all(|(k, want)| settled.get(k) == Some(want))
             })
             .map(|e| e.source.clone())
     });
@@ -774,6 +836,20 @@ fn conditions(set: &ConfigSet, ingest: &mut Ingest<'_>) {
 /// order. Every row of [`SHOCK_STATS`] is unconditional (a test), so a
 /// condition can only come from a later row, which must bring its
 /// handling here.
+/// The shock's maximum (the agent list, 2026-11-28; `CalcPerform.lua` 3532
+/// to 3538): the `ShockMax` override (PoB's first), else [`SHOCK_MAX`] plus
+/// the character's `ShockMax` BASE (in every active skill's list; a skill's
+/// own `ShockMax` is a stat its mapping leaves a reason).
+fn shock_maximum(ingest: &Ingest<'_>) -> f64 {
+    if let Some(e) = unconditional(ingest, Poe1Quantity::ShockMaximum, Op::Override).next() {
+        return e.value;
+    }
+    SHOCK_MAX
+        + unconditional(ingest, Poe1Quantity::ShockMaximum, Op::Base)
+            .map(|e| e.value)
+            .sum::<f64>()
+}
+
 fn unconditional<'a>(
     ingest: &'a Ingest<'_>,
     quantity: Poe1Quantity,
@@ -805,7 +881,7 @@ pub fn shock(set: &ConfigSet, ingest: &Ingest<'_>) -> Result<Option<(f64, Source
     match last(set, SHOCKED_INPUT, ConfigInputKind::Input) {
         None | Some(ConfigValue::Boolean(false)) => {
             return Ok(skill_override.and_then(|(v, source)| {
-                let shock = crate::math::floor(crate::math::min(v, SHOCK_MAX));
+                let shock = crate::math::floor(crate::math::min(v, shock_maximum(ingest)));
                 (shock > 0.0).then_some((shock, source))
             }));
         }
@@ -846,7 +922,7 @@ pub fn shock(set: &ConfigSet, ingest: &Ingest<'_>) -> Result<Option<(f64, Source
     }
     let shock = crate::math::floor(crate::math::min(
         crate::math::max(guaranteed, configured),
-        SHOCK_MAX,
+        shock_maximum(ingest),
     ));
     if shock <= 0.0 {
         return Ok(None);
@@ -903,6 +979,22 @@ pub fn chill(
     let mut strongest = None;
     for e in unconditional(ingest, Poe1Quantity::SkillChill, Op::Base) {
         chilled = true;
+        // The skill's own chill effect (the agent list, 2026-11-27): its
+        // increases join the character's, its more multiplies, rounded to
+        // 2 decimals as `calcLib.mod`'s `More`.
+        let own = |op: Op| {
+            unconditional(ingest, Poe1Quantity::SkillChillEffect, op)
+                .filter(|o| o.source == e.source)
+                .map(|o| o.value)
+        };
+        let own_inc: f64 = own(Op::Increased).sum();
+        let own_more: f64 = own(Op::More).map(|v| 1.0 + v / 100.0).product();
+        let own_more = crate::math::round_half_up(own_more * 100.0) / 100.0;
+        let scale = if own_inc == 0.0 && own_more == 1.0 {
+            scale
+        } else {
+            (1.0 + (inc + own_inc) / 100.0) * own_more
+        };
         let effect = e.value * scale;
         if strongest.is_none() || effect > guaranteed {
             guaranteed = crate::math::max(guaranteed, effect);
@@ -1359,7 +1451,11 @@ pub fn damage_taken(
     chill_damage_taken(set, ingest);
     enemy_states(set, ingest);
     let Some(set) = set else { return };
-    conditions(set, ingest);
+    let settled = ingest
+        .states()
+        .cloned()
+        .unwrap_or_else(|| super::states::states(input));
+    conditions(set, &settled, ingest);
     covered(input, set, ingest);
     moving(set, ingest);
     alt_ailments(set, ingest);

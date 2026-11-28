@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, open items agent list): as armour-no-socketed-gems-marauder.xml with gems socketed in the
+     helmet and the body armour (so neither line applies), a disabled group in the boots (not counted: the line
+     applies), and none in the gloves.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Marauder" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="1" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="false" slot="Helmet">
+				<Gem nameSpec="Smite" skillId="Smite" variantId="Smite" gemId="Metadata/Items/Gems/SkillGemSmite" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="false" slot="Body Armour">
+				<Gem nameSpec="Ground Slam" skillId="GroundSlam" variantId="GroundSlam" gemId="Metadata/Items/Gems/SkillGemGroundSlam" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="false" includeInFullDPS="false" slot="Boots">
+				<Gem nameSpec="Leap Slam" skillId="LeapSlam" variantId="LeapSlam" gemId="Metadata/Items/Gems/SkillGemLeapSlam" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items activeItemSet="1">
+		<Item id="1">
+Rarity: RARE
+Loom Test Hide
+Glorious Plate
+Quality: 20
+Sockets: R-R-R
+ArmourBasePercentile: 0.5
+Implicits: 0
++80 to Armour
+60% increased Armour
++70 to maximum Life
++40% to Fire Resistance
+		</Item>
+		<Item id="2">
+Rarity: RARE
+Loom Test Crown
+Eternal Burgonet
+Sockets: R-R
+Implicits: 0
++30 to Armour
+20% increased Armour
+		</Item>
+		<Item id="3">
+Rarity: RARE
+Loom Test Grip
+Titan Gauntlets
+Quality: 10
+Implicits: 0
++15% to Cold Resistance
+		</Item>
+		<Item id="4">
+Rarity: RARE
+Loom Test Stride
+Titan Greaves
+Quality: 20
+Sockets: R
+Armour: 289
+ArmourBasePercentile: 0
+Implicits: 0
++25 to maximum Life
+		</Item>
+		<Item id="5">
+Rarity: RARE
+Loom Test Band
+Coral Ring
+Implicits: 1
++25 to maximum Life
+15% increased Armour
++10% to all Elemental Resistances
++12% to Lightning Resistance
+		</Item>
+		<Item id="6">
+Rarity: RARE
+Loom Test Loop
+Coral Ring
+Implicits: 1
++25 to maximum Life
++30 to Armour
++20% to Chaos Resistance
+		</Item>
+		<Item id="7">
+Rarity: RARE
+Loom Test Charm
+Onyx Amulet
+Implicits: 1
++12 to all Attributes
++30 to Evasion Rating
+10% increased Evasion Rating
+		</Item>
+		<ItemSet id="1">
+			<Slot name="Body Armour" itemId="1"/>
+			<Slot name="Helmet" itemId="2"/>
+			<Slot name="Gloves" itemId="3"/>
+			<Slot name="Boots" itemId="4"/>
+			<Slot name="Ring 1" itemId="5"/>
+			<Slot name="Ring 2" itemId="6"/>
+			<Slot name="Amulet" itemId="7"/>
+		</ItemSet>
+	</Items>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<CustomModifierBlock enabled="true" title="Default">
+				+10% to all Elemental Resistances if you have an Equipped Helmet with no Socketed Gems
+10% increased Maximum Life if you have Equipped Gloves with no Socketed Gems
+10% increased Movement Speed if you have Equipped Boots with no Socketed Gems
+Defences from Equipped Body Armour are doubled if it has no Socketed Gems
+			</CustomModifierBlock>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>

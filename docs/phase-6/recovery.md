@@ -363,7 +363,7 @@ The code-architecture-reviewer read the four parts against PoB's Lua. It found n
 **The engine** (`leech::rates`, from the hit phase; slice revision 17):
 - **The per-type values:** the hit's passes keep each type's value against the enemy (`HitSources::against`).
 - **Which hits:** a spell's or a one-handed attack's hit gets a rate for each pool it leeches (`life-leech-rate`, `energy-shield-leech-rate`, `mana-leech-rate`).
-  - A dual wielder's leech is `NotComputed`: PoB combines the hands (`combineStat`).
+  - A dual wielder's leech is `NotComputed`: PoB combines the hands (`combineStat`). Computed since open items S7 (below, "Open items S7, part 2").
   - A minion's hit sets none.
 - **The quantities:** `DamageLeech(pool, source)` (`LeechSource` is any damage, a type, or elemental), `LeechRate`, `InstantLeech`, and `CannotLeech`, all skill quantities.
 - **The rows:** 31 rows generated from PoB's own parse of each leech stat's line (`ModParser`, with its flags: attack or spell hits are hit rows), plus "#% of Leech is Instant".
@@ -501,7 +501,7 @@ The code-architecture-reviewer read the four parts against PoB's Lua. It found n
 - **`SecondMinimalMaximumHitTaken`:** the second smallest of the five, in PoB's order.
 
 **The engine** (`enemy_hit::maximum_hit`; slice revision 21):
-- **The fields:** `<type>-maximum-hit-taken` and `second-minimal-maximum-hit-taken`. A split hit is `NotComputed`.
+- **The fields:** `<type>-maximum-hit-taken` and `second-minimal-maximum-hit-taken`. A split hit was `NotComputed`; open items S7 ports the smoothing passes (below, "Open items S7, part 1").
 - **Not modelled config:** `conditionLowLife` and `conditionLowEnergyShield` are `unmodelled-config`.
 - **The markers,** split by the fields they change:
   - **`EnemyHitReason`:** the hit's fields and maximum hit (Arctic Armour, Storm Barrier, Flesh and Stone, Enfeeble's damage, no extra crit damage if crit recently).
@@ -605,3 +605,190 @@ What the engine does:
 **Evidence** (`b-ct`, against P6-11cd's run):
 - **Public:** 0 unexpected; 28 values toward PoB (three builds' maximum hits and defence estimate), none away.
 - **Corpus:** unchanged.
+
+
+## Open items S7, part 1: maximum hit's smoothing passes
+
+**What PoB does** (`CalcDefence.lua` 3164 to 3258): for a hit of one type partly taken as others (`PhysicalDamageFromHitsTakenAsFire` and kin) with armour applied, each part's quadratic gives an approximate maximum hit; PoB takes the smallest and runs up to 8 smoothing passes (`data.misc.maxHitSmoothingPasses`):
+- each pass takes the hit from full pools: `calcs.takenHitFromDamage` (149 to 175: per type, the converted share times resistance and `1 - max(min(DRmax, min(DRmax, armourReductionF + base reduction) - overwhelm), 0) / 100`, plus the flat damage taken, times the multiplier after reduction, rounded), then `calcs.reducePoolsByDamage(nil, ...)` (188 to 421);
+- the pass's overkill is `OverkillDamage - hitPoolRemaining` (`hitPoolRemaining`: the life hit pool left, plus the smallest mind over matter pool and the smallest energy shield pool left over the hit's types);
+- the incoming damage moves by the overkill, scaled by a step from the previous pass's overkill, and is divided by the square root of the largest `(overkill + pool) / pool` over the parts; it stops when the overkill is within 1;
+- `<Type>MaximumHitTaken = round(incoming / enemy damage multiplier)`.
+
+**The engine:** `enemy_hit::smoothed` and `enemy_hit::taken_hit_from_damage`, with `ehp::overkill_from_full` (`ehp::reduce` now also gives `hitPoolRemaining`). The split hit's field is computed instead of `NotComputed`. Vaal Arctic Armour's mitigation stays out of maximum hit, as before.
+
+**Fixtures:** `max-hit-taken-as-armour-marauder.xml` (armour, 20% of physical taken as fire and 20% as cold) and `max-hit-taken-as-energy-shield-marauder.xml` (an energy shield helmet, 30% as lightning, 10% as chaos): every maximum hit, `SecondMinimalMaximumHitTaken`, and `TotalEHP` equal PoB's; 66 targets each.
+
+**Evidence** (`local/p6/s7a`, `b-ct`, against S4's run):
+- **Public:** 0 unexpected; `Complete` 41,654 to 41,786 (the fixtures). 20 fields in 10 builds computed for the first time (physical and the second smallest), partial with their builds' reasons; in two (`ice-nova-elementalist-mapping.xml`, `kinetic-blast-of-clustering-necromancer.xml`) they equal PoB's; in the other eight every type's maximum hit already differs from PoB's for those reasons (energy shield, armour, or the taken multipliers). No other value moved.
+- **Corpus:** 0 unexpected; 10 fields in 5 builds computed (partial or indeterminate); no value moved.
+- **Tests:** `ehp::tests::the_hit_pool_left_should_be_pobs`; the workspace tests, the real-bundle tests, clippy, and rustfmt pass.
+
+
+## Open items S7, part 2: a dual wielder's leech
+
+**What PoB does:** each hand's pass computes its leech per hit, its instances (`duration x hitRate`), and its instant rate, with `hitRate = HitChance / 100 x globalOutput.Speed` (`CalcOffence.lua` 3211, 3632 to 3667): the hand's own chance to hit and the hands' combined speed. `combineStat` `DPS` then joins each value (3877 to 3891; 2099 to 2103): `(main + off) / 2`, or the sum for a skill that hits with both weapons (`doubleHitsWhenDualWielding`). The rate follows from the joined values as for one hand (3981 to 4005).
+
+**The engine:** `leech::rates` is split into the pass's part (`hand_leech`: the leech per hit, the instant share, the instances and instant rate) and the rate (`finish`); the one-hand path makes the same graph as before (its documents are byte-identical). `leech::rates_dual` runs each hand's part at the combined speed and joins them, a hand that does not leech adding 0; the instance rate is read in the main hand's context (PoB's `skillCfg`, which no modelled leech rate modifier tells from a hand's). A dual-wielding attack's leech fields were `NotComputed`.
+
+**Fixture:** `smite-dual-wield-leech-templar.xml` (the dual-wield lines fixture with 0.4% of attack damage leeched as life, 0.2% of physical attack damage as life, 0.3% of attack damage as mana, and 8% of leech instant). Its life and mana leech rates are PoB's times the attack rate's Q11 ratio exactly (0.999893497594129 for both and for `Speed`): DIV-0720 to DIV-0726, Q11. A Dual Strike copy (the sum) gives the same ratio, 0.999893497594129, but stays partial while Dual Strike's PoB skill data is not ported (S1), so it is not a fixture.
+
+**Evidence** (`local/p6/s7b`, `b-ct`, against part 1's run):
+- **Public:** 0 unexpected; `Complete` 41,786 to 41,866 (the fixture). No other value or state moved; the three dual-wield fixtures' documents changed in graph nodes only.
+- **Corpus:** 0 unexpected; documents byte-identical.
+- **Tests:** the workspace tests, the real-bundle tests, clippy, and rustfmt pass.
+
+
+## Open items S7, part 3: a dual wielder's damaging ailments
+
+**What PoB does:** each hand's pass computes its ailments with its own crit and chance to hit, the stacks at the hands' combined speed (`globalOutput.Speed`, `CalcOffence.lua` 4323, 4607). `combineStat` then joins them (5528 to 5545; 2002 to 2104):
+- **Bleeding and ignite** (`CHANCE_AILMENT`): one hand's alone when only it inflicts the ailment; otherwise `max x r + min x (1 - r)`, `r = min(1, <Ailment>Stacks / <Ailment>StacksMax)` of the shared output. For bleeding that is the stacks of the last pass that bled, the off hand's (4476), over its maximum. Ignite's stacks are never written, so `r = 1` and the larger hand's ignite counts.
+- **Poison** (`TotalPoisonDPS`, `DPS`): `(main + off) / 2`, 0 for a hand without it, the sum for a skill that hits with both weapons.
+
+**The engine:** `ailment::damaging` returns a `Damaging` with its stacks; the dual-wield path runs it per hand at the combined speed (with the skill's PoB data, as one hand does) and joins the hands in `hit::combine_ailment`, the bleed maximum the 1 the engine models. A dual-wielding attack's ailment fields were `NotComputed`. Burning ground stays not computed for a dual wielder (PoB does not combine it), and so does impale (PoB combines its inputs, not its DPS).
+
+**Fixtures** (both from the dual-wield lines fixture): `smite-dual-wield-bleed-poison-templar.xml` (both hands bleed and poison) and `smite-dual-wield-ignite-sword-templar.xml` (fire on the off hand's sword only, so its ignite alone; both poison). Poison and ignite are PoB's times the attack rate's Q11 ratio exactly (0.9998934975941292). Bleeding is not linear in the rate (the off hand's stacks weight it); the engine's larger hand (9.7236), smaller hand (6.7177), and share (0.8572), each rescaled to PoB's rate, recombine to PoB's 9.29565303191029 exactly. Registered as Q11: DIV-0727 to DIV-0740.
+
+**Evidence** (`local/p6/s7c`, `b-ct`, against part 2's run):
+- **Public:** 0 unexpected; `Complete` 41,866 to 42,026 (the fixtures). No other document changed.
+- **Corpus:** 0 unexpected; documents byte-identical.
+- **Tests:** the workspace tests, the real-bundle tests, clippy, and rustfmt pass.
+
+
+## Open items S7, part 4: a dual wielder's impale
+
+**What PoB does** (`CalcOffence.lua` 5472 to 5520 per pass, 5569 to 5571 and 3901 to combine, 6027 to 6047): each hand's pass computes its stored hit (`impaleStoredHitAvg`), `ImpaleChance` (`min(100, sum)`), and `ImpaleModifier`. For a skill that hits with both weapons, `ImpaleDPS` is the sum of each hand's `stored x (modifier - 1) x HitChance / 100`; otherwise it reads the combined values: the stored hit and the hit chance averaged, `ImpaleModifier` by `CHANCE` (each hand's weighted by `ImpaleChance x HitChance` over both). Then times the combined speed.
+
+**The engine:** `ailment::impale` is split into the pass's `impale_parts` and the DPS (one-hand documents unchanged); `hit::combine_impale` joins the hands as PoB. When only one hand impales, PoB still averages the other hand's stored hit in, which the parts do not carry: that case stays `NotComputed` (computed since part 9). Mapped on the way: `impale_on_hit_%_chance_with_axes_swords` ("#% chance to Impale Enemies on Hit with Axes or Swords"), PoB's `ImpaleChance` BASE with `Hit` and Axe or Sword (`ModParser.lua` 917).
+
+**Fixture:** `smite-dual-wield-impale-templar.xml` (20% chance to impale with attacks, 10% more with axes or swords, so the two hands' chances weight the modifier): `ImpaleDPS` is PoB's times the attack rate's Q11 ratio exactly (0.999893497594129); DIV-0741 to DIV-0746, Q11. The summed branch (a skill that hits with both weapons) has no fixture: Cleave's and Viper Strike's PoB skill data are not ported (S1), so their fields stay partial or not computed; the same holds for parts 2 and 3's summed branches.
+
+**Evidence** (`local/p6/s7d`, `b-ct`, against part 3's run):
+- **Public:** 0 unexpected; `Complete` 42,026 to 42,105 (the fixture). No other document changed.
+- **Corpus:** 0 unexpected; documents byte-identical.
+- **Tests:** the workspace tests, the real-bundle tests, clippy, and rustfmt pass.
+
+
+## Open items S7, part 5: missing life gained before a hit per Defiance
+
+**What PoB does:** "Gain #% of Missing Unreserved Life before being Hit by an Enemy Per Defiance" is `MissingLifeBeforeEnemyHit` BASE per `Multiplier:Defiance` (its `ModCache` parse); the multiplier is the config's `multiplierDefiance`, at most 10, in combat (`ConfigOptions.lua` 1059 to 1060). The EHP estimate reads the sum as P6-11hm's line.
+
+**The engine:** `StackKind::Defiance` and `PerStack::MissingLifeBeforeHit` in `poe1::stacks`, the count from `multiplierDefiance` at most 10 in the loop of config-counted stacks. The reservation guard test (`skill_modifiers.rs`) allows the row, as it does P6-11hm's.
+
+**Fixtures:** `ice-nova-defiance-missing-life-witch.xml` (1 Defiance, 3%) and `ice-nova-defiance-two-witch.xml` (2, 6%): every field equals PoB's, the mitigated hits 17.98 and 57 among them. From 3 Defiance on this build's estimate reaches PoB's iteration bound (58 hits), so the cap at 10 is not shown by a fixture; it is PoB's config line, in the same loop as the other capped counts.
+
+**Also found:** the corpus build's `unmodelled-condition` `DualWielding` on block chance comes from an ambiguous base in a hand, not a defence gap: moved to S9 in the inventory.
+
+**Evidence** (`local/p6/s7e`, `b-ct`, against part 4's run):
+- **Public:** 0 unexpected; `Complete` 42,105 to 42,259 (the fixtures). `Generals Perforate Zerker.xml` loses the stat's reason on its 80 fields (they keep other reasons); no value moved.
+- **Corpus:** 0 unexpected; documents byte-identical.
+- **Tests:** the workspace tests, the real-bundle tests, clippy, and rustfmt pass.
+
+
+## Open items S7, part 6: the enemy's damage category
+
+**What PoB does** (`CalcDefence.lua`, `damageCategoryConfig`, the config's `enemyDamageType`, `Average` when unset): the category picks
+- the evade chance that lowers the enemy's crit (`ConfiguredEvadeChance`, 1656): melee's, projectile's, none for a spell, `Average` the two's sum over four;
+- the flat damage taken (1976 to 1982): attacks' in full for `Melee` and `Projectile` (with the type's projectile attacks' for `Projectile`), spells' and the type's spell projectiles' for either spell category, `Average` the weighted mix;
+- the taken multiplier and suppression at 100% (2024 to 2030): the attack's or the spell's, suppression's whole effect against a spell, half for `Average`, none against an attack;
+- Summon Stone Golem of Safeguarding's share (2463): all for `Melee`, a quarter for `Average`, none otherwise;
+- in the estimate (2748 to 2790): the category's block chance, spell block's energy shield (all against a spell, half for `Average`), suppression (none against an attack, halved for `Average`), and the chance not to be hit (`ConfiguredNotHitChance`, 1655).
+
+**The engine:** `enemy_hit::Category` (`Average`, `Melee`, `Projectile`, `Spell`, `SpellProjectile`) read from `enemyDamageType`, threaded through `enemy_hit::phase`, `maximum_hit` (the golem's share), and `ehp::Mitigation`. `Untyped` and `DamageOverTime` change the estimate's flow (no hit, or no evade and block) and stay `unmodelled-config` (`Untyped` modelled since part 9). A melee attack's own flat damage taken (`<Type>DamageTakenFromMeleeAttacks`) has no modelled source.
+
+**Fixtures:** `ice-nova-enemy-damage-melee-witch.xml`, `-projectile-`, and `-spell-` (attack and spell block, evasion, flat damage taken from attacks and projectile attacks, gains on block, an armour with 40% suppression): every field equals PoB's, and the three give three different estimates (`TotalEHP` 5,943, 6,471, 3,494). A `SpellProjectile` copy equals `Spell` here (no projectile avoidance) and was not added.
+
+**Evidence** (`local/p6/s7f`, `b-ct`, against part 5's run):
+- **Public:** 0 unexpected; `Complete` 42,259 to 42,512: the fixtures, and `ice-nova-tailwind-adrenaline-witch.xml`'s 21 estimate fields (category `Spell`), now equal to PoB's. `holy-flame-totem-hierophant.xml`'s reason is now the boss preset alone (its category is set by the preset). No value moved.
+- **Corpus:** 0 unexpected; one build's 21 estimate fields computed (indeterminate with its other reasons).
+- **Tests:** the workspace tests, the real-bundle tests, clippy, and rustfmt pass.
+
+## Open items S7, part 7: the total pools and effective HP against damage over time
+
+**What PoB does** (`CalcDefence.lua` 2307 to 2377, 2535 to 2553, 3327 to 3337):
+- `<Type>ManaEffectiveLife` is `calcMoMEBPool` on `LifeRecoverable` (the hit pool's mind over matter, on recoverable life rather than the hit pool), with the type's share and energy shield bypass;
+- `<Type>TotalPool` adds `EnergyShieldRecoveryCap` unless the type bypasses energy shield (chaos, or every type with "Damage taken from Unblocked hits always bypasses Energy Shield") or Eldritch Battery puts the shield in the mind over matter pool. A bypass between 0 and 100 has no modelled source.
+- `<Type>DotEHP = <Type>TotalPool / <Type>TakenDotMult`.
+
+**The engine:** `Poe1Field::TotalPool` and `Poe1Field::DotEhp`, set by `enemy_hit::total_pools` from the values `maximum_hit` already reads. Their reasons are what they read: the life, energy shield, and mind over matter reads, not the hit pools' guard, allies, recoup, or life loss prevented. **Slice revision 24** compares the ten fields (`applies: present`).
+
+`LifeRecoverable` on low life now follows PoB's order, `Life x (100 x threshold) / 100` (`CalcPerform.lua` 75), not `Life x threshold`. The two differ by one unit in the last place on `pools-low-life-threshold-ice-nova-witch.xml` (927.7500000000001 against 927.75). Its maximum hit fields round, so they did not show it.
+
+**Fixtures:** none new. The fields appear in every build with the maximum hit's pools, including the existing pool fixtures, and all of them equal PoB's: mind over matter (`mom-ice-nova-witch.xml`, `mom-physical-`), Eldritch Battery with and without it (`eldritch-battery-ice-nova-witch.xml`, `eldritch-battery-mom-`), Emperor's Vigilance (`ice-nova-emperors-vigilance-witch.xml`, `-disabled-`), Zealot's Oath, and low life with and without a threshold (`pools-low-life-ice-nova-witch.xml`, `pools-low-life-threshold-`).
+
+**Evidence** (`local/p6/s7g`, `b-ct`, against part 6's run):
+- **Public:** 0 unexpected; `Complete` 42,512 to 47,992. Of the new fields, 5,480 match PoB, 160 are partial and 89 indeterminate on their builds' other reasons, and 40 are not computed: four builds whose maximum hit is not computed (`holy-flame-totem-hierophant.xml`'s boss preset, three on a field they depend on). No existing value or state moved.
+- **Corpus:** 0 unexpected; 110 new fields partial and 100 indeterminate on the builds' other reasons.
+- **Tests:** the workspace tests, the real-bundle tests, clippy, and rustfmt pass.
+
+## Open items S7, part 8: degeneration and net regeneration
+
+**What PoB does** (`CalcDefence.lua` 1288 to 1294, 1802 to 1821, 3339 to 3486):
+- `<Type>Degen` BASE is the build's degeneration of a type. Blood Rage gives physical per point of life and of energy shield, the stat over 6000 (`act_dex.lua` 3315 to 3322). Righteous Fire gives fire per point of life and of energy shield while unreserved life is at least 2 (`act_int.lua` 15439 to 15446). Righteous Fire of Arcane Devotion gives fire per point of mana. All are `GlobalEffect` buffs, scaled by buff effect (`ScaleAddMod`), and PoB's `PerStat` reads `floor(stat + 0.0001)`.
+- Each type's amount is shifted over time by `damageOverTimeShiftTable` (the type's `DamageTakenAs` without the hits-only ones, the rest to itself). Each part is multiplied by its type's `<Type>TakenDotMult` and summed into `TotalBuildDegen`, which is absent when 0.
+- With a total, each pool's net regeneration is its `<Pool>RegenRecovery` less its share of each type's degeneration:
+  - mind over matter's share goes to mana;
+  - when energy shield regenerates above 0, the share that does not bypass energy shield goes to it (with Eldritch Battery, only mind over matter's share does);
+  - the rest goes to life.
+
+  `TotalNetRegen` is the three's sum.
+
+**The engine:** `poe1::degen`, a phase after regeneration:
+- **Fields:** `Poe1Field::TotalBuildDegen`, `NetRegen(pool)`, and `TotalNetRegen`; every net field depends on all three regenerations, since energy shield's picks the split.
+- **Quantities:** `Poe1Quantity::Degen(type, DegenOf)` rows on Blood Rage and both Righteous Fires, in place of `NoSlice("degeneration")`. A main skill's buff gives its degeneration rows through `gems::main_skill_degen` (PoB applies the main skill's buff to you; `righteous-fire-marauder.xml`).
+- **Threshold:** the phase settles Righteous Fire's life threshold state as the hit does.
+- **Reasons:** a pool's own degeneration or recovery is `Poe1Quantity::NetRegenReason`, a reason on the net fields alone (`mapping::NET_REGEN_REASONS`): rage's life loss and Pious Path's energy shield recovery, both `NoEffect` rows until now, and Frost Shield's energy shield drain, until now `NoSlice`.
+
+**Slice revision 25** compares `TotalBuildDegen`, `NetLifeRegen`, `NetManaRegen`, `NetEnergyShieldRegen`, and `TotalNetRegen` (`applies: present`, as PoB has them only with a degeneration).
+
+**Fixtures** (original; each run three times by PoB, identical; every compared field equals PoB's):
+- `degen-blood-rage-mom-witch.xml`: mana's share;
+- `degen-righteous-fire-energy-shield-witch.xml`: Righteous Fire on energy shield, which regenerates through Zealot's Oath;
+- `degen-blood-rage-taken-as-fire-witch.xml`: the shift over time;
+- `degen-blood-rage-eldritch-battery-witch.xml`: Eldritch Battery's split.
+
+"Regenerate # Life per second" and "Regenerate #% of Energy Shield per second" as config lines leave their stat's value unsettled, so the fixtures use the percent life line and Zealot's Oath.
+
+**Evidence** (`local/p6/s7h`, `b-ct`, against part 7's run):
+- **Public:** 0 unexpected; `Complete` 47,992 to 48,452: the fixtures' 368 fields, and 92 degeneration fields of existing builds (the Blood Rage Smite fixtures, both Righteous Fire marauders, the Inquisitor builds) equal to PoB's. Of the 165 new fields, 112 match, 32 are partial, and 21 indeterminate on their builds' other reasons. Some partial builds' values differ from PoB's, each with those reasons (`rf-chieftain-life-stack.xml`, `cyclone-shockwave-slayer.xml`, and others). No existing value or state moved.
+- **Corpus:** 0 unexpected; 35 new fields, partial or indeterminate on the builds' other reasons.
+- **Tests:** the workspace tests, the real-bundle tests, clippy, and rustfmt pass.
+
+
+## Open items S7, part 9: Wicked Ward, impale from one hand, and untyped damage
+
+S7's last agent items. Of the rest its tasks line listed, ward's other line (`restore_ward_on_block_%`) is on the game-truth list (PoB applies nothing; the maintainer's check in game), burning ground is not combined by PoB for a dual wielder (no value to compare), and `DamageOverTime` stays a reason (below).
+
+**Wicked Ward** (`keystone_wicked_ward`):
+- **What PoB does:** the game's node carries this stat alone; PoB reads the tree's text, the same in every tree from 3_16 to 3_29. "Energy Shield Recharge is not interrupted by Damage if Recharge began Recently" parses to nothing (`ModCache.lua` 8636). "40% less Energy Shield Recharge Rate" is `EnergyShieldRecharge` MORE -40 (5482). The keystone's `Condition:HaveWickedWard` is read by no module.
+- **The engine:** a `keystones::KEYSTONES` row, `EnergyShieldRecharge` MORE -40, beside Eldritch Battery's -50. It was `unmapped-stat` (the close-out's `C-keystone`).
+
+**A dual wielder's impale from one hand** (part 4 left it not computed):
+- **What PoB does:** every pass sums its stored physical hit (`impaleStoredHitAvg`, `CalcOffence.lua` 3415 to 3420), whether or not it impales. `combineStat("impaleStoredHitAvg", "DPS")` averages both hands' (3901). `ImpaleModifier` by `CHANCE` takes the impaling hand's alone when the other's is nil (2061). In the summed branch, the other hand's term is `(nil or 1) - 1`, so 0 (6031, 6032).
+- **The engine:** `ailment::impale_stored_hit` gives a pass's stored hit without its impale. `hit::combine_impale` takes each hand's parts as an `Option`, its stored hit, and its chance to hit. With one hand's parts it uses that hand's gain over both hands' averaged stored hit and chance to hit; the summed branch skips the hand without parts. A build where both hands impale makes the same graph as before.
+
+**Untyped damage** (`enemyDamageType` `Untyped`; part 6 left it `unmodelled-config`):
+- **What PoB does** (`CalcDefence.lua`):
+  - The chance not to be hit is the chance to avoid all damage from hits alone (1652).
+  - No evasion lowers the enemy's crit (1656: `UntypedEvadeChance` is nil, so 0).
+  - The flat damage taken is the type's always and when hit, with no attack or spell lines (1976 to 1982).
+  - The taken multiplier is the type's own when hit, `<Type>TakenHitMult` (1896, 2024 to 2030).
+  - Spell suppression does not apply: neither the 100% rule (2026 to 2030) nor the chance (2771).
+  - The block chance is the attack's, `EffectiveBlockChance`, as for `Melee` (2748 to 2751).
+  - Spell block gives no energy shield (2764 to 2768).
+  - The stone golem takes no share (2463).
+- **The engine:** `enemy_hit::Category::Untyped`, read in each of those places in `enemy_hit` and `ehp::Mitigation`. `Category::suppressed` (the spells' and `Average`) takes the place of `!attack()`, which `Untyped` would have passed.
+- **`DamageOverTime`:** no hit estimate, and the enemy's own degeneration (`CalcDefence.lua` 3501 to 3530) added to the net regenerations. It stays `unmodelled-config`; no build in either set uses it.
+
+**Fixtures** (original; each run three times by PoB, identical):
+- `wicked-ward-energy-shield-recharge-witch.xml`: Wicked Ward with increased recharge rate. Every field equals PoB's.
+- `smite-dual-wield-impale-main-hand-templar.xml`: an axe in the main hand and a club in the off hand, with a chance to impale with axes or swords. Only the main hand impales.
+- `smite-dual-wield-impale-off-hand-templar.xml`: the same with the hands swapped, so only the off hand impales.
+- `ice-nova-enemy-damage-untyped-witch.xml`: part 6's category fixture with `Untyped`. Every field equals PoB's. Against the `Melee` fixture, the chance not to be hit is 0, the physical taken multiplier 1, and `TotalEHP` 2,869 against 5,943.
+
+The two impale fixtures equal PoB's except for the attack rate, which is Q11's floored milliseconds: `ImpaleDPS` and every other differing field is PoB's times the rate's ratio (0.9995002498750626). These are registered as DIV-0747 to DIV-0760, Q11.
+
+**Evidence** (`local/p6/s7i`, `b-ct`, against part 8's run):
+- **Public:** 0 unexpected; `Complete` 48,452 to 48,804 (the fixtures). The only existing document that changed is `animate-guardian-guardian.xml`: its `EnergyShieldRecharge` moved toward PoB's (604 to 362; PoB 412) and stays partial on the build's other reasons.
+- **Corpus:** 0 unexpected; documents byte-identical.
+- **Tests:** the workspace tests, the real-bundle tests, clippy, rustfmt, and the wasm32 check pass.

@@ -2,7 +2,8 @@
 //! `NumberOfDamagingHits`, `NumberOfMitigatedDamagingHits`,
 //! `TotalNumberOfHits`, `ConfiguredDamageChance`, `ConfiguredNotHitChance`,
 //! and `TotalEHP` (`Modules/CalcDefence.lua` 188 to 427, 1645 to 1667,
-//! 2568 to 2913), for the default `Average` estimate.
+//! 2568 to 2913), for the config's damage category (`Average` and the
+//! four hit categories since open items S7, `enemy_hit::Category`).
 //!
 //! What PoB does:
 //! - **Hits to die** (`numberOfHitsToDie`): with the pools full (life
@@ -113,14 +114,20 @@ pub(super) struct Character {
     /// Every type bypasses energy shield (PoB's `UnblockedDamageDoesBypassES`;
     /// P6-11hy), as chaos does.
     pub(super) all_bypass: bool,
+    /// Chaos does not bypass energy shield (PoB's
+    /// `ChaosNotBypassEnergyShield`; the agent list): [`bypasses`].
+    pub(super) chaos_not_bypass: bool,
     /// Summon Stone Golem of Safeguarding's share of each hit, percent, and
     /// its life (PoB's `alliesTakenBeforeYou.stoneGolem`; P6-11ar).
     pub(super) golem_rate: f64,
     pub(super) golem: f64,
     /// The share of life lost to hits that is lost over time instead,
-    /// percent, at most 100 (PoB's `preventedLifeLoss`; P6-11ce). The share
-    /// below half life (Petrified Blood's) is 0: no modelled source gives it.
+    /// percent, at most 100 (PoB's `preventedLifeLoss`; P6-11ce).
     pub(super) prevented: f64,
+    /// The share of the loss below half life that is prevented, percent
+    /// (PoB's `LifeLossBelowHalfPrevented` BASE, uncapped; open items S2:
+    /// Petrified Blood).
+    pub(super) below_half: f64,
     /// The shared elemental aegis (PoB's `sharedElementalAegis`; P6-11hl).
     pub(super) elemental_aegis: f64,
     /// The percent of missing unreserved life gained before each enemy hit
@@ -167,18 +174,64 @@ struct Run {
     iterations: u32,
 }
 
+/// Whether damage of type `ty` bypasses energy shield (`CalcDefence.lua`
+/// 2279 to 2299): every type with `all_bypass` (PoB's
+/// `UnblockedDamageDoesBypassES`), else chaos unless `chaos_not_bypass`
+/// (`ChaosNotBypassEnergyShield`; the agent list). A bypass between 0 and
+/// 100 has no modelled source.
+pub(super) fn bypasses(ty: DamageType, all_bypass: bool, chaos_not_bypass: bool) -> bool {
+    all_bypass || (ty == DamageType::Chaos && !chaos_not_bypass)
+}
+
 /// PoB's `calcLifeHitPoolWithLossPrevention` (`CalcDefence.lua` 177 to
-/// 181) with no loss prevented below half life: `aboveLow / (1 - p / 100) +
-/// min(life, half) / (1 - p / 100)`.
-pub(super) fn life_hit_pool(life: f64, max_life: f64, prevented: f64) -> f64 {
+/// 181): `aboveLow / (1 - p / 100) + min(life, half) / (1 - b / 100) / (1 -
+/// p / 100)`, `b` the loss below half prevented (open items S2).
+pub(super) fn life_hit_pool(life: f64, max_life: f64, prevented: f64, below_half: f64) -> f64 {
     let half = max_life * 0.5;
     let kept = 1.0 - prevented / 100.0;
-    (life - half).max(0.0) / kept + life.min(half) / 1.0 / kept
+    (life - half).max(0.0) / kept + life.min(half) / (1.0 - below_half / 100.0) / kept
+}
+
+impl Character {
+    /// PoB's `preventedLifeLossTotal` above 0 (`CalcDefence.lua` 2233 to
+    /// 2244): some loss is prevented, above or below half life (the share
+    /// below half counts once loss above half does not prevent it all).
+    pub(super) fn prevents_loss(&self) -> bool {
+        self.prevented > 0.0 || (self.below_half > 0.0 && self.prevented < 100.0)
+    }
 }
 
 /// `calcs.reducePoolsByDamage` for life and energy shield alone: the pools
 /// left and the overkill damage.
 fn reduce(pools: Pools, damage: &[Option<f64>; 5], ch: &Character) -> (Pools, f64) {
+    let (pools, overkill, _) = reduce_full(pools, damage, ch);
+    (pools, overkill)
+}
+
+/// PoB's `calcs.reducePoolsByDamage(nil, damage, actor)` (open items S7):
+/// the hit taken from full pools, as maximum hit's smoothing passes take
+/// it (`CalcDefence.lua` 3233 to 3235): its `OverkillDamage` and
+/// `hitPoolRemaining`.
+pub(super) fn overkill_from_full(damage: &[Option<f64>; 5], ch: &Character) -> (f64, f64) {
+    let pools = Pools {
+        life: ch.life,
+        energy_shield: ch.energy_shield,
+        mana: ch.mana,
+        guard: ch.guard,
+        golem: ch.golem,
+        elemental_aegis: ch.elemental_aegis,
+        ward: ch.ward,
+        frost: ch.frost,
+    };
+    let (_, overkill, remaining) = reduce_full(pools, damage, ch);
+    (overkill, remaining)
+}
+
+/// `reduce`, with PoB's `hitPoolRemaining` (`CalcDefence.lua` 396 to 403):
+/// the life hit pool left (0 below 1 life), plus the smallest mind over
+/// matter pool and the smallest energy shield pool left over the hit's
+/// types, floored.
+fn reduce_full(pools: Pools, damage: &[Option<f64>; 5], ch: &Character) -> (Pools, f64, f64) {
     let damage: [Option<f64>; 5] = damage.map(|d| d.filter(|&v| v > 0.0).map(crate::math::ceil));
     let mut energy_shield = pools.energy_shield.max(0.0);
     let mut mana = pools.mana.max(0.0);
@@ -189,7 +242,7 @@ fn reduce(pools: Pools, damage: &[Option<f64>; 5], ch: &Character) -> (Pools, f6
     let mut elemental_aegis = pools.elemental_aegis;
     let mut ward = pools.ward.max(0.0);
     let ward_before = ward;
-    let life_pool = life_hit_pool(life, ch.max_life, ch.prevented);
+    let life_pool = life_hit_pool(life, ch.max_life, ch.prevented, ch.below_half);
     // Each type's mind over matter pool and energy shield pool: all of the
     // shield, or none for chaos (its bypass is 100%: `min(pool / 1 - pool,
     // es)` is 0).
@@ -204,7 +257,7 @@ fn reduce(pools: Pools, damage: &[Option<f64>; 5], ch: &Character) -> (Pools, f6
             mana
         };
         let with_mana = life_pool + mom_pool;
-        let bypasses = ty == DamageType::Chaos || ch.all_bypass;
+        let bypasses = bypasses(ty, ch.all_bypass, ch.chaos_not_bypass);
         if ch.eb && !bypasses {
             // `CalcDefence.lua` 254 to 256, with no bypass.
             es_pools[i] = crate::math::floor(
@@ -227,7 +280,7 @@ fn reduce(pools: Pools, damage: &[Option<f64>; 5], ch: &Character) -> (Pools, f6
         let Some(mut remainder) = damage[i] else {
             continue;
         };
-        let bypass = if ty == DamageType::Chaos || ch.all_bypass {
+        let bypass = if bypasses(ty, ch.all_bypass, ch.chaos_not_bypass) {
             1.0
         } else {
             0.0
@@ -300,20 +353,34 @@ fn reduce(pools: Pools, damage: &[Option<f64>; 5], ch: &Character) -> (Pools, f6
             mana -= taken;
             remainder -= taken;
         }
-        // Life loss prevented (P6-11ce; `CalcDefence.lua` 348 to 384, with
-        // nothing prevented below half): the damage life can still take
-        // caps the hit, and the prevented share is lost over time instead.
-        if ch.prevented > 0.0 {
+        // Life loss prevented (P6-11ce; `CalcDefence.lua` 348 to 384): the
+        // damage life can still take caps the hit, and the prevented share
+        // is lost over time instead. With loss below half prevented too
+        // (open items S2, Petrified Blood: PoB's `preventedLifeLossBelowHalf`
+        // not 0), the part above half takes the prevented share, and below
+        // half both shares come off what is left.
+        if ch.prevents_loss() {
             let half = ch.max_life * 0.5;
             let share = ch.prevented / 100.0;
+            let below = ch.below_half / 100.0;
             let above_low = (life - half).max(0.0) / (1.0 - share);
-            let can_take = above_low + life.min(half).max(0.0) / (1.0 - 0.0) / (1.0 - share);
+            let can_take = above_low + life.min(half).max(0.0) / (1.0 - below) / (1.0 - share);
             if can_take < remainder {
                 overkill += remainder - can_take;
                 remainder = can_take;
             }
-            let over_time = remainder * ch.prevented / 100.0;
-            remainder -= over_time;
+            if (1.0 - share) * ch.below_half != 0.0 {
+                let split = remainder.min(above_low);
+                life -= split * (1.0 - share);
+                remainder -= split;
+                if life <= half {
+                    remainder -= remainder * share;
+                    remainder -= remainder * below;
+                }
+            } else {
+                let over_time = remainder * ch.prevented / 100.0;
+                remainder -= over_time;
+            }
         }
         if life > 0.0 {
             let taken = remainder.min(life);
@@ -322,6 +389,22 @@ fn reduce(pools: Pools, damage: &[Option<f64>; 5], ch: &Character) -> (Pools, f6
         }
         overkill += remainder;
     }
+    let present = |pools: &[f64; 5]| {
+        pools
+            .iter()
+            .zip(&damage)
+            .filter(|(_, d)| d.is_some())
+            .map(|(p, _)| *p)
+            .fold(f64::INFINITY, f64::min)
+    };
+    let finite = |v: f64| if v.is_finite() { v } else { 0.0 };
+    let life_left = if life >= 1.0 {
+        life_hit_pool(life, ch.max_life, ch.prevented, ch.below_half)
+    } else {
+        0.0
+    };
+    let remaining =
+        crate::math::floor(life_left + finite(present(&mom_pools)) + finite(present(&es_pools)));
     (
         Pools {
             life: crate::math::floor(life),
@@ -336,6 +419,7 @@ fn reduce(pools: Pools, damage: &[Option<f64>; 5], ch: &Character) -> (Pools, f6
             frost,
         },
         crate::math::ceil(overkill),
+        remaining,
     )
 }
 
@@ -463,6 +547,8 @@ fn hits_to_die(
 
 /// The block, suppression, and avoidance the estimate reads.
 pub(super) struct Mitigation {
+    /// The enemy's damage category (open items S7).
+    pub(super) category: super::enemy_hit::Category,
     /// The effective attack and spell block chances (projectile ones are
     /// the same without their own lines).
     pub(super) block: f64,
@@ -485,7 +571,8 @@ pub(super) struct Mitigation {
     pub(super) energy_shield_on_block: f64,
     pub(super) energy_shield_on_spell_block: f64,
     /// `EffectiveAttackDodgeChance`, `EffectiveSpellDodgeChance`, and
-    /// `AvoidAllDamageFromHitsChance` (none of their stats is mapped: 0).
+    /// `AvoidAllDamageFromHitsChance` (the dodge stats are unmapped: 0;
+    /// the avoid chance is Elusive's, `buffs`, since the agent list).
     pub(super) attack_dodge: f64,
     pub(super) spell_dodge: f64,
     pub(super) avoid_all: f64,
@@ -506,7 +593,7 @@ pub(super) fn estimate(
     let mut run = Run { iterations: 0 };
     // Life loss prevented limits the speed-up (P6-11ce; `CalcDefence.lua`
     // 2742: `LimitEHPSpeedup` when `preventedLifeLossTotal` is above 0).
-    let tracks_loss = ch.prevented > 0.0;
+    let tracks_loss = ch.prevents_loss();
     let damaging = hits_to_die(
         taken_hit,
         1.0,
@@ -519,11 +606,27 @@ pub(super) fn estimate(
         false,
     );
     // Block, suppression, avoidance (`Average`).
-    let block_chance = (m.block + m.block + m.spell_block + m.spell_block) / 4.0 / 100.0;
+    // The category's block chance (2748 to 2751; open items S7): a
+    // projectile's is the attack's and a spell projectile's the spell's
+    // (no own lines); `Average` the four's mean; an untyped hit's the
+    // attack's (`EffectiveBlockChance`, as `Melee`).
+    use super::enemy_hit::Category;
+    let block_chance = match m.category {
+        Category::Average => (m.block + m.block + m.spell_block + m.spell_block) / 4.0,
+        Category::Melee | Category::Projectile | Category::Untyped => m.block,
+        Category::Spell | Category::SpellProjectile => m.spell_block,
+    } / 100.0;
     let block_effect = 1.0 - block_chance * m.block_effect / 100.0;
-    let mut suppress = m.suppression / 100.0;
+    // Suppression against a spell or `Average` (halved), none against an
+    // attack or an untyped hit (2771 to 2779).
+    let mut suppress = match m.category {
+        Category::Melee | Category::Projectile | Category::Untyped => 0.0,
+        _ => m.suppression / 100.0,
+    };
     let suppression_effect = if suppress < 1.0 {
-        suppress /= 2.0;
+        if m.category == Category::Average {
+            suppress /= 2.0;
+        }
         1.0 - suppress * (SUPPRESSION_EFFECT + m.suppression_effect).max(0.0) / 100.0
     } else {
         1.0
@@ -540,8 +643,14 @@ pub(super) fn estimate(
         Gains {
             life: m.life_on_block * block_chance,
             mana: 0.0,
+            // Spell block's energy shield: all of it against a spell, half
+            // for `Average`, none against an attack (2764 to 2768).
             energy_shield: m.energy_shield_on_block * block_chance
-                + m.energy_shield_on_spell_block / 2.0 * block_chance,
+                + match m.category {
+                    Category::Spell | Category::SpellProjectile => m.energy_shield_on_spell_block,
+                    Category::Average => m.energy_shield_on_spell_block / 2.0,
+                    Category::Melee | Category::Projectile | Category::Untyped => 0.0,
+                } * block_chance,
             limit: false,
             missing_life: ch.missing_life,
         }
@@ -578,7 +687,16 @@ pub(super) fn estimate(
             * (1.0 - m.avoid_all / 100.0)
             * (1.0 - m.avoid_projectiles / 100.0)
             * 100.0;
-    let not_hit = (melee + projectile + spell + spell_projectile) / 4.0;
+    // `ConfiguredNotHitChance`: the category's (1655); an untyped hit's
+    // the chance to avoid all damage from hits alone (1652).
+    let not_hit = match m.category {
+        Category::Average => (melee + projectile + spell + spell_projectile) / 4.0,
+        Category::Melee => melee,
+        Category::Projectile => projectile,
+        Category::Spell => spell,
+        Category::SpellProjectile => spell_projectile,
+        Category::Untyped => 100.0 - (1.0 - m.avoid_all / 100.0) * 100.0,
+    };
     let total_hits = mitigated / (1.0 - not_hit / 100.0);
     let ehp = total_hits * enemy_damage_in;
     let deps = [
@@ -614,6 +732,22 @@ pub(super) fn estimate(
 mod tests {
     use super::*;
 
+    /// Open items S2: Petrified Blood's loss below half prevented, PoB's
+    /// `calcLifeHitPoolWithLossPrevention` (`CalcDefence.lua` 177 to 181).
+    #[test]
+    fn the_life_hit_pool_should_count_the_loss_below_half_prevented() {
+        // 1,000 life, all recoverable, 40% below half: 500 + 500 / 0.6.
+        let pool = life_hit_pool(1000.0, 1000.0, 0.0, 40.0);
+        assert!((pool - (500.0 + 500.0 / 0.6)).abs() < 1e-9, "{pool}");
+        // With 20% prevented above too: both divide below half.
+        let pool = life_hit_pool(1000.0, 1000.0, 20.0, 40.0);
+        assert!(
+            (pool - (500.0 / 0.8 + 500.0 / 0.6 / 0.8)).abs() < 1e-9,
+            "{pool}"
+        );
+        assert_eq!(life_hit_pool(400.0, 1000.0, 0.0, 0.0), 400.0);
+    }
+
     /// A bare level 90 Witch (1,125 life, no energy shield) against PoB's
     /// default Pinnacle boss's physical hit of 1,113 (rounded up to 1,114
     /// before the pools): one hit and a fraction, as PoB's
@@ -632,9 +766,11 @@ mod tests {
             recoup: false,
             eb: false,
             all_bypass: false,
+            chaos_not_bypass: false,
             golem_rate: 0.0,
             golem: 0.0,
             prevented: 0.0,
+            below_half: 0.0,
             elemental_aegis: 0.0,
             missing_life: 0.0,
             ward: 0.0,
@@ -669,9 +805,11 @@ mod tests {
             recoup: false,
             eb: false,
             all_bypass: false,
+            chaos_not_bypass: false,
             golem_rate: 0.0,
             golem: 0.0,
             prevented: 0.0,
+            below_half: 0.0,
             elemental_aegis: 0.0,
             missing_life: 0.0,
             ward: 0.0,
@@ -695,6 +833,45 @@ mod tests {
         assert_eq!((after.guard, after.life), (0.0, 1000.0));
     }
 
+    /// PoB's `hitPoolRemaining` (open items S7): the life left plus the
+    /// smallest energy shield pool left over the hit's types; chaos's pool
+    /// is none (its bypass is 100%), so a hit with a chaos part leaves the
+    /// shield out; overkill past every pool.
+    #[test]
+    fn the_hit_pool_left_should_be_pobs() {
+        let ch = Character {
+            life: 1000.0,
+            max_life: 1000.0,
+            energy_shield: 500.0,
+            mana: 0.0,
+            mom: [0.0; 5],
+            guard_rate: 0.0,
+            guard: 0.0,
+            recoup: false,
+            eb: false,
+            all_bypass: false,
+            chaos_not_bypass: false,
+            golem_rate: 0.0,
+            golem: 0.0,
+            prevented: 0.0,
+            below_half: 0.0,
+            elemental_aegis: 0.0,
+            missing_life: 0.0,
+            ward: 0.0,
+            frost_rate: 0.0,
+            frost: 0.0,
+        };
+        // 300 physical: the shield takes it, 200 left, life 1000.
+        let (overkill, left) = overkill_from_full(&[Some(300.0), None, None, None, None], &ch);
+        assert_eq!((overkill, left), (0.0, 1200.0));
+        // With a chaos part, the smallest shield pool left is chaos's 0.
+        let (_, left) = overkill_from_full(&[Some(300.0), None, None, None, Some(100.0)], &ch);
+        assert_eq!(left, 900.0);
+        // 2,000 physical: 500 shield, 1,000 life, 500 over.
+        let (overkill, left) = overkill_from_full(&[Some(2000.0), None, None, None, None], &ch);
+        assert_eq!((overkill, left), (500.0, 0.0));
+    }
+
     /// PoB's `reducePoolsByDamage` with an ally before you (P6-11ar): the
     /// Stone Golem's 3.75% of a 1,000 hit (37.5, floored after the take,
     /// 62 left of 100) before the guard's 50% of the rest; the next hit's
@@ -712,9 +889,11 @@ mod tests {
             recoup: false,
             eb: false,
             all_bypass: false,
+            chaos_not_bypass: false,
             golem_rate: 3.75,
             golem: 100.0,
             prevented: 0.0,
+            below_half: 0.0,
             elemental_aegis: 0.0,
             missing_life: 0.0,
             ward: 0.0,

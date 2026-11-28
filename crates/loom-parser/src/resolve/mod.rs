@@ -485,23 +485,47 @@ impl<'a> Index<'a> {
             return None;
         }
         let key = self.folded.get(&tokenized.key.to_lowercase())?.as_ref()?;
-        Some(self.resolve_key(line, 1, &tokenized, key))
+        Some(self.resolve_key(line, 1, &tokenized, key, false))
+    }
+
+    /// Resolves one line as if each unsigned non-negative value its
+    /// template prints with a forced sign (`{0:+d}`) carried the `+` the
+    /// game prints (ADR-015 Amendment 4): older item text writes
+    /// "(8-12)% Chance to Block Attack Damage during Effect" where the game
+    /// now writes "+(8-12)%". An import tolerance, never used by
+    /// [`Index::resolve`]; the value is the same, since a negative value
+    /// always prints its `-`. `None` when the line has no unsigned value or
+    /// its key is not indexed.
+    #[must_use]
+    pub fn resolve_sign_added(&self, line: &str) -> Option<Resolution> {
+        let line = normalize(line);
+        let tokenized = tokenize(&line);
+        if !tokenized.tokens.iter().any(|t| t.sign.is_none()) {
+            return None;
+        }
+        let key = tokenized.key.clone();
+        self.entries
+            .contains_key(&key)
+            .then(|| self.resolve_key(line, 1, &tokenized, &key, true))
     }
 
     /// Resolves normalized text covering `lines` input lines.
     fn resolve_normalized(&self, line: String, lines: usize) -> Resolution {
         let tokenized = tokenize(&line);
         let key = tokenized.key.clone();
-        self.resolve_key(line, lines, &tokenized, &key)
+        self.resolve_key(line, lines, &tokenized, &key, false)
     }
 
-    /// Resolves tokenized text against the entries of `key`.
+    /// Resolves tokenized text against the entries of `key`; `sign_added`
+    /// reads an unsigned non-negative value as signed where the template
+    /// forces a sign ([`Index::resolve_sign_added`]).
     fn resolve_key(
         &self,
         line: String,
         lines: usize,
         tokenized: &token::Tokenized,
         key: &str,
+        sign_added: bool,
     ) -> Resolution {
         let Some(entries) = self.entries.get(key) else {
             return Resolution {
@@ -514,7 +538,7 @@ impl<'a> Index<'a> {
         let mut found: BTreeMap<DescRef, (bool, Candidate)> = BTreeMap::new();
         let mut rejected = Vec::new();
         for entry in entries {
-            let verified = verify(entry, &tokenized.tokens);
+            let verified = verify(entry, &tokenized.tokens, sign_added);
             if let Some((_, first)) = found.get_mut(&entry.at) {
                 // A later variant of a description already read: kept only
                 // as another reading when its values differ.
@@ -779,7 +803,11 @@ struct Read {
 
 /// Verifies one variant against the line's tokens (same key, so the same
 /// number of tokens); returns every stat of the hand with its value.
-fn verify(entry: &Entry<'_>, tokens: &[Token]) -> Result<Vec<ResolvedStat>, RejectReason> {
+fn verify(
+    entry: &Entry<'_>,
+    tokens: &[Token],
+    sign_added: bool,
+) -> Result<Vec<ResolvedStat>, RejectReason> {
     let variant = entry.variant;
     if let Some(flag) = variant.unknown_flags.first() {
         return Err(RejectReason::UnknownFlag(flag.clone()));
@@ -824,7 +852,7 @@ fn verify(entry: &Entry<'_>, tokens: &[Token]) -> Result<Vec<ResolvedStat>, Reje
                 if let PlaceholderFormat::Other(written) = format {
                     return Err(RejectReason::UnsupportedFormat(written.clone()));
                 }
-                let (numbers, ranged) = shown_numbers(token, format, *literal_sign)
+                let (numbers, ranged) = shown_numbers(token, format, *literal_sign, sign_added)
                     .ok_or_else(|| RejectReason::SignMismatch { stat: id(*stat) })?;
                 let chain: Vec<&NumericHandler> = variant
                     .handlers
@@ -937,12 +965,21 @@ fn shown_numbers(
     token: &Token,
     format: &PlaceholderFormat,
     literal_sign: Option<Sign>,
+    sign_added: bool,
 ) -> Option<(Vec<String>, bool)> {
     let signed = matches!(format, PlaceholderFormat::Signed);
+    // ADR-015 Amendment 4: an unsigned non-negative value where the format
+    // forces a sign reads as `+`.
+    let non_negative = match &token.atom {
+        Atom::Number(n) => !n.starts_with('-'),
+        Atom::Range { min, max } => !min.starts_with('-') && !max.starts_with('-'),
+        Atom::Slot => false,
+    };
     // How the sign before the atom applies: `Some(true)` negates.
     let negate = match (literal_sign, signed, token.sign) {
         (Some(literal), false, Some(sign)) if literal == sign => false,
         (None, false, None) | (None, true, Some(Sign::Plus)) => false,
+        (None, true, None) if sign_added && non_negative => false,
         (None, false, Some(Sign::Minus)) | (None, true, Some(Sign::Minus)) => true,
         _ => return None,
     };

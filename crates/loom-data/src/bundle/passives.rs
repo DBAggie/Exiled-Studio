@@ -192,6 +192,29 @@ pub struct Passive {
     /// The classes it is a start node of, by ID.
     #[serde(default)]
     pub characters: Vec<String>,
+    /// The buffs it grants (`PassiveSkillBuffs`). Since data schema 6
+    /// ([`super::PASSIVE_BUFF_SCHEMA`]): build 26530219's ascendancy auras
+    /// (Void Beacon and kin) carry their stats here, the node none.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub buffs: Vec<PassiveBuff>,
+}
+
+/// A buff a passive grants: a `BuffTemplates` row, its `BuffDefinitions`
+/// stats paired with the template's `Buff_StatValues` by position (data
+/// schema 6).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PassiveBuff {
+    /// The template's ID.
+    pub id: String,
+    /// The definition's ID.
+    pub definition: String,
+    /// The template's aura radius (0: none).
+    #[serde(default)]
+    pub radius: i64,
+    /// Stats and values.
+    #[serde(default)]
+    pub stats: Vec<StatAmount>,
 }
 
 /// A mastery group (`PassiveSkillMasteryGroups`).

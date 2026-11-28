@@ -4,8 +4,14 @@
 //!
 //! What PoB does:
 //! - **Which flasks.** A flask slot marked active in the item set
-//!   (`CalcSetup.lua` 929). Mageblood's magic utility flasks
-//!   (`CalcPerform.lua` 1543 to 1564) come from unmapped stats, so reasons.
+//!   (`CalcSetup.lua` 929), and Mageblood's magic utility flasks
+//!   (`CalcPerform.lua` 1543 to 1564; the agent list): the leftmost and
+//!   rightmost counts of the items' lines, over the equipped magic flasks
+//!   whose base is not a life, mana, or hybrid flask, in slot order
+//!   ([`active_flasks`]). An unsettled count is a reason
+//!   (`magic-utility-flask-count`), and so is a flask the build marks active
+//!   that "Magic Utility Flasks cannot be Used" stops in the game
+//!   ([`CANNOT_BE_USED_STAT`]).
 //! - **The effect.** `inc` is the player's `FlaskEffect` INC sum, plus the
 //!   flask's own `FlaskEffect` and `LocalEffect` INC (`Classes/Item.lua`
 //!   2400), plus `MagicUtilityFlaskEffect` INC for a magic flask that
@@ -50,6 +56,8 @@
 use loom_data::bundle::poe1::Flask;
 use loom_domain::{ItemId, LineResolution, Rarity, Resolved, StatId, StatLine, StatValue};
 
+use crate::input::LineValues;
+
 use super::{Poe1Quantity, collect, mapping::Poe1Mapping, skill_modifiers};
 use crate::condition::Flags;
 use crate::ingest::{EffectTemplate, Ingest, StatMap, StatMapping};
@@ -90,7 +98,7 @@ pub const DURATION_STATS: [&str; 2] = ["local_flask_duration_+%", "local_flask_d
 /// on full charges PoB does not parse at all; the effect of curses on you
 /// during the effect (`CurseEffectOnSelf` INC, `UsingFlask`) no slice
 /// field reads. Movement speed during the effect is an alias since P6-10b.
-pub const NO_EFFECT_LOCAL: [&str; 14] = [
+pub const NO_EFFECT_LOCAL: [&str; 16] = [
     // P6-11dz: avoid shock during the effect (`AvoidShock` BASE,
     // `UsingFlask`): no slice field.
     "local_avoid_shock_%_during_flask_effect",
@@ -103,6 +111,15 @@ pub const NO_EFFECT_LOCAL: [&str; 14] = [
     "local_flask_avoid_stun_chance_%_during_flask_effect",
     "local_flask_bleeding_immunity_if_bleeding_and_remove_corrupted_blood_s",
     "local_flask_gain_X_charges_when_hit",
+    // Mageblood (the agent list): immunity to bleeding during the effect
+    // (`BleedImmune` FLAG, `UsingFlask`): no slice field, as the helmet's
+    // immunity (`mapping::NO_EFFECT`).
+    "local_flask_immune_to_bleeding_and_corrupted_blood_during_flask_effect",
+    // Immunity to shock during the effect (`ShockImmune` FLAG,
+    // `UsingFlask`): PoB reads it only for a shock on you (`CalcPerform.lua`
+    // 853), which only the `conditionShocked` and `conditionOnShockedGround`
+    // checks give, each a reason, as for the shock effect below.
+    "local_flask_immune_to_shock_during_flask_effect",
     // P6-11gp: life leeched from damage taken during the effect
     // (`DamageTakenWhenHitLifeLeech` BASE, `UsingFlask`): no module of PoB
     // reads the mod.
@@ -147,6 +164,13 @@ pub const ALIASES: &[(&str, &str)] = &[
         "local_flask_cast_speed_+%_while_healing",
         "base_cast_speed_+%",
     ),
+    // "#% chance to Freeze, Shock and Ignite during Effect" (the agent list;
+    // `EnemyFreezeChance`, `EnemyShockChance`, `EnemyIgniteChance` BASE,
+    // `UsingFlask`).
+    (
+        "local_flask_chance_to_freeze_shock_ignite_%_while_healing",
+        "chance_to_freeze_shock_ignite_%",
+    ),
     // "#% increased Critical Strike Chance during Effect".
     (
         "local_flask_critical_strike_chance_+%_during_flask_effect",
@@ -183,11 +207,25 @@ pub const ALIASES: &[(&str, &str)] = &[
         "local_unique_flask_block_%_while_healing",
         "additional_block_%",
     ),
+    // "#% increased Damage Over Time during Effect" (a unique's; the old
+    // "during Flask Effect" is a reviewed rewording; PoB: `Damage` INC with
+    // `ModFlag.Dot`, `UsingFlask`).
+    (
+        "local_unique_flask_damage_over_time_+%_during_flask_effect",
+        "damage_over_time_+%",
+    ),
     // "Gain #% of Elemental Damage as Extra Chaos Damage during effect"
     // (close-out M1).
     (
         "local_unique_flask_elemental_damage_%_to_add_as_chaos_while_healing",
         "elemental_damage_%_to_add_as_chaos",
+    ),
+    // "#% of Chaos Damage Leeched as Life during Effect" (a unique's; the
+    // old "during Flask effect" is a reviewed rewording; PoB:
+    // `ChaosDamageLifeLeech` BASE, `UsingFlask`).
+    (
+        "local_unique_flask_life_leech_from_chaos_damage_permyriad_while_healing",
+        "base_life_leech_from_chaos_damage_permyriad",
     ),
     // "Gain #% of Physical Damage as Extra Chaos Damage during effect"
     // (close-out M1).
@@ -255,6 +293,8 @@ impl StatMapping for FlaskMapping {
             || NO_EFFECT_LOCAL.contains(&id)
             || DURATION_STATS.contains(&id)
             || id == INSTANT_STAT
+            || id == LOW_LIFE_INSTANT_STAT
+            || id == PARTIAL_INSTANT_STAT
         {
             return StatMap::NoEffect;
         }
@@ -381,32 +421,207 @@ struct Active<'d> {
     scale: f64,
 }
 
-/// The active flasks' items and slots (module docs, "Which flasks").
-fn active_slots(input: &CalcInput<'_>) -> Vec<(ItemId, String)> {
+/// Mageblood's "Leftmost # Magic Utility Flasks constantly apply their
+/// Flask Effects to you" (the agent list; PoB's
+/// `LeftActiveMagicUtilityFlasks` BASE, `CalcPerform.lua` 1543 to 1564).
+pub const ALWAYS_APPLY_STAT: &str = "num_magic_utility_flasks_always_apply";
+
+/// Its rightmost form (PoB's `RightActiveMagicUtilityFlasks` BASE).
+pub const ALWAYS_APPLY_RIGHTMOST_STAT: &str = "num_magic_utility_flasks_always_apply_rightmost";
+
+/// Mageblood's "Magic Utility Flasks cannot be Used". PoB parses no mod
+/// for it, so a magic utility flask the build marks active applies there
+/// even when Mageblood does not apply it; in the game it cannot be used.
+/// The engine applies it as PoB does and marks it a reason
+/// (`magic-utility-flask-cannot-be-used`).
+pub const CANNOT_BE_USED_STAT: &str = "magic_utility_flasks_cannot_be_used";
+
+/// "Can't use Flask in Fifth Slot" (the agent list, 2026-11-28; PoB's
+/// `CanNotUseItem` with `DisablesItem` `Flask 5`, `CalcSetup.lua` 845 to
+/// 877): the flask there is not used, unless the config's "Don't disable
+/// items" ([`IGNORE_DISABLERS_INPUT`]) is on. PoB keeps a Tincture there;
+/// the engine models no tincture.
+pub const FIFTH_SLOT_STAT: &str = "cannot_use_flask_in_fifth_slot";
+
+/// PoB's "Don't disable items" (`ConfigOptions.lua` 248).
+pub const IGNORE_DISABLERS_INPUT: &str = "ignoreItemDisablers";
+
+/// The active flasks (module docs, "Which flasks").
+struct ActiveFlasks {
+    /// Their items and slots, in slot order.
+    slots: Vec<(ItemId, String)>,
+    /// An item whose Mageblood count is not settled (a ranged roll the
+    /// host did not settle), with its slot: then which flasks apply is
+    /// not known.
+    unsettled: Option<(ItemId, String)>,
+    /// Magic utility flasks the build marks active that "cannot be Used"
+    /// makes unusable in the game (PoB applies them; [`CANNOT_BE_USED_STAT`]).
+    cannot_use: Vec<(ItemId, String)>,
+}
+
+/// The total of `stat` on the selected lines of the items in the active
+/// item set's slots, with the host's rolled values; `Err` with the item
+/// and slot of a value that is not settled.
+fn slot_item_stat(input: &CalcInput<'_>, stat: &str) -> Result<i64, (ItemId, String)> {
+    let mut total = 0;
+    for (id, place) in collect::items_in_use(input.build) {
+        let collect::ItemPlace::Slot(slot) = place else {
+            continue;
+        };
+        let Some(item) = input.build.items.item(id) else {
+            continue;
+        };
+        for (line, m) in item.body.modifiers() {
+            if !m.selected {
+                continue;
+            }
+            let LineResolution::Resolved {
+                result: Resolved::Stats(stats),
+                ..
+            } = &m.resolution
+            else {
+                continue;
+            };
+            let rolled = input.options.item_lines.get(&id).and_then(|l| l.get(&line));
+            for (j, s) in stats.iter().enumerate() {
+                if s.stat.as_str() != stat {
+                    continue;
+                }
+                let value = match (&s.value, rolled) {
+                    (StatValue::Exact { min, max }, _) if min == max => Some(*min),
+                    (StatValue::Ranged { min, max }, Some(LineValues::Rolled(values))) => values
+                        .get(j)
+                        .copied()
+                        .flatten()
+                        .filter(|v| (*min..=*max).contains(v)),
+                    _ => None,
+                };
+                match value {
+                    Some(v) => total += v,
+                    None => return Err((id, slot.clone())),
+                }
+            }
+        }
+    }
+    Ok(total)
+}
+
+/// Whether the build has `stat` on a selected line of an item in a slot.
+fn has_slot_item_stat(input: &CalcInput<'_>, stat: &str) -> bool {
+    collect::items_in_use(input.build)
+        .into_iter()
+        .any(|(id, place)| {
+            matches!(place, collect::ItemPlace::Slot(_))
+                && input.build.items.item(id).is_some_and(|item| {
+                    item.body.modifiers().any(|(_, m)| {
+                        m.selected
+                            && matches!(&m.resolution, LineResolution::Resolved {
+                            result: Resolved::Stats(stats),
+                            ..
+                        } if stats.iter().any(|s| s.stat.as_str() == stat))
+                    })
+                })
+        })
+}
+
+/// Whether item `id` is a magic utility flask as PoB tells it
+/// (`CalcPerform.lua` 1550, 1551): magic, its base not a life, mana, or
+/// hybrid flask.
+fn is_magic_utility(input: &CalcInput<'_>, id: ItemId) -> bool {
+    let Some(item) = input.build.items.item(id) else {
+        return false;
+    };
+    let base = input
+        .options
+        .item_bases
+        .get(&id)
+        .map(|b| b.name.as_str())
+        .or(item.body.base.as_deref())
+        .unwrap_or_default();
+    item.body.rarity == Some(Rarity::Magic)
+        && !["Life Flask", "Mana Flask", "Hybrid Flask"]
+            .iter()
+            .any(|kind| base.contains(kind))
+}
+
+/// The active flasks (module docs, "Which flasks"): the flask slots the
+/// build marks active, and Mageblood's magic utility flasks, the leftmost
+/// and rightmost counted in slot order (PoB's `orderedSlots`, `Flask 1` to
+/// `Flask 5`).
+fn active_flasks(input: &CalcInput<'_>) -> ActiveFlasks {
+    let mut out = ActiveFlasks {
+        slots: Vec::new(),
+        unsettled: None,
+        cannot_use: Vec::new(),
+    };
     let Some(set) = collect::active_item_set(input.build) else {
-        return Vec::new();
+        return out;
     };
     let second = set
         .attributes
         .iter()
         .any(|a| a.name == "useSecondWeaponSet" && a.value == "true");
-    let mut slots = Vec::new();
+    // Every equipped flask, in slot order, with whether the build marks it
+    // active.
+    let mut flasks: Vec<(ItemId, String, bool)> = Vec::new();
     for entry in set.slots.typed() {
         let slot = entry.slot.as_str();
         let Some(id) = entry.item else { continue };
-        if id.0 == 0
-            || !collect::slot_in_use(slot, second)
-            || !collect::is_flask_slot(slot)
-            || !entry
-                .attributes
-                .iter()
-                .any(|a| a.name == "active" && a.value == "true")
-        {
+        if id.0 == 0 || !collect::slot_in_use(slot, second) || !collect::is_flask_slot(slot) {
             continue;
         }
-        slots.push((id, slot.to_owned()));
+        let active = entry
+            .attributes
+            .iter()
+            .any(|a| a.name == "active" && a.value == "true");
+        flasks.push((id, slot.to_owned(), active));
     }
-    slots
+    flasks.sort_by(|a, b| a.1.cmp(&b.1));
+    let (left, right) = match (
+        slot_item_stat(input, ALWAYS_APPLY_STAT),
+        slot_item_stat(input, ALWAYS_APPLY_RIGHTMOST_STAT),
+    ) {
+        (Ok(l), Ok(r)) => (l, r),
+        (Err(at), _) | (_, Err(at)) => {
+            out.unsettled = Some(at);
+            (0, 0)
+        }
+    };
+    let magic: Vec<usize> = (0..flasks.len())
+        .filter(|&i| is_magic_utility(input, flasks[i].0))
+        .collect();
+    let left = usize::try_from(left).unwrap_or(0).min(magic.len());
+    let right = usize::try_from(right).unwrap_or(0).min(magic.len());
+    let constant: Vec<usize> = magic[..left]
+        .iter()
+        .chain(&magic[magic.len() - right..])
+        .copied()
+        .collect();
+    let cannot_be_used = has_slot_item_stat(input, CANNOT_BE_USED_STAT);
+    let ignore = collect::active_config(input.build).is_some_and(|set| {
+        matches!(
+            super::config::last_input(
+                set,
+                IGNORE_DISABLERS_INPUT,
+                loom_domain::ConfigInputKind::Input
+            ),
+            Some(loom_domain::ConfigValue::Boolean(true))
+        )
+    });
+    let fifth_disabled = !ignore && has_slot_item_stat(input, FIFTH_SLOT_STAT);
+    for (i, (id, slot, active)) in flasks.into_iter().enumerate() {
+        if fifth_disabled && slot == "Flask 5" {
+            continue;
+        }
+        let applies = constant.contains(&i);
+        if active && !applies && cannot_be_used && magic.contains(&i) {
+            out.cannot_use.push((id, slot.clone()));
+        }
+        if active || applies {
+            out.slots.push((id, slot));
+        }
+    }
+    out
 }
 
 /// The flask base of item `id`: the base name the import adapter found
@@ -431,49 +646,122 @@ fn base_of<'d>(
 /// itself reaches no slice field (its recovery is the `LifeRecovery` rate).
 pub const INSTANT_STAT: &str = "local_flask_recovers_instantly";
 
-/// Whether the item `id` recovers all at once ([`INSTANT_STAT`] on one of
-/// its selected lines).
-fn all_instant(input: &CalcInput<'_>, id: ItemId) -> bool {
-    input.build.items.item(id).is_some_and(|item| {
-        item.body.lines.iter().any(|l| match &l.kind {
-            loom_domain::LineKind::Modifier(m) if m.selected => match &m.resolution {
-                LineResolution::Resolved {
-                    result: Resolved::Stats(stats),
-                    ..
-                } => stats.iter().any(|s| s.stat.as_str() == INSTANT_STAT),
-                _ => false,
-            },
-            _ => false,
-        })
-    })
+/// "Instant Recovery when on Low Life" (the agent list; PoB's
+/// `FlaskLowLifeInstantRecovery` BASE 100, the flask's
+/// `instantLowLifePerc`, added to its instant share while
+/// `Condition:LowLife`, `CalcPerform.lua` 1603 to 1607): with low life
+/// settled true the flask recovers all at once, so sets no `Using`
+/// condition; unsettled, those conditions stay unsettled. The line itself
+/// reaches no slice field.
+pub const LOW_LIFE_INSTANT_STAT: &str = "local_flask_recover_instantly_when_on_low_life";
+
+/// "#% of Recovery applied Instantly" (the agent list, 2026-11-28; PoB's
+/// `FlaskInstantRecovery` BASE, added to the flask's `instantPerc`): the
+/// flask recovers all at once when its instant share reaches 100
+/// (`CalcPerform.lua` 1603 to 1614). The line itself reaches no slice
+/// field.
+pub const PARTIAL_INSTANT_STAT: &str = "local_flask_recovery_amount_%_to_recover_instantly";
+
+/// Whether the item `id` recovers all at once: its instant share, 100 for
+/// [`INSTANT_STAT`] and the value of [`PARTIAL_INSTANT_STAT`] on its
+/// selected lines, plus 100 for [`LOW_LIFE_INSTANT_STAT`] with `low_life`
+/// (the settled low life), at least 100. `None` when that depends on an
+/// unsettled low life or on a value whose range straddles 100.
+fn all_instant(input: &CalcInput<'_>, id: ItemId, low_life: Option<bool>) -> Option<bool> {
+    let Some(item) = input.build.items.item(id) else {
+        return Some(false);
+    };
+    let (mut low, mut high, mut on_low_life) = (0_i64, 0_i64, false);
+    for l in &item.body.lines {
+        let loom_domain::LineKind::Modifier(m) = &l.kind else {
+            continue;
+        };
+        if !m.selected {
+            continue;
+        }
+        let LineResolution::Resolved {
+            result: Resolved::Stats(stats),
+            ..
+        } = &m.resolution
+        else {
+            continue;
+        };
+        for st in stats {
+            match st.stat.as_str() {
+                INSTANT_STAT => {
+                    low += 100;
+                    high += 100;
+                }
+                PARTIAL_INSTANT_STAT => {
+                    let (a, b) = match &st.value {
+                        StatValue::Exact { min, max } | StatValue::Ranged { min, max, .. } => {
+                            (*min, *max)
+                        }
+                        // A value not shown: neither bound known.
+                        StatValue::Hidden { .. } | StatValue::Lookup(_) => (0, 100),
+                    };
+                    low += a;
+                    high += b;
+                }
+                LOW_LIFE_INSTANT_STAT => on_low_life = true,
+                _ => {}
+            }
+        }
+    }
+    if on_low_life {
+        match low_life {
+            Some(true) => return Some(true),
+            Some(false) => {}
+            None if low >= 100 => return Some(true),
+            None => return None,
+        }
+    }
+    if low >= 100 {
+        Some(true)
+    } else if high < 100 {
+        Some(false)
+    } else {
+        None
+    }
 }
 
 /// The active flasks that do not recover all at once (P6-11gw): the ones
-/// that set PoB's `Using` conditions.
-fn using_slots(input: &CalcInput<'_>) -> Vec<(ItemId, String)> {
-    active_slots(input)
-        .into_iter()
-        .filter(|(id, _)| !all_instant(input, *id))
-        .collect()
+/// that set PoB's `Using` conditions; `None` when one depends on an
+/// unsettled low life.
+fn using_slots(input: &CalcInput<'_>, low_life: Option<bool>) -> Option<Vec<(ItemId, String)>> {
+    let active = active_flasks(input);
+    // Which flasks Mageblood applies is not known.
+    if active.unsettled.is_some() {
+        return None;
+    }
+    let mut out = Vec::new();
+    for (id, slot) in active.slots {
+        if !all_instant(input, id, low_life)? {
+            out.push((id, slot));
+        }
+    }
+    Some(out)
 }
 
 /// Whether the character is using a flask (PoB's `UsingFlask`; P6-11dz,
 /// `CalcPerform.lua` 1735): an active flask whose recovery is not all
-/// instant ([`INSTANT_STAT`], P6-11gw). PoB's global
-/// `LifeFlaskInstantRecovery` lines are unmapped stats, a reason wherever
-/// they appear.
+/// instant ([`INSTANT_STAT`], P6-11gw; [`LOW_LIFE_INSTANT_STAT`] by
+/// `low_life`, the settled low life). `None` when that depends on an
+/// unsettled low life. PoB's global `LifeFlaskInstantRecovery` lines are
+/// unmapped stats, a reason wherever they appear.
 #[must_use]
-pub fn using_flask(input: &CalcInput<'_>) -> bool {
-    !using_slots(input).is_empty()
+pub fn using_flask(input: &CalcInput<'_>, low_life: Option<bool>) -> Option<bool> {
+    Some(!using_slots(input, low_life)?.is_empty())
 }
 
 /// Whether the character is using a life flask (PoB's `UsingLifeFlask`;
 /// P6-11cq, module docs): `Some(false)` with no active flask, `Some(true)`
 /// when an active flask's base recovers life, `None` when a flask's base
-/// is not known.
+/// is not known or its instant recovery depends on an unsettled low life
+/// (`low_life`).
 #[must_use]
-pub fn using_life_flask(input: &CalcInput<'_>) -> Option<bool> {
-    let slots = using_slots(input);
+pub fn using_life_flask(input: &CalcInput<'_>, low_life: Option<bool>) -> Option<bool> {
+    let slots = using_slots(input, low_life)?;
     if slots.is_empty() {
         return Some(false);
     }
@@ -491,7 +779,25 @@ pub fn using_life_flask(input: &CalcInput<'_>) -> Option<bool> {
 /// source of flask effect is in (passives, items, config).
 pub fn flasks(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
     let build = input.build;
-    let slots = active_slots(input);
+    let ActiveFlasks {
+        slots,
+        unsettled,
+        cannot_use,
+    } = active_flasks(input);
+    if let Some((item, slot)) = unsettled {
+        ingest.reason(UnsupportedReason::UnmodelledItem {
+            item,
+            slot,
+            what: "magic-utility-flask-count",
+        });
+    }
+    for (item, slot) in cannot_use {
+        ingest.reason(UnsupportedReason::UnmodelledItem {
+            item,
+            slot,
+            what: "magic-utility-flask-cannot-be-used",
+        });
+    }
     if slots.is_empty() {
         return;
     }

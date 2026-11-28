@@ -20,8 +20,10 @@
 //! a dependency, so an unsupported one leaves this field unsupported and a
 //! partial one makes it partial). Not modelled: ground damage over time
 //! and corrupting blood (the damage over time field is then unsupported),
-//! decay, critical culling, and skills that show their average damage
-//! (their stat stays a reason).
+//! decay, and skills that show their average damage (their stat stays a
+//! reason). Critical culling (the agent list, 2026-11-28): the hit's
+//! [`Poe1Quantity::CriticalCullPercent`], the larger of it and the regular
+//! cull.
 //!
 //! **Mirage Archer** (P6-8b; `CalcMirages.lua` 64 to 113, `CalcOffence.lua`
 //! 6088 to 6123): a skill Mirage Archer supports (its
@@ -32,7 +34,8 @@
 //! [`crate::calculate`] with it). Then:
 //! - `CombinedDPS` gains the mirage's `TotalDPS` and `ImpaleDPS`, each
 //!   times the count (1 per `summon_mirage_archer_on_hit`, PoB's
-//!   `MirageArcherMaxCount` BASE 1);
+//!   `MirageArcherMaxCount` BASE 1, and the character's
+//!   [`Poe1Quantity::MirageArcherCount`]);
 //! - a mirage ignite or bleeding larger than the skill's own sets the
 //!   skill's to 0 (and adds the mirage's only to PoB's `MirageDPS`, not to
 //!   `CombinedDPS`);
@@ -122,6 +125,20 @@ fn mirage(
     if !marked {
         return Ok(None);
     }
+    // The character's extra mirage archers (the agent list, 2026-11-28; PoB
+    // sums `MirageArcherMaxCount` over the skill's list, `CalcMirages.lua`
+    // 72).
+    let extra: f64 = calc
+        .store()
+        .effects()
+        .iter()
+        .filter(|e| {
+            e.quantity == Quantity::Poe1(Poe1Quantity::MirageArcherCount)
+                && e.op == crate::quantity::Op::Base
+                && e.conditions == crate::store::Conditions::none()
+        })
+        .map(|e| e.value)
+        .sum();
     let source = crate::source::Source::Rule(MIRAGE_RULE);
     let unsupported = |what| UnsupportedReason::UnmodelledSkill {
         source: source.clone(),
@@ -168,7 +185,7 @@ fn mirage(
         impale,
         ignite,
         bleed,
-        count: f64::from(count.max(1)),
+        count: (f64::from(count) + extra).max(1.0),
         reasons,
     }))
 }
@@ -327,7 +344,9 @@ pub(super) fn combine(
         calc.set_unsupported(field, UnsupportedReason::NotComputed);
         return Ok(());
     }
-    if !dots.is_empty() {
+    // PoB adds the damage over time only without `showAverage`
+    // (`CalcOffence.lua` 6126 to 6128; the agent list, 2026-11-28).
+    if !dots.is_empty() && !show_average {
         let sum = phases::total(calc, &dots, Term::Step("dot-sum"))?;
         let cap = phases::constant(calc, "dot-dps-cap", DOT_DPS_CAP)?;
         terms.push(phases::pair(
@@ -360,11 +379,33 @@ pub(super) fn combine(
         flags = flags | Flags::SPELL;
     }
     let cx = calc.context(flags);
+    // The critical cull the hit computed (the agent list, 2026-11-28): PoB's
+    // `CullPercent` is the larger of it and the regular one.
+    let critical = Quantity::Poe1(Poe1Quantity::CriticalCullPercent);
+    let critical_percent = if phases::has(calc, critical) {
+        let (store, graph) = calc.parts();
+        let q = store.sum(
+            graph,
+            critical,
+            crate::quantity::Op::Base,
+            &cx,
+            Term::Step("critical-cull"),
+        )?;
+        reasons.extend(&q.reasons);
+        Some(Valued {
+            node: q.node,
+            value: q.value,
+        })
+    } else {
+        None
+    };
+    let mut culled = false;
     for (quantity, percent) in CULLS {
         let (store, graph) = calc.parts();
         let cull = store.flag(graph, Quantity::Poe1(quantity), &cx)?;
         reasons.extend(&cull.reasons);
-        if cull.value > 0.0 {
+        if cull.value > 0.0 && critical_percent.is_none_or(|c| c.value <= percent) {
+            culled = true;
             let value = 100.0 / (100.0 - percent);
             let multiplier = phases::constant(calc, "cull-multiplier", value)?;
             let node = calc.graph_mut().push(
@@ -378,6 +419,27 @@ pub(super) fn combine(
             combined = phases::product(calc, &[combined, multiplier, on], Term::Step("culled"))?;
             break;
         }
+        if cull.value > 0.0 {
+            break;
+        }
+    }
+    if let Some(c) = critical_percent.filter(|c| !culled && c.value > 0.0) {
+        // `100 / (100 - CullPercent)`.
+        let hundred = phases::constant(calc, "hundred", 100.0)?;
+        let negative = phases::constant(calc, "minus-one", -1.0)?;
+        let minus = phases::product(calc, &[c, negative], Term::Step("critical-cull-negative"))?;
+        let left = phases::total(calc, &[hundred, minus], Term::Step("critical-cull-rest"))?;
+        let value = 100.0 / left.value;
+        let node = calc.graph_mut().push(
+            Node::Quotient {
+                term: Term::Step("critical-cull-multiplier"),
+                a: hundred.node,
+                b: left.node,
+            },
+            value,
+        )?;
+        let multiplier = Valued { node, value };
+        combined = phases::product(calc, &[combined, multiplier], Term::Step("culled"))?;
     }
     let result = phases::total(calc, &[combined], Term::Result)?;
     calc.set_derived(field, phases::query(result, reasons), &deps);

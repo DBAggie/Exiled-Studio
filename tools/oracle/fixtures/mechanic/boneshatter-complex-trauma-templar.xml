@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, open items agent list): Boneshatter of Complex Trauma with the config's 30 stacks: its
+     more damage per Trauma capped at 10 (limitVar TraumaStacksMax).
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Templar" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="5" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Boneshatter" skillId="BoneshatterAltX" variantId="BoneshatterAltX" gemId="Metadata/Items/Gems/SkillGemBoneshatter" level="20" quality="0" enabled="true" enableGlobal1="true" count="1" skillPart="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items activeItemSet="1">
+		<Item id="1">
+Rarity: RARE
+Loom Test Cleaver
+Siege Axe
+Quality: 20
+Implicits: 0
+Adds 10 to 20 Physical Damage
+80% increased Physical Damage
+15% increased Attack Speed
+25% increased Critical Strike Chance
+Adds 5 to 50 Lightning Damage
++200 to Accuracy Rating
+		</Item>
+		<ItemSet id="1">
+			<Slot name="Weapon 1" itemId="1"/>
+		</ItemSet>
+	</Items>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<Input name="traumaStacks" number="30"/>
+			<CustomModifierBlock enabled="true" title="Default">
+
+			</CustomModifierBlock>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>

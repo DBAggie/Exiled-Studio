@@ -15,7 +15,7 @@ use loom_domain::StatId;
 
 /// The English text of each row's stat in `stat_descriptions.txt`, as PoB's
 /// patterns read it (`ModParser.lua` 222 to 232, 457).
-const TEXTS: [(&str, &str); 36] = [
+const TEXTS: [(&str, &str); 40] = [
     // Close-out M6.
     (
         "anger_aura_effect_+%",
@@ -75,6 +75,11 @@ const TEXTS: [(&str, &str); 36] = [
         "herald_skills_mana_reservation_efficiency_+%",
         "{0}% increased Mana Reservation Efficiency of Herald Skills",
     ),
+    // The agent list: `CooldownRecovery` INC with Intimidating Cry's name.
+    (
+        "intimidating_cry_cooldown_speed_+%",
+        "Intimidating Cry has {0}% increased Cooldown Recovery Rate",
+    ),
     // P6-11ey: PoB's `ManaReservationEfficiency` with `KeywordFlag.Mine`.
     (
         "mana_reservation_efficiency_+%_for_skills_that_throw_mines",
@@ -92,6 +97,11 @@ const TEXTS: [(&str, &str); 36] = [
         "{0}% increased Skill Effect Duration",
     ),
     // Open items S3.
+    // The agent list: `ManaReserved` INC with the Spellslinger condition.
+    (
+        "spellslinger_mana_reservation_+%",
+        "Skills Supported by Spellslinger have {0}% increased Mana Reservation",
+    ),
     (
         "spellslinger_mana_reservation_efficiency_+%",
         "{0}% increased Mana Reservation Efficiency of Skills Supported by Spellslinger",
@@ -121,6 +131,10 @@ const TEXTS: [(&str, &str); 36] = [
         "{0}% increased Effect of your Marks",
     ),
     // P6-11gc: PoB's `BuffEffect` tagged with the golem skill's name.
+    (
+        "base_bone_golem_granted_buff_effect_+%",
+        "{0}% increased Effect of the Buff granted by your Carrion Golems",
+    ),
     (
         "base_chaos_golem_granted_buff_effect_+%",
         "{0}% increased Effect of the Buff granted by your Chaos Golems",
@@ -160,6 +174,11 @@ const TEXTS: [(&str, &str); 36] = [
         "vulnerability_curse_effect_+%",
         "{0}% increased Vulnerability Curse Effect",
     ),
+    // The agent list: Punishment's, as Vulnerability's.
+    (
+        "punishment_curse_effect_+%",
+        "{0}% increased Punishment Curse Effect",
+    ),
     // Close-out M6.
     (
         "zealotry_mana_reservation_efficiency_+%",
@@ -184,6 +203,10 @@ const NO_EFFECT_NAMING: &[&str] = &[
     // Open items S8: Adrenaline when leech is removed by filling unreserved
     // life, a line PoB applies no mod of.
     "chance_to_gain_adrenaline_for_2_seconds_on_leech_removed_by_filling_unreserved_life_%",
+    // The agent list: leech not removed when unreserved life is filled,
+    // read by `conditions::settle` (the leeching conditions), no
+    // reservation.
+    "life_leech_does_not_stop_at_full_life",
 ];
 
 #[test]
@@ -302,13 +325,22 @@ fn real_reservation_and_aura_stats_should_be_covered() {
                         )
                 }) => {}
             // "Gain #% of Missing Unreserved Life before being Hit by an
-            // Enemy" (P6-11hm): the EHP estimate's, not a reservation.
+            // Enemy" (P6-11hm), and its form per Defiance (open items S7):
+            // the EHP estimate's, not a reservation.
             loom_calc::StatMap::Effects(e)
                 if e.iter().all(|t| {
-                    t.quantity
-                        == loom_calc::Quantity::Poe1(
-                            loom_calc::poe1::Poe1Quantity::MissingLifeBeforeHit,
+                    matches!(
+                        t.quantity,
+                        loom_calc::Quantity::Poe1(
+                            loom_calc::poe1::Poe1Quantity::MissingLifeBeforeHit
+                                | loom_calc::poe1::Poe1Quantity::Stack(
+                                    loom_calc::poe1::stacks::StackKind::Defiance,
+                                    loom_calc::poe1::stacks::StackValue::Per(
+                                        loom_calc::poe1::stacks::PerStack::MissingLifeBeforeHit
+                                    )
+                                )
                         )
+                    )
                 }) => {}
             // "+#% to all maximum Elemental Resistances if you have
             // Reserved Life and Mana" (P6-11ib): reads the reservations.

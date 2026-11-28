@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, open items S3): Ice Nova socketed in a helmet with the crafted Focus trigger line: PoB's rate 1 / (Focus's 4 s duration + its 8 s cooldown), a global trigger.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Witch" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="3" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true" slot="Helmet">
+				<Gem nameSpec="Ice Nova" skillId="IceNova" variantId="IceNova" gemId="Metadata/Items/Gems/SkillGemIceNova" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items activeItemSet="1">
+		<Item id="1">
+Rarity: RARE
+Loom Fixture
+Iron Hat
+Quality: 0
+Sockets: B
+Implicits: 0
+Trigger Socketed Spells when you Focus, with a 0.25 second Cooldown
+		</Item>
+		<ItemSet id="1">
+			<Slot name="Helmet" itemId="1"/>
+		</ItemSet>
+	</Items>
+	<Config></Config>
+</PathOfBuilding>

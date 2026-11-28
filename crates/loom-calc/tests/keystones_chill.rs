@@ -19,7 +19,7 @@ use loom_domain::StatId;
 /// parses line by line; the descriptions file keeps the line breaks as
 /// `\n`), and of each chill row's stat in `stat_descriptions.txt`, as
 /// PoB's patterns read them (module docs of each).
-const TEXTS: [(&str, &str); 22] = [
+const TEXTS: [(&str, &str); 23] = [
     // P6-11ap: Eldritch Battery.
     (
         "keystone_eldritch_battery",
@@ -103,6 +103,11 @@ const TEXTS: [(&str, &str); 22] = [
     (
         "keystone_supreme_prodigy",
         "Ignore Attribute Requirements\\nGain no inherent bonuses from Attributes",
+    ),
+    // Open items S7, part 9: Wicked Ward.
+    (
+        "keystone_wicked_ward",
+        "Energy Shield Recharge is not interrupted by Damage if Recharge began Recently\\n40% less Energy Shield Recharge Rate",
     ),
     // P6-10b part 15: Mind over Matter.
     (

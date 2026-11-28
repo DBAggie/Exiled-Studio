@@ -805,6 +805,7 @@ fn resolution_to(r: &d::LineResolution) -> LineResolution {
                 d::Adapted::CaseFolded => Adapted::CaseFolded,
                 d::Adapted::SplitSection => Adapted::SplitSection,
                 d::Adapted::Reworded => Adapted::Reworded,
+                d::Adapted::SignAdded => Adapted::SignAdded,
             }),
         },
         d::LineResolution::Continues { line } => LineResolution::Continues {
@@ -878,6 +879,7 @@ fn resolution_from(r: LineResolution) -> Result<d::LineResolution, DtoError> {
                 Adapted::CaseFolded => d::Adapted::CaseFolded,
                 Adapted::SplitSection => d::Adapted::SplitSection,
                 Adapted::Reworded => d::Adapted::Reworded,
+                Adapted::SignAdded => d::Adapted::SignAdded,
             }),
         },
         LineResolution::Continues { line } => d::LineResolution::Continues {

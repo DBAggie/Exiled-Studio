@@ -16,7 +16,7 @@ use loom_domain::StatId;
 
 /// The English text of each row's stat in `stat_descriptions.txt`, as PoB's
 /// patterns read it (module docs of each).
-const TEXTS: [(&str, &str); 16] = [
+const TEXTS: [(&str, &str); 19] = [
     (
         "chance_to_inflict_cold_exposure_on_hit_with_cold_damage_%",
         "{0}% Chance to Inflict Cold Exposure on Hit with Cold Damage",
@@ -28,6 +28,12 @@ const TEXTS: [(&str, &str); 16] = [
     (
         "cold_skill_chance_to_inflict_cold_exposure_%",
         "Cold Skills have a {0}% chance to apply Cold Exposure on Hit",
+    ),
+    // The agent list: `CritChance` INC with the enemy's
+    // `HasLightningExposure`.
+    (
+        "critical_strike_chance_+%_vs_enemies_with_lightning_exposure",
+        "{0}% increased Critical Strike Chance against enemies with Lightning Exposure",
     ),
     (
         "cold_exposure_on_hit_magnitude",
@@ -75,6 +81,15 @@ const TEXTS: [(&str, &str); 16] = [
         "{0}% increased Effect of Non-Damaging Ailments",
     ),
     ("shock_effect_+%", "{0}% increased Effect of Shock"),
+    // The agent list (2026-11-28): the shock's maximum.
+    (
+        "shock_maximum_magnitude_+",
+        "{0:+d}% to Maximum Effect of Shock",
+    ),
+    (
+        "raider_shock_maximum_effect_override_%",
+        "Maximum Effect of Shock is {0}% increased Damage taken",
+    ),
     (
         "shock_minimum_damage_taken_increase_%",
         "Shocks from your Hits always increase Damage taken by at least {0}%",
@@ -106,6 +121,9 @@ const NO_EFFECT_NAMING: &[&str] = &[
     "chance_to_be_frozen_shocked_ignited_%",
     "lightning_ailment_duration_+%",
     "shocked_effect_on_self_+%",
+    // Agent list: Shockwave Support's chance to trigger its attack ("Shockwave"
+    // in the text), never the enemy's shock; `poe1::triggers` reads the rate.
+    "support_blunt_chance_to_trigger_shockwave_on_hit_%",
 ];
 
 /// Rows whose text names shock but which read a condition the config
@@ -116,6 +134,9 @@ const CONDITION_ROWS: &[&str] = &[
     // (`conditions::ENEMY_SHOCKED`).
     "critical_strike_chance_+%_vs_shocked_enemies",
     "damage_+%_if_you_have_shocked_recently",
+    // The agent list (2026-11-27): the shocked enemy's physical damage
+    // converted, under the settled `Enemy:Shocked` (the enemy's hit).
+    "enemies_shocked_by_you_have_physical_damage_%_converted_to_lightning",
     // P6-11gz: exposure while a curse you cast holds (`poe1::exposure`
     // reads them with the settled states).
     "inflict_cold_exposure_if_cast_frostbite_in_past_10_seconds",
@@ -138,6 +159,12 @@ const OTHER_PART_ROWS: &[&str] = &[
 /// Regeneration rows whose text names exposure (P6-10b): the regeneration
 /// field's reason alone (`mapping::REGEN_REASONS`), never the enemy's.
 const REGEN_ROWS: &[&str] = &["mana_regeneration_rate_per_minute_%_if_inflicted_exposure_recently"];
+
+/// Item lines that grant and trigger a skill whose name has "Shock" in it
+/// (open items S3, part 7: `triggers::GRANTED_TRIGGERS`): the grant flag
+/// and the line's chance, never the enemy's shock.
+const GRANTED_SKILL_ROWS: &[&str] =
+    &["local_display_trigger_level_x_gore_shockwave_on_melee_hit_with_atleast_150_strength"];
 
 #[test]
 fn the_texts_should_name_the_rows() {
@@ -227,6 +254,7 @@ fn real_exposure_and_shock_stats_should_be_covered() {
             loom_calc::StatMap::Effects(_) if CONDITION_ROWS.contains(&stat) => {}
             loom_calc::StatMap::Effects(_) if OTHER_PART_ROWS.contains(&stat) => {}
             loom_calc::StatMap::Effects(_) if REGEN_ROWS.contains(&stat) => {}
+            loom_calc::StatMap::Effects(_) if GRANTED_SKILL_ROWS.contains(&stat) => {}
             other => wrong.push(format!("{stat}: {other:?}")),
         }
     }

@@ -6,13 +6,17 @@
 //! - **case-folded:** the text differs from the game's in letter case only
 //!   (hand-edited text); refused when the text folds to more than one game
 //!   key ([`Index::resolve_case_folded`]);
+//! - **sign-added:** the game's description prints a forced sign
+//!   (`{0:+d}`) the older text does not have ("(8-12)% Chance to Block
+//!   Attack Damage during Effect" for "+(8-12)%"); an unsigned non-negative
+//!   value reads as `+`, the same value (ADR-015 Amendment 4);
 //! - **split-section:** an import format put the two lines of one
 //!   description in two sections; the line and an adjacent line of another
 //!   section resolve together as one two-line description.
 
 use loom_domain::{ItemBody, LineKind, LineResolution, ModifierLine};
 
-use crate::resolve::{Index, Outcome, Resolution, Unresolved};
+use crate::resolve::{Index, Outcome, RejectReason, Resolution, Unresolved};
 
 /// The case-folded reading of one line, when exact matching gave
 /// `resolution` for it alone with no template and the line was not read
@@ -36,6 +40,36 @@ pub fn case_folded(
     }
     index
         .resolve_case_folded(text)
+        .filter(|r| !matches!(r.outcome, Outcome::Unresolved(_)))
+}
+
+/// The sign-added reading of one line (ADR-015 Amendment 4), when exact
+/// matching gave `resolution` for it alone, not through a composed
+/// wrapper (`composed`), and every variant its key indexes was refused for
+/// a sign only ([`RejectReason::SignMismatch`]): the game's description
+/// prints a forced sign the older text does not have. `None` otherwise, or
+/// when the reading does not resolve.
+#[must_use]
+pub fn sign_added(
+    index: &Index<'_>,
+    text: &str,
+    resolution: &Resolution,
+    composed: bool,
+) -> Option<Resolution> {
+    let Outcome::Unresolved(Unresolved::NoVariantFits(rejected)) = &resolution.outcome else {
+        return None;
+    };
+    if composed
+        || resolution.lines != 1
+        || rejected.is_empty()
+        || !rejected
+            .iter()
+            .all(|r| matches!(r.reason, RejectReason::SignMismatch { .. }))
+    {
+        return None;
+    }
+    index
+        .resolve_sign_added(text)
         .filter(|r| !matches!(r.outcome, Outcome::Unresolved(_)))
 }
 

@@ -395,6 +395,10 @@ impl<'d> Ours<'d> {
         let mut seen = BTreeSet::new();
         let mut out = Vec::new();
         let mut queue = VecDeque::from([root]);
+        // An override keeps what it replaced for the breakdown (the agent
+        // list, 2026-11-27: energy shield as a percent of life): its
+        // children are read even when one is another phase's result.
+        let mut kept = BTreeSet::new();
         while let Some(i) = queue.pop_front() {
             if !seen.insert(i) {
                 continue;
@@ -402,10 +406,13 @@ impl<'d> Ours<'d> {
             let Some(n) = usize::try_from(i).ok().and_then(|u| graph.get(u)) else {
                 continue;
             };
-            if i != root && n.term.as_deref() == Some("result") {
+            if i != root && n.term.as_deref() == Some("result") && !kept.contains(&i) {
                 continue;
             }
             out.push(i);
+            if matches!(n.kind, calc_dto::NodeKind::Override) {
+                kept.extend(n.children.iter().copied());
+            }
             queue.extend(n.children.iter().copied());
         }
         out

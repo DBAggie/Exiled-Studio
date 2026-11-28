@@ -83,7 +83,10 @@
 //!   only 1 mark is possible"); a mark that loses its slot frees the rule.
 //! - [`Kind::Warcry`]: its buff rows (none reaches a slice field), and
 //!   Rallying Cry's exerted-attack effect only when no ally is configured
-//!   (`multiplierNearbyAlly`): otherwise a reason.
+//!   (`multiplierNearbyAlly`): otherwise a reason. The first gem of each
+//!   cry that exerts attacks ([`ExertCry`]) gives its uptime terms
+//!   ([`WarcryValue`]), from which the hit takes the exerted attacks'
+//!   uptime and damage (`hit::exerted_attacks`, the agent list).
 //! - Lightning Golem's Wrath ([`WRATH_INPUT`]): when the config enables it
 //!   and a Summon Lightning Golem is modelled, its aura rows at the golem's
 //!   level ([`wrath`]).
@@ -116,7 +119,7 @@ use super::mapping::HitEffect;
 use super::skill::{self, GemEffectRef, GroupSkill, MainSkill};
 use super::skill_modifiers::{self, Totals};
 use super::sockets;
-use super::{LeechSource, Poe1Quantity, Pool, ReservationKind, TakenOf, TakenWhen};
+use super::{DegenOf, LeechSource, Poe1Quantity, Pool, ReservationKind, TakenOf, TakenWhen};
 use crate::condition::{ConditionKey, Flags};
 use crate::ingest::Ingest;
 use crate::input::{CalcData, CalcInput, Resource};
@@ -229,6 +232,26 @@ pub enum BuffStat {
     /// `unmapped-stat` reason when the stat is not 0. As `NoSlice` for
     /// everything else.
     Defence(&'static str),
+    /// Rows applied only while the config count `input` (else its saved
+    /// placeholder, else `default`, as [`Self::PerCount`]) is at least
+    /// `at`, unscaled (the agent list, 2026-11-27: Sigil of Power's less
+    /// enemy damage at its maximum stages; PoB's `MultiplierThreshold` tag
+    /// with `actor = "enemy"`, which on the enemy reads the character's
+    /// stage multiplier, against `thresholdVar`).
+    AtCount {
+        /// The config count.
+        input: &'static str,
+        /// The count without the input.
+        default: u32,
+        /// The count from which the rows apply.
+        at: u32,
+        /// PoB's multiplier name.
+        var: &'static str,
+        /// PoB's threshold multiplier name.
+        threshold_var: &'static str,
+        /// The rows.
+        rows: &'static [HitEffect],
+    },
     /// Reaches a slice field in a way the engine does not model: an
     /// `unmodelled-skill` reason with this name when the stat is not 0
     /// (P6-10b: Enduring Cry's regeneration per warcry power).
@@ -322,6 +345,12 @@ pub enum BuffStat {
         /// The count's limit, if any (PoB's `limitVar`: Frost Shield's
         /// stages at most its `FrostShieldMaxStages`; P6-11ho).
         limit: Option<u32>,
+        /// The count PoB applies without the input (the agent list,
+        /// 2026-11-27: an option's `defaultPlaceholderState`, which
+        /// `BuildModList` applies when the input is absent; the saved
+        /// placeholder first, `ConfigTab.lua` 1083 to 1092). `None`: no
+        /// input, no rows.
+        default: Option<u32>,
         /// The rows.
         rows: &'static [HitEffect],
     },
@@ -746,13 +775,31 @@ pub const SKILLS: &[(&str, Kind)] = &[
                     "attack_speed_+%_granted_from_skill",
                     BuffStat::Rows(&[(Quantity::Speed, Op::Increased, 1.0, Flags::ATTACK, NONE)]),
                 ),
+                // Open items S7, part 8: `PhysicalDegen` BASE per point of
+                // energy shield and of life, the stat over 6000
+                // (`act_dex.lua` 3315 to 3322), read by `poe1::degen`.
                 (
                     "base_physical_damage_%_of_maximum_energy_shield_to_deal_per_minute",
-                    BuffStat::NoSlice("degeneration"),
+                    BuffStat::Rows(&[(
+                        Quantity::Poe1(Poe1Quantity::Degen(
+                            DamageType::Physical,
+                            DegenOf::EnergyShield,
+                        )),
+                        Op::Base,
+                        6000.0,
+                        NONE,
+                        NONE,
+                    )]),
                 ),
                 (
                     "base_physical_damage_%_of_maximum_life_to_deal_per_minute",
-                    BuffStat::NoSlice("degeneration"),
+                    BuffStat::Rows(&[(
+                        Quantity::Poe1(Poe1Quantity::Degen(DamageType::Physical, DegenOf::Life)),
+                        Op::Base,
+                        6000.0,
+                        NONE,
+                        NONE,
+                    )]),
                 ),
                 // P6-10b part 9: `PhysicalDamageLifeLeech` BASE with attacks,
                 // the hit's leech (`poe1::leech`).
@@ -772,6 +819,9 @@ pub const SKILLS: &[(&str, Kind)] = &[
             ],
         },
     ),
+    // Open items S3, part 7: a skill an item grants and triggers (PoB's
+    // export: no global effect).
+    ("BoneNova", Kind::Inert),
     // Bone Offering (P6-9e): its buff goes to minions alone (`buffNotPlayer`).
     (
         "BoneOffering",
@@ -796,6 +846,10 @@ pub const SKILLS: &[(&str, Kind)] = &[
             ],
         },
     ),
+    // Open items S3: Arcanist Brand: no global effect in PoB's data
+    // (`act_int.lua` 545, its base mod the skill's own `debuff`); the spells
+    // it triggers read its activation in its own context (`poe1::triggers`).
+    ("BrandSupport", Kind::Inert),
     ("BurningArrow", Kind::Inert),
     (
         "Clarity",
@@ -1349,7 +1403,7 @@ pub const SKILLS: &[(&str, Kind)] = &[
     // the enemy in the area (the config's `conditionEnemyInFrostGlobe`),
     // else 60%. The energy shield drain (`EnergyShieldDegen` from one
     // stage) changes only the net regeneration (`CalcDefence.lua` 1288 to
-    // 1292, 3397), no slice field.
+    // 1292, 3397): a reason on those fields (open items S7, part 8).
     (
         "FrostShield",
         Kind::Buff {
@@ -1358,7 +1412,15 @@ pub const SKILLS: &[(&str, Kind)] = &[
             stats: &[
                 (
                     "energy_shield_lost_per_minute",
-                    BuffStat::NoSlice("energy-shield-degeneration"),
+                    BuffStat::Rows(&[(
+                        Quantity::Poe1(Poe1Quantity::NetRegenReason(
+                            "energy_shield_lost_per_minute",
+                        )),
+                        Op::Flag,
+                        1.0,
+                        NONE,
+                        NONE,
+                    )]),
                 ),
                 (
                     "frost_globe_absorb_damage_%_enemy_in_bubble",
@@ -1396,6 +1458,7 @@ pub const SKILLS: &[(&str, Kind)] = &[
                         input: FROST_SHIELD_STAGES_INPUT,
                         var: "FrostShieldStage",
                         limit: Some(FROST_SHIELD_MAX_STAGES),
+                        default: None,
                         rows: &[(Quantity::CritChance, Op::Base, 100.0, Flags::SPELL, NONE)],
                     },
                 ),
@@ -1405,6 +1468,7 @@ pub const SKILLS: &[(&str, Kind)] = &[
                         input: FROST_SHIELD_STAGES_INPUT,
                         var: "FrostShieldStage",
                         limit: Some(FROST_SHIELD_MAX_STAGES),
+                        default: None,
                         rows: &[(
                             Quantity::Poe1(Poe1Quantity::FrostShieldLife),
                             Op::Base,
@@ -1453,6 +1517,7 @@ pub const SKILLS: &[(&str, Kind)] = &[
             )],
         },
     ),
+    ("GoreShockwave", Kind::Inert),
     (
         "Grace",
         Kind::Buff {
@@ -1673,6 +1738,7 @@ pub const SKILLS: &[(&str, Kind)] = &[
     ("HolyStrike", Kind::Inert),
     ("IceNova", Kind::Inert),
     ("IceSpear", Kind::Inert),
+    ("IcicleBurst", Kind::Inert),
     // P6-11dv: Immortal Call (`act_str.lua` 6700 to 6716), a guard: less
     // elemental and physical damage taken (`ElementalDamageTaken`,
     // `PhysicalDamageTaken` MORE). Its less physical damage taken per
@@ -1785,6 +1851,7 @@ pub const SKILLS: &[(&str, Kind)] = &[
     // (`act_int.lua`, `KineticBlast`).
     ("KineticBlast", Kind::Inert),
     ("LeapSlam", Kind::Inert),
+    ("LightningWarp", Kind::Inert),
     (
         "Malevolence",
         Kind::Buff {
@@ -1850,6 +1917,51 @@ pub const SKILLS: &[(&str, Kind)] = &[
     ),
     ("OrbOfStorms", Kind::Inert),
     ("PenanceBrand", Kind::Inert),
+    // Open items S2: Petrified Blood (`act_str.lua` 8519 to 8580), a buff that
+    // reserves 35% of mana ([`reservation`]): its skills' mana cost also as
+    // life while not on Low Life (`ManaCostAsLifeCost` BASE, `unscalable`,
+    // [`UNSCALABLE_STATS`]; `costs` reads it), and the life loss below half
+    // it prevents (`LifeLossBelowHalfPrevented` BASE, PoB's life hit pool,
+    // `CalcDefence.lua` 177 to 181 and 2235 to 2245; `enemy_hit` and `ehp`
+    // read it). The share lost over time (`LifeLossBelowHalfLost`) no PoB
+    // module reads.
+    (
+        "PetrifiedBlood",
+        Kind::Buff {
+            name: "Petrified Blood",
+            effect: EffectType::Buff,
+            stats: &[
+                (
+                    "petrified_blood_%_life_loss_below_half_from_hit_to_prevent",
+                    BuffStat::Rows(&[(
+                        Quantity::Poe1(Poe1Quantity::LifeLossBelowHalfPrevented),
+                        Op::Base,
+                        1.0,
+                        NONE,
+                        NONE,
+                    )]),
+                ),
+                (
+                    "petrified_blood_%_prevented_life_loss_to_lose_over_time",
+                    BuffStat::NoSlice("life-loss-over-time"),
+                ),
+                (
+                    "skill_grants_life_cost_%_mana_cost_while_not_on_low_life",
+                    BuffStat::WhenState {
+                        state: super::conditions::NOT_LOW_LIFE,
+                        var: "LowLife",
+                        rows: &[(
+                            Quantity::Poe1(Poe1Quantity::ManaCostAsLifeCost),
+                            Op::Base,
+                            1.0,
+                            NONE,
+                            NONE,
+                        )],
+                    },
+                ),
+            ],
+        },
+    ),
     // P6-11fo: Phase Run's buff (`act_dex.lua`, `PhaseRun`): movement
     // speed, and physical damage MORE with melee for skills that are not
     // totems' (PoB's negated `SkillType.SummonsTotem` tag,
@@ -2233,6 +2345,7 @@ pub const SKILLS: &[(&str, Kind)] = &[
             ],
         },
     ),
+    ("RainOfArrows", Kind::Inert),
     ("RaiseZombie", Kind::Inert),
     ("RaiseZombieAltX", Kind::Inert),
     ("RaiseZombieAltY", Kind::Inert),
@@ -2253,8 +2366,10 @@ pub const SKILLS: &[(&str, Kind)] = &[
         },
     ),
     // PoB `Data/Skills/act_int.lua` `skills["RighteousFire"]`: its spell
-    // damage more is a buff while unreserved life is at least 2; the
-    // degeneration reaches no slice field (Phase 6, P6-1).
+    // damage more is a buff while unreserved life is at least 2; so is its
+    // degeneration, `FireDegen` BASE per point of energy shield and of
+    // life, the stat over 6000 (open items S7, part 8; `act_int.lua` 15439
+    // to 15446), read by `poe1::degen`.
     (
         "RighteousFire",
         Kind::Buff {
@@ -2263,11 +2378,26 @@ pub const SKILLS: &[(&str, Kind)] = &[
             stats: &[
                 (
                     "base_nonlethal_fire_damage_%_of_maximum_energy_shield_taken_per_minute",
-                    BuffStat::NoSlice("degeneration"),
+                    BuffStat::LifeThreshold(&[(
+                        Quantity::Poe1(Poe1Quantity::Degen(
+                            DamageType::Fire,
+                            DegenOf::EnergyShield,
+                        )),
+                        Op::Base,
+                        6000.0,
+                        NONE,
+                        NONE,
+                    )]),
                 ),
                 (
                     "base_nonlethal_fire_damage_%_of_maximum_life_taken_per_minute",
-                    BuffStat::NoSlice("degeneration"),
+                    BuffStat::LifeThreshold(&[(
+                        Quantity::Poe1(Poe1Quantity::Degen(DamageType::Fire, DegenOf::Life)),
+                        Op::Base,
+                        6000.0,
+                        NONE,
+                        NONE,
+                    )]),
                 ),
                 (
                     "righteous_fire_spell_damage_+%_final",
@@ -2288,9 +2418,19 @@ pub const SKILLS: &[(&str, Kind)] = &[
             name: "Righteous Fire of Arcane Devotion",
             effect: EffectType::Buff,
             stats: &[
+                // Open items S7, part 8: `FireDegen` BASE per point of mana,
+                // the stat over 6000, while unreserved life is at least 2
+                // (`act_int.lua` 15539 to 15542; its threshold of 1 mana
+                // changes nothing: below it the amount per point is 0).
                 (
                     "base_nonlethal_fire_damage_%_of_maximum_mana_taken_per_minute",
-                    BuffStat::NoSlice("degeneration"),
+                    BuffStat::LifeThreshold(&[(
+                        Quantity::Poe1(Poe1Quantity::Degen(DamageType::Fire, DegenOf::Mana)),
+                        Op::Base,
+                        6000.0,
+                        NONE,
+                        NONE,
+                    )]),
                 ),
                 (
                     "righteous_fire_cast_speed_+%_final",
@@ -2358,10 +2498,13 @@ pub const SKILLS: &[(&str, Kind)] = &[
     ("ShieldCharge", Kind::Inert),
     ("ShieldCrush", Kind::Inert),
     // P6-11fx: Sigil of Power (`act_int.lua`): added lightning damage per
-    // stage up to its maximum, and the enemy's less damage at the maximum;
-    // the stages are the config's `sigilOfPowerStages`, 1 by default (its
-    // placeholder), so it acts without any input: a reason (the stage
-    // multiplier not modelled).
+    // stage up to its maximum, and the enemy's less damage at the maximum.
+    // The agent list (2026-11-27): the stages are the config's
+    // `sigilOfPowerStages`, else its saved placeholder, else 1 (PoB's
+    // `defaultPlaceholderState`), at most the gem's constant
+    // `circle_of_power_max_stages` (4; PoB's `limitVar`). The less damage
+    // reads, on the enemy, the character's stage multiplier
+    // (`actor = "enemy"`): it applies at the maximum, unscaled.
     (
         "SigilOfPower",
         Kind::Buff {
@@ -2370,11 +2513,36 @@ pub const SKILLS: &[(&str, Kind)] = &[
             stats: &[
                 (
                     "circle_of_power_enemy_damage_+%_final_at_max_stages",
-                    BuffStat::Reason("sigil-of-power-stages"),
+                    BuffStat::AtCount {
+                        input: SIGIL_OF_POWER_STAGES_INPUT,
+                        default: 1,
+                        at: SIGIL_OF_POWER_MAX_STAGES,
+                        var: "SigilOfPowerStage",
+                        threshold_var: "SigilOfPowerMaxStages",
+                        rows: &[(
+                            Quantity::Poe1(Poe1Quantity::EnemyDamage),
+                            Op::More,
+                            1.0,
+                            NONE,
+                            NONE,
+                        )],
+                    },
                 ),
                 (
                     "circle_of_power_max_added_lightning_per_stage",
-                    BuffStat::Reason("sigil-of-power-stages"),
+                    BuffStat::PerCount {
+                        input: SIGIL_OF_POWER_STAGES_INPUT,
+                        var: "SigilOfPowerStage",
+                        limit: Some(SIGIL_OF_POWER_MAX_STAGES),
+                        default: Some(1),
+                        rows: &[(
+                            added(DamageType::Lightning, Bound::Max),
+                            Op::Base,
+                            1.0,
+                            NONE,
+                            NONE,
+                        )],
+                    },
                 ),
                 (
                     "circle_of_power_max_stages",
@@ -2382,7 +2550,19 @@ pub const SKILLS: &[(&str, Kind)] = &[
                 ),
                 (
                     "circle_of_power_min_added_lightning_per_stage",
-                    BuffStat::Reason("sigil-of-power-stages"),
+                    BuffStat::PerCount {
+                        input: SIGIL_OF_POWER_STAGES_INPUT,
+                        var: "SigilOfPowerStage",
+                        limit: Some(SIGIL_OF_POWER_MAX_STAGES),
+                        default: Some(1),
+                        rows: &[(
+                            added(DamageType::Lightning, Bound::Min),
+                            Op::Base,
+                            1.0,
+                            NONE,
+                            NONE,
+                        )],
+                    },
                 ),
             ],
         },
@@ -2449,6 +2629,9 @@ pub const SKILLS: &[(&str, Kind)] = &[
             ],
         },
     ),
+    // Open items S3, part 5: the lightning spell of Mjolner's fixture
+    // (PoB's export: no global effect).
+    ("Spark", Kind::Inert),
     ("SpectralShieldThrow", Kind::Inert),
     ("Spellslinger", Kind::Inert),
     ("StaticStrike", Kind::Inert),
@@ -2709,13 +2892,19 @@ pub const SKILLS: &[(&str, Kind)] = &[
             ],
         },
     ),
+    ("TentacleSmash", Kind::Inert),
     ("Tornado", Kind::Inert),
     ("ToxicRain", Kind::Inert),
     // P6-11fr: Bloodrend (an item's triggered spell): no stat map in PoB.
     ("TriggeredBloodrend", Kind::Inert),
+    ("TriggeredMoltenStrike", Kind::Inert),
+    ("TriggeredStarfall", Kind::Inert),
     // P6-9f: no global effect and no reservation in PoB's skill data (the
     // skill is inert when it is not the main skill).
     ("UniqueMirageWarriors", Kind::Inert),
+    // Open items S3, part 8: The Hidden Blade's skill (PoB's export: no global
+    // effect).
+    ("UnseenStrike", Kind::Inert),
     // P6-11fr: Vaal Blight's Hinder (`act_int.lua`, `VaalBlight`): the
     // enemy's `ChaosDamageTaken` INC, a `Debuff` named "Hinder". Its damage
     // over time acts on Vaal Blight alone.
@@ -2753,6 +2942,35 @@ pub const SKILLS: &[(&str, Kind)] = &[
     // P6-11fr: Vaal attacks with no global effect in PoB.
     ("VaalEarthquake", Kind::Inert),
     ("VaalFlickerStrike", Kind::Inert),
+    // Open items S2: Vaal Grace's aura (`act_dex.lua` 8998 to 9040): its one
+    // global stat, "+15% chance to Evade Attack Hits" (`EvadeChance` BASE,
+    // [`super::evade`]). Its "Damage taken from Suppressed Hits is Unlucky"
+    // has no row in PoB's stat map, so PoB applies nothing; the game makes
+    // the enemy's suppressed hits unlucky, which the engine does not model:
+    // a reason on the fields the enemy's hit reaches (review of S2).
+    (
+        "VaalGrace",
+        Kind::Buff {
+            name: "Vaal Grace",
+            effect: EffectType::Aura,
+            stats: &[
+                (
+                    "chance_to_evade_attacks_%",
+                    BuffStat::Rows(&[(
+                        Quantity::Poe1(Poe1Quantity::EvadeChance),
+                        Op::Base,
+                        1.0,
+                        NONE,
+                        NONE,
+                    )]),
+                ),
+                (
+                    "damage_taken_from_suppressed_hits_is_unlucky",
+                    BuffStat::Defence("spell-suppression"),
+                ),
+            ],
+        },
+    ),
     // P6-11du: Vaal Haste's aura (`act_dex.lua` 9171), Haste's stats; PoB
     // merges buffs by name, so it stacks with Haste.
     (
@@ -2839,6 +3057,42 @@ pub const SKILLS: &[(&str, Kind)] = &[
                 "vaal_righteous_fire_spell_damage_+%_final",
                 BuffStat::Rows(&[(Quantity::Damage, Op::More, 1.0, Flags::SPELL, NONE)]),
             )],
+        },
+    ),
+    // Open items S2: Vaal Smite's aura (`act_str.lua` 10517 to 10575): Smite's
+    // aura's stats without its condition, `LightningMin` and `LightningMax`
+    // BASE and `EnemyShockChance`; it replaces Smite's aura ([`apply`]).
+    (
+        "VaalSmite",
+        Kind::Buff {
+            name: VAAL_SMITE_AURA,
+            effect: EffectType::Aura,
+            stats: &[
+                (
+                    "base_chance_to_shock_%_from_skill",
+                    BuffStat::NoSlice("ailment-chance"),
+                ),
+                (
+                    "maximum_added_lightning_damage_from_skill",
+                    BuffStat::Rows(&[(
+                        added(DamageType::Lightning, Bound::Max),
+                        Op::Base,
+                        1.0,
+                        NONE,
+                        NONE,
+                    )]),
+                ),
+                (
+                    "minimum_added_lightning_damage_from_skill",
+                    BuffStat::Rows(&[(
+                        added(DamageType::Lightning, Bound::Min),
+                        Op::Base,
+                        1.0,
+                        NONE,
+                        NONE,
+                    )]),
+                ),
+            ],
         },
     ),
     ("VaalSummonSkeletons", Kind::Inert),
@@ -3048,6 +3302,11 @@ pub const SKILLS: &[(&str, Kind)] = &[
 /// buff effect modifier scales it (P6-8a).
 const UNSCALABLE: &[&str] = &["Cyclone"];
 
+/// Stats of a gate ([`BuffStat::WhenState`]) whose mod PoB marks
+/// `unscalable` while the skill's other buff mods are not (open items S2:
+/// Petrified Blood's life cost, `act_str.lua` 8527).
+const UNSCALABLE_STATS: &[&str] = &["skill_grants_life_cost_%_mana_cost_while_not_on_low_life"];
+
 /// Supports whose stats act through the hex they support (PoB's
 /// `GlobalEffect` `effectType = "Curse"`; P6-11fl), sorted by ID: the
 /// rows join the curse's, so they apply only while it holds a curse slot.
@@ -3140,6 +3399,9 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
     // ([`BONECHILL_SUPPORT`], `damage_taken`); its cold damage MORE is the
     // supported skill's own; no global stat.
     ("SupportBonechill", &[]),
+    // Open items S3: Arcanist Brand's support part: no global stat; the
+    // spell it supports is triggered by the brand (`poe1::triggers`).
+    ("SupportBrandSupport", &[]),
     ("SupportBrutality", &[]),
     ("SupportBurningDamage", &[]),
     // Cast On Critical Strike's two parts (P6-8a; the awakened gem's attack
@@ -3148,6 +3410,11 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
     ("SupportCastOnCritTriggered", &[]),
     ("SupportCastOnCritTriggeredPlus", &[]),
     ("SupportCastOnCriticalStrike", &[]),
+    // Open items S3: Cast on Death: no global stat; the spell it supports
+    // takes PoB's stand-in time (`poe1::triggers`).
+    ("SupportCastOnDeath", &[]),
+    // Open items S3, part 8: Kitava's Thirst's support.
+    ("SupportCastOnManaSpent", &[]),
     ("SupportCastOnMeleeKill", &[]),
     ("SupportCastOnMeleeKillTriggered", &[]),
     ("SupportCastOnWardBreak", &[]),
@@ -3305,6 +3572,7 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
                 input: MOMENTUM_REMOVED_INPUT,
                 var: "MomentumStacksRemoved",
                 limit: None,
+                default: None,
                 rows: &[(
                     Quantity::Poe1(Poe1Quantity::MovementSpeed),
                     Op::Increased,
@@ -3349,7 +3617,33 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
     ("SupportSwiftAffliction", &[]),
     ("SupportSwiftAssembly", &[]),
     ("SupportTrapAndMineDamage", &[]),
+    // Open items S3, part 5: the supports an item's trigger line gives its
+    // socketed spells (`item_supports::TRIGGER_ROWS`): no global stat; the
+    // spell is triggered (`poe1::triggers`).
+    // Open items S3, part 8: Maloney's Mechanism's and the crafted Focus
+    // line's supports.
+    ("SupportTriggerBowSkillOnBowAttack", &[]),
+    ("SupportTriggerElementalSpellOnBlock", &[]),
+    ("SupportTriggerFireSpellOnHit", &[]),
+    ("SupportTriggerSpellFromHelmet", &[]),
+    ("SupportTriggerSpellOnAttack", &[]),
+    ("SupportTriggerSpellOnBowAttack", &[]),
+    ("SupportTriggerSpellOnBowAttackFreezeHit", &[]),
+    // The agent list: the crafted trigger (`poe1::triggers`, `SkillUse`).
+    ("SupportTriggerSpellOnSkillUse", &[]),
+    ("SupportTriggerSpellOnUnarmedMeleeCriticalHit", &[]),
     ("SupportTrinity", &[]),
+    // Open items S2: Unbound Ailments has no global stat; its ailment
+    // effect is the supported skill's own, read for Summon Skitterbots'
+    // auras ([`skitterbots`]) and a reason for a chilling area
+    // ([`guaranteed_chill`]).
+    ("SupportUnboundAilments", &[]),
+    (
+        "SupportUniqueCosprisMaliceColdSpellsCastOnMeleeCriticalStrike",
+        &[],
+    ),
+    ("SupportUniqueMjolnerLightningSpellsCastOnHit", &[]),
+    ("SupportUniqueVirulenceSpellsCastOnBlock", &[]),
     ("SupportUnleash", &[]),
     ("SupportUrgentOrders", &[]),
     ("SupportViciousProjectiles", &[]),
@@ -3525,15 +3819,111 @@ pub const WRATH_STATS: &[(&str, HitEffect)] = &[
     ),
 ];
 
-/// Intimidating Cry's terms of its exerted attacks' uptime
-/// (`CalcOffence.lua` 2592 to 2600), each a `Base` effect of
-/// [`Poe1Quantity::IntimidatingCry`] the hit reads.
+/// General's Cry's terms for its mirage warriors (`CalcMirages.lua` 364
+/// to 377): `Base` effects of [`Poe1Quantity::GeneralsCry`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum GeneralsCryValue {
+    /// The cry's cooldown, seconds (`calcSkillCooldown`, as
+    /// [`WarcryValue::Cooldown`]).
+    Cooldown,
+    /// The maximum mirage warriors (PoB's `GeneralsCryDoubleMaxCount`
+    /// BASE: the gem's `maximum_number_of_spiritual_cry_warriors` and the
+    /// character's lines).
+    Warriors,
+}
+
+impl GeneralsCryValue {
+    /// The value's stable name.
+    #[must_use]
+    pub const fn name(self) -> &'static str {
+        match self {
+            Self::Cooldown => "cooldown",
+            Self::Warriors => "warriors",
+        }
+    }
+}
+
+/// General's Cry's gem stat of its maximum mirage warriors.
+const GENERALS_CRY_WARRIORS_STAT: &str = "maximum_number_of_spiritual_cry_warriors";
+
+/// A warcry that exerts attacks (`CalcOffence.lua` 2540 to 2741, in PoB's
+/// order), each with the main skill's type its exerted attacks need.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum ExertCry {
+    /// Ancestral Cry: a `MeleeSingleTarget` skill.
+    Ancestral,
+    /// Infernal Cry: a `Melee` skill.
+    Infernal,
+    /// Intimidating Cry: a `Melee` skill.
+    Intimidating,
+    /// Rallying Cry: a `Melee` skill.
+    Rallying,
+    /// Seismic Cry: a `Slam` skill.
+    Seismic,
+    /// Battlemage's Cry: a `Melee` skill.
+    Battlemage,
+}
+
+impl ExertCry {
+    /// Every cry, in PoB's order.
+    pub const ALL: [Self; 6] = [
+        Self::Ancestral,
+        Self::Infernal,
+        Self::Intimidating,
+        Self::Rallying,
+        Self::Seismic,
+        Self::Battlemage,
+    ];
+
+    /// The cry's stable name.
+    #[must_use]
+    pub const fn name(self) -> &'static str {
+        match self {
+            Self::Ancestral => "ancestral-cry",
+            Self::Infernal => "infernal-cry",
+            Self::Intimidating => "intimidating-cry",
+            Self::Rallying => "rallying-cry",
+            Self::Seismic => "seismic-cry",
+            Self::Battlemage => "battlemages-cry",
+        }
+    }
+
+    /// The cry of a warcry gem's buff name (PoB's skill name), if it
+    /// exerts attacks.
+    #[must_use]
+    pub fn of(name: &str) -> Option<Self> {
+        Some(match name {
+            "Ancestral Cry" => Self::Ancestral,
+            "Infernal Cry" => Self::Infernal,
+            "Intimidating Cry" => Self::Intimidating,
+            "Rallying Cry" => Self::Rallying,
+            "Seismic Cry" => Self::Seismic,
+            "Battlemage's Cry" => Self::Battlemage,
+            _ => return None,
+        })
+    }
+
+    /// The main skill's type the cry's exerted attacks need.
+    #[must_use]
+    pub const fn skill_type(self) -> &'static str {
+        match self {
+            Self::Ancestral => "MeleeSingleTarget",
+            Self::Seismic => "Slam",
+            Self::Infernal | Self::Intimidating | Self::Rallying | Self::Battlemage => "Melee",
+        }
+    }
+}
+
+/// A warcry's terms of its exerted attacks' uptime (`CalcOffence.lua`
+/// 2540 to 2741), each a `Base` effect of [`Poe1Quantity::ExertingCry`]
+/// the hit reads.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum WarcryValue {
-    /// Exerted attacks per cry: `floor((base + extra) x more)` (PoB's
-    /// `NumIntimidatingExerts`, `CalcPerform.lua` 2316 to 2320), the
-    /// base the gem's `skill_empowers_next_x_melee_attacks`; the extra
-    /// exerts are stats the mapping does not know (reasons).
+    /// Exerted attacks per cry before the extra exerts: the gem's
+    /// `skill_empowers_next_x_melee_attacks` (PoB's `<Cry>ExertedAttacks`);
+    /// the hit takes `floor((base + extra) x more)` (`Num<Cry>Exerts`,
+    /// `CalcPerform.lua` 2316 to 2320) with
+    /// [`Poe1Quantity::ExtraExertedAttacks`].
     Exerts,
     /// The cooldown, seconds (`calcSkillCooldown`, `CalcOffence.lua`
     /// 274 to 287): the level's over `1 + inc / 100`, `inc` the gems'
@@ -3590,7 +3980,7 @@ pub struct WarcryTerms {
 
 /// The stats of a warcry's gems PoB reads as its `Duration` MORE
 /// (`SkillStatMap.lua` 694 to 707).
-const DURATION_MORE_STATS: &[&str] = &[
+pub(super) const DURATION_MORE_STATS: &[&str] = &[
     "active_skill_quality_duration_+%_final",
     // Close-out M3: More and Less Duration.
     "support_more_duration_skill_effect_duration_+%_final",
@@ -3598,11 +3988,16 @@ const DURATION_MORE_STATS: &[&str] = &[
     "support_swift_affliction_skill_effect_and_damaging_ailment_duration_+%_final",
 ];
 
+/// PoB's power of "Warcries have infinite Power" (`CalcPerform.lua` 1309).
+pub const INFINITE_WARCRY_POWER: f64 = 999_999.0;
+
 /// The warcry power (P6-11bs, P6-11hz; `CalcPerform.lua` 1311 and 2327):
 /// the config's override (its input, else its placeholder), else
-/// `max(base x (1 + inc / 100), 0)`, `base` 20 against a boss. With `inc`
-/// 0 it is PoB's `Multiplier:WarcryPower` (`output.WarcryPower`, the base
-/// alone).
+/// [`INFINITE_WARCRY_POWER`] with `infinite` (PoB's second `OVERRIDE`,
+/// added after the config's, so the config's is the one read), else
+/// `max(base x (1 + inc / 100), minimum)`, `base` 20 against a boss. With
+/// `inc` and `minimum` 0 it is PoB's `Multiplier:WarcryPower`
+/// (`output.WarcryPower`, the base alone).
 ///
 /// # Errors
 /// `warcry-power` for a config power that is not a number.
@@ -3610,6 +4005,8 @@ pub fn warcry_power(
     input: &CalcInput<'_>,
     config: Option<&ConfigSet>,
     inc: f64,
+    minimum: f64,
+    infinite: bool,
 ) -> Result<f64, &'static str> {
     let number = |kind| match config.and_then(|set| last_input(set, WARCRY_POWER_INPUT, kind)) {
         None => Ok(None),
@@ -3622,6 +4019,7 @@ pub fn warcry_power(
         Some(p) => p,
         None => match number(ConfigInputKind::Placeholder)? {
             Some(p) => p,
+            None if infinite => INFINITE_WARCRY_POWER,
             None => {
                 let base = if super::enemy::enemy(input.build, input.data).kind
                     == super::enemy::BossKind::None
@@ -3630,7 +4028,7 @@ pub fn warcry_power(
                 } else {
                     BOSS_WARCRY_POWER
                 };
-                crate::math::max(base * (1.0 + inc / 100.0), 0.0)
+                crate::math::max(base * (1.0 + inc / 100.0), minimum)
             }
         },
     };
@@ -3677,7 +4075,13 @@ pub fn warcry_terms(
         return Err("warcry-uptime");
     }
     // The power.
-    let power = warcry_power(input, config, totals.warcry_power)?;
+    let power = warcry_power(
+        input,
+        config,
+        totals.warcry_power,
+        totals.warcry_minimum_power,
+        totals.warcry_infinite_power,
+    )?;
     // The duration.
     let base = stat("base_skill_effect_duration") / 1000.0;
     let inc = stat("skill_effect_duration_+%") + totals.duration + totals.warcry_duration;
@@ -3698,7 +4102,8 @@ pub fn warcry_terms(
         + (stat("base_cooldown_speed_+%")
             + stat("warcry_cooldown_speed_+%")
             + totals.cooldown_recovery
-            + totals.warcry_cooldown_recovery)
+            + totals.warcry_cooldown_recovery
+            + totals.named_cooldown_recovery(s.active.map(|a| a.id.as_str())))
             / 100.0;
     let cooldown = cooldown_ms / 1000.0 / recovery;
     let uptime = crate::math::min(duration / cooldown, 1.0);
@@ -3715,9 +4120,9 @@ pub const WARCRY_CAST_TIME: f64 = 0.8;
 /// PoB's server tick rate (`Modules/Data.lua` 231: `1 / 0.033`).
 const SERVER_TICK_RATE: f64 = 1.0 / 0.033;
 
-/// Intimidating Cry's uptime terms (module docs) from its first modelled
-/// skill: `None` when the level is missing.
-fn intimidating_terms(
+/// A cry's uptime terms (module docs) from its first modelled skill:
+/// `None` when the level is missing.
+fn exert_terms(
     input: &CalcInput<'_>,
     s: &GroupSkill<'_>,
     totals: &Totals,
@@ -3753,10 +4158,17 @@ fn intimidating_terms(
     let (cooldown_ms, stored) = (level.cooldown as f64, level.stored_uses as f64);
     // `CooldownRecovery` INC: `base_cooldown_speed_+%` and, with the
     // warcry keyword, `warcry_cooldown_speed_+%` (`SkillStatMap.lua` 534,
-    // 547).
+    // 547), and the character's (PoB's `skillModList` holds them: the
+    // untagged, the warcries', and Intimidating Cry's by name; the agent
+    // list).
     let modifier = crate::math::max(
         0.0,
-        1.0 + (stat("base_cooldown_speed_+%") + stat("warcry_cooldown_speed_+%")) / 100.0,
+        1.0 + (stat("base_cooldown_speed_+%")
+            + stat("warcry_cooldown_speed_+%")
+            + totals.cooldown_recovery
+            + totals.warcry_cooldown_recovery
+            + totals.named_cooldown_recovery(s.active.map(|a| a.id.as_str())))
+            / 100.0,
     );
     let mut cooldown = cooldown_ms / 1000.0 / modifier;
     if stored <= 1.0 {
@@ -3769,7 +4181,7 @@ fn intimidating_terms(
     Some([
         (
             WarcryValue::Exerts,
-            crate::math::floor(stat("skill_empowers_next_x_melee_attacks")),
+            stat("skill_empowers_next_x_melee_attacks"),
         ),
         (WarcryValue::Cooldown, cooldown),
         (WarcryValue::CastRate, cast_rate),
@@ -3812,6 +4224,12 @@ const FROST_GLOBE_INPUT: &str = "conditionEnemyInFrostGlobe";
 /// constant).
 const FROST_SHIELD_MAX_STAGES: u32 = 4;
 
+/// The config count of Sigil of Power's stages (`ConfigOptions.lua` 620).
+pub const SIGIL_OF_POWER_STAGES_INPUT: &str = "sigilOfPowerStages";
+/// Sigil of Power's maximum stages (`circle_of_power_max_stages`, the
+/// gem's constant).
+const SIGIL_OF_POWER_MAX_STAGES: u32 = 4;
+
 /// The config inputs this module reads.
 #[must_use]
 pub fn is_input(name: &str) -> bool {
@@ -3832,6 +4250,8 @@ pub fn is_input(name: &str) -> bool {
         BANNER_PLANTED_INPUT,
         WAVE_OF_CONVICTION_INPUT,
         PLAGUE_BEARER_INPUT,
+        // The agent list (2026-11-27): Sigil of Power's stages.
+        SIGIL_OF_POWER_STAGES_INPUT,
     ]
     .contains(&name)
 }
@@ -4475,8 +4895,13 @@ struct Collected {
     lightning_golems: Vec<(Source, i64)>,
     /// Whether a modelled Rallying Cry is in the list.
     rallying_cry: Option<Source>,
-    /// Whether an Intimidating Cry's terms are in.
-    intimidating: bool,
+    /// The cries whose exert terms are in.
+    exerting: std::collections::BTreeSet<ExertCry>,
+    /// The main skill's group's slot (`Some(None)` for a group without
+    /// one), which General's Cry's must equal.
+    main_slot: Option<Option<String>>,
+    /// Whether a General's Cry's terms are in.
+    generals_cry: bool,
     /// The aura buffs that affect allies, by name, each with its first
     /// skill (P6-11er: `AurasAffectEnemies` puts them on the enemy too).
     ally_auras: BTreeMap<&'static str, Source>,
@@ -4504,7 +4929,12 @@ pub fn gems(
         .ok()
         .map(|m| m.group - 1);
     let matches = sockets::socket_matches(build, &groups, input.data);
-    let mut collected = Collected::default();
+    let mut collected = Collected {
+        main_slot: main_group
+            .and_then(|g| groups.get(g))
+            .map(|group| group.slot.as_ref().map(|s| s.as_str().to_owned())),
+        ..Collected::default()
+    };
     for (g, group) in groups.iter().enumerate() {
         let slot = group.slot.as_ref().map(|s| s.as_str());
         if main_group != Some(g) && !(group.enabled && slot_enabled(build, slot)) {
@@ -4625,6 +5055,9 @@ pub fn gems(
                 // Its supports' global effects (Arcane Surge's buff) act
                 // as any skill's.
                 supports_global(input, g, s, totals, config, &mut collected, ingest);
+                // Its buff's degeneration acts on you as any buff's (open
+                // items S7, part 8); the rest of the buff the hit reads.
+                main_skill_degen(input, g, s, totals, config, &mut collected, ingest);
                 continue;
             }
             let place = GroupPlace { index: g, slot };
@@ -4818,6 +5251,27 @@ fn apply(
     // Guards: PoB's slots (module docs).
     let kept = guard_slots(&guards, ingest);
     merged.retain(|(name, ..), _| !guards.contains_key(name) || kept.contains(name));
+    // Vaal Smite's aura replaces Smite's (open items S2): every row of
+    // Smite's aura has `Condition` `AffectedByVaalSmite` negated
+    // (`act_str.lua` 10325 to 10334), which PoB sets while Vaal Smite's
+    // aura applies (`CalcPerform.lua` 2417 to 2419).
+    if let Some((_, row)) = merged
+        .iter()
+        .find(|((name, ..), _)| *name == VAAL_SMITE_AURA)
+    {
+        let vaal = row.1.clone();
+        merged.retain(|(name, ..), _| *name != SMITE_AURA);
+        // Smite as the main skill gives its aura through the hit's mapping
+        // (P3-8l), which that condition would turn off: not modelled.
+        let main_is_smite = skill::main_skill(input.build, input.data, &GemLevels::none())
+            .is_ok_and(|m| m.effect().id == "Smite");
+        if main_is_smite {
+            ingest.reason(UnsupportedReason::UnmodelledSkill {
+                source: vaal,
+                what: "vaal-smite-over-smite",
+            });
+        }
+    }
     // Lightning Golem's Wrath (module docs): merged as an aura of its name.
     wrath(
         input,
@@ -5169,6 +5623,62 @@ struct GroupPlace<'a> {
 }
 
 /// One active skill of the group at `place` (module docs).
+/// The main skill's buff rows of [`Poe1Quantity::Degen`] (open items S7,
+/// part 8): PoB applies the main skill's `GlobalEffect` buff to you as any
+/// skill's (Righteous Fire's degeneration as the main skill), scaled as
+/// [`one_skill`] scales a buff; the buff's other stats the hit reads.
+fn main_skill_degen(
+    input: &CalcInput<'_>,
+    g: usize,
+    s: &GroupSkill<'_>,
+    totals: &Totals,
+    config: Option<&ConfigSet>,
+    collected: &mut Collected,
+    ingest: &mut Ingest<'_>,
+) {
+    let Some(Kind::Buff {
+        name,
+        effect: EffectType::Buff,
+        stats,
+    }) = kind(&s.active_gem.effect.id)
+    else {
+        return;
+    };
+    if s.global_off {
+        return;
+    }
+    let on_you = totals.offering_on_you(&s.active_gem.effect.id);
+    let own = own_effect(input, s, false)
+        + named_golem(totals, s)
+        + named_aura(totals, s, false)
+        + totals.offering(&s.active_gem.effect.id, on_you);
+    let scale = if UNSCALABLE.contains(&s.active_gem.effect.id.as_str()) {
+        1.0
+    } else {
+        totals.buff_scale(false, &s.types, own)
+    };
+    let mut rows = Merged::new();
+    add_rows(
+        input,
+        g,
+        &s.active_gem,
+        name,
+        stats,
+        (scale, scale),
+        config,
+        false,
+        on_you,
+        None,
+        &mut rows,
+        ingest,
+    );
+    for (key, row) in rows {
+        if matches!(row.2.0, Quantity::Poe1(Poe1Quantity::Degen(..))) {
+            collected.merged.entry(key).or_insert(row);
+        }
+    }
+}
+
 fn one_skill(
     input: &CalcInput<'_>,
     place: GroupPlace<'_>,
@@ -5250,22 +5760,74 @@ fn one_skill(
     {
         collected.rallying_cry = Some(active_source.clone());
     }
-    // Intimidating Cry's exerted attacks: the first one's terms (PoB
-    // computes it once, `IntimidatingCryCalculated`).
+    // General's Cry's mirage warriors (the agent list, S5): the first one in
+    // the main skill's slot (`CalcMirages.lua` 365 to 371, the skill list's
+    // order).
     if matches!(
         kind,
         Kind::Warcry {
-            name: "Intimidating Cry",
+            name: "General's Cry",
             ..
         }
-    ) && !collected.intimidating
+    ) && !collected.generals_cry
+        && collected.main_slot.as_ref().map(Option::as_deref) == Some(slot)
     {
-        collected.intimidating = true;
-        match intimidating_terms(input, s, totals) {
+        collected.generals_cry = true;
+        let warriors = skill::instance(
+            s.active_gem.effect,
+            s.active_gem.level,
+            s.active_gem.quality,
+            input.data,
+        );
+        let cooldown = exert_terms(input, s, totals).and_then(|terms| {
+            terms
+                .iter()
+                .find(|(v, _)| *v == WarcryValue::Cooldown)
+                .map(|(_, c)| *c)
+        });
+        match cooldown {
+            Some(cooldown) if warriors.problems.is_empty() => {
+                #[expect(
+                    clippy::cast_precision_loss,
+                    reason = "stat values are small integers, exact as f64"
+                )]
+                let count = warriors
+                    .stats
+                    .iter()
+                    .filter(|(id, _)| id == GENERALS_CRY_WARRIORS_STAT)
+                    .map(|(_, v)| *v as f64)
+                    .sum::<f64>();
+                for (v, value) in [
+                    (GeneralsCryValue::Cooldown, cooldown),
+                    (GeneralsCryValue::Warriors, count),
+                ] {
+                    ingest.effect(Effect {
+                        quantity: Quantity::Poe1(Poe1Quantity::GeneralsCry(v)),
+                        op: Op::Base,
+                        value,
+                        conditions: Conditions::none(),
+                        source: active_source.clone(),
+                    });
+                }
+            }
+            _ => ingest.reason(UnsupportedReason::UnmodelledSkill {
+                source: active_source.clone(),
+                what: "warcry-uptime",
+            }),
+        }
+    }
+    // A cry's exerted attacks: the first one's terms (PoB computes each
+    // cry once, `<Cry>CryCalculated`).
+    let cry = match kind {
+        Kind::Warcry { name, .. } => ExertCry::of(name),
+        _ => None,
+    };
+    if let Some(cry) = cry.filter(|c| collected.exerting.insert(*c)) {
+        match exert_terms(input, s, totals) {
             Some(terms) => {
                 for (v, value) in terms {
                     ingest.effect(Effect {
-                        quantity: Quantity::Poe1(Poe1Quantity::IntimidatingCry(v)),
+                        quantity: Quantity::Poe1(Poe1Quantity::ExertingCry(cry, v)),
                         op: Op::Base,
                         value,
                         conditions: Conditions::none(),
@@ -5727,6 +6289,35 @@ fn add_rows(
                 }
                 continue;
             }
+            BuffStat::AtCount {
+                input: counted,
+                default,
+                at,
+                rows,
+                ..
+            } => {
+                let read = config
+                    .and_then(|set| last_input(set, counted, ConfigInputKind::Input))
+                    .or_else(|| {
+                        config
+                            .and_then(|set| last_input(set, counted, ConfigInputKind::Placeholder))
+                    });
+                let n = match read {
+                    Some(ConfigValue::Number(n)) => n.value().0,
+                    None => f64::from(default),
+                    Some(_) => {
+                        ingest.reason(UnsupportedReason::UnmodelledConfig {
+                            input: counted.to_owned(),
+                        });
+                        continue;
+                    }
+                };
+                if n < f64::from(at) {
+                    continue;
+                }
+                row_scale = 1.0;
+                (rows, None)
+            }
             BuffStat::Reason(what) => {
                 if *value != 0 {
                     ingest.reason(UnsupportedReason::UnmodelledSkill {
@@ -5802,26 +6393,37 @@ fn add_rows(
             BuffStat::PerCount {
                 input: counted,
                 limit,
+                default,
                 rows,
                 ..
             } => {
-                match config.and_then(|set| last_input(set, counted, ConfigInputKind::Input)) {
-                    Some(ConfigValue::Number(n))
-                        if n.value().0.is_finite() && n.value().0 != 0.0 =>
-                    {
-                        count = n.value().0;
-                        if let Some(limit) = limit {
-                            count = crate::math::min(count, f64::from(limit));
-                        }
-                    }
-                    Some(ConfigValue::Number(n)) if n.value().0 == 0.0 => continue,
-                    None => continue,
+                // An absent input with a default: the saved placeholder,
+                // else the default (PoB's `BuildModList`).
+                let mut read =
+                    config.and_then(|set| last_input(set, counted, ConfigInputKind::Input));
+                if read.is_none() && default.is_some() {
+                    read = config
+                        .and_then(|set| last_input(set, counted, ConfigInputKind::Placeholder));
+                }
+                let raw = match read {
+                    Some(ConfigValue::Number(n)) if n.value().0.is_finite() => n.value().0,
+                    None => match default {
+                        Some(d) => f64::from(d),
+                        None => continue,
+                    },
                     Some(_) => {
                         ingest.reason(UnsupportedReason::UnmodelledConfig {
                             input: counted.to_owned(),
                         });
                         continue;
                     }
+                };
+                if raw == 0.0 {
+                    continue;
+                }
+                count = raw;
+                if let Some(limit) = limit {
+                    count = crate::math::min(count, f64::from(limit));
                 }
                 (rows, None)
             }
@@ -5858,7 +6460,12 @@ fn add_rows(
             }
             BuffStat::Threshold(rows) => (rows, Some((STAT_THRESHOLD, true))),
             BuffStat::LifeThreshold(rows) => (rows, Some((LIFE_THRESHOLD, true))),
-            BuffStat::WhenState { state, rows, .. } => (rows, Some((state, true))),
+            BuffStat::WhenState { state, rows, .. } => {
+                if UNSCALABLE_STATS.contains(&id) {
+                    row_scale = 1.0;
+                }
+                (rows, Some((state, true)))
+            }
             BuffStat::MinionOnly(rows) => {
                 if !for_minion && !minion_only_on_you {
                     continue;
@@ -6141,58 +6748,57 @@ fn ailment_overrides(
 /// mods of source `Skill`: the gem's `shock_effect_+%` and
 /// `chill_effect_+%` at its level), each marking the enemy shocked or
 /// chilled. No effect modifier scales an override afterwards (3509 to
-/// 3519). A support with an ailment effect stat (its `Skill` mods too), Bonechill's flag
-/// on it (`SkitterbotBonechill`), and the modifiers that stop or change
-/// the auras (`SkitterbotsCannotShock`, `SkitterbotAilmentEffect`,
-/// `ScorchingSkitterbot`, `SkitterbotAffectPlayer`: unmapped stats) are
-/// reasons.
+/// 3519). The `inc` is every `Skill` mod of the skill: the gem's and its
+/// supports' stats ([`SHOCK_EFFECT_STATS`], [`CHILL_EFFECT_STATS`]; open
+/// items S2: Unbound Ailments' `non_damaging_ailment_effect_+%`, Bonechill's
+/// `chill_effect_+%`). Bonechill on it (`supportBonechill`) gives the
+/// guaranteed Bonechill (1357 to 1358, 1379 to 1380; [`BONECHILL_SUPPORT`]):
+/// the chill raises the enemy's cold damage taken (3444); its
+/// `SkitterbotBonechill` flag only reads the chill on you (844), which the
+/// modifiers that make the auras affect you start. Those modifiers and the
+/// ones that stop or change the auras (`SkitterbotsCannotShock`,
+/// `SkitterbotAilmentEffect`, `ScorchingSkitterbot`,
+/// `SkitterbotAffectPlayer`: unmapped stats) are reasons.
 fn skitterbots(input: &CalcInput<'_>, s: &GroupSkill<'_>, source: Source, ingest: &mut Ingest<'_>) {
-    // A support's mods of source `Skill` that PoB's override reads: its
-    // shock, chill, and non-damaging ailment effect (`SkillStatMap.lua`:
-    // `EnemyShockEffect`, `EnemyChillEffect` INC), and Bonechill's flag.
-    // Another support changes nothing here (its reservation is
-    // [`reservation`]'s; an unknown one is `unmodelled-gem`).
-    const AILMENT_EFFECT_STATS: [&str; 3] = [
-        "chill_effect_+%",
-        "non_damaging_ailment_effect_+%",
-        "shock_effect_+%",
-    ];
-    let support_reads = s.supports.iter().any(|sup| {
-        sup.effect.id == BONECHILL_SUPPORT
-            || skill::instance(sup.effect, sup.level, sup.quality, input.data)
-                .stats
-                .iter()
-                .any(|(id, v)| *v != 0 && AILMENT_EFFECT_STATS.contains(&id.as_str()))
-    });
-    if support_reads {
-        ingest.reason(UnsupportedReason::UnmodelledSkill {
+    // The gem's and its supports' `Skill` mods (PoB's `{ source = "Skill" }`).
+    let instances: Vec<_> = std::iter::once(&s.active_gem)
+        .chain(&s.supports)
+        .map(|r| skill::instance(r.effect, r.level, r.quality, input.data))
+        .collect();
+    let sum = |ids: &[&str]| -> f64 {
+        instances
+            .iter()
+            .flat_map(|i| &i.stats)
+            .filter(|(id, _)| ids.contains(&id.as_str()))
+            .map(|(_, v)| {
+                #[expect(clippy::cast_precision_loss, reason = "gem stat values, exact as f64")]
+                let v = *v as f64;
+                v
+            })
+            .sum()
+    };
+    if s.supports
+        .iter()
+        .any(|sup| sup.effect.id == BONECHILL_SUPPORT)
+    {
+        ingest.effect(Effect {
+            quantity: Quantity::Poe1(Poe1Quantity::Bonechill(true)),
+            op: Op::Flag,
+            value: 1.0,
+            conditions: Conditions::none(),
             source: source.clone(),
-            what: "skitterbots-supports",
         });
     }
-    let instance = skill::instance(
-        s.active_gem.effect,
-        s.active_gem.level,
-        s.active_gem.quality,
-        input.data,
-    );
-    let stat = |id: &str| {
-        instance
-            .stats
-            .iter()
-            .find(|(s, _)| s == id)
-            .map_or(0.0, |(_, v)| *v as f64)
-    };
     for (quantity, default, effect) in [
         (
             Poe1Quantity::SkillShockOverride,
             super::damage_taken::SHOCK_DEFAULT,
-            stat("shock_effect_+%"),
+            sum(&SHOCK_EFFECT_STATS),
         ),
         (
             Poe1Quantity::SkillChillOverride,
             super::damage_taken::CHILL_DEFAULT,
-            stat("chill_effect_+%"),
+            sum(&CHILL_EFFECT_STATS),
         ),
     ] {
         ingest.effect(Effect {
@@ -6240,9 +6846,30 @@ const AURA_NOT_ON_SELF_SUPPORTS: &[&str] = &["SupportGenerosity"];
 /// Bonechill Support's granted effect (P6-11fv).
 const BONECHILL_SUPPORT: &str = "SupportBonechill";
 
-/// Quality stats that give a skill's own chill effect (PoB's
-/// `EnemyChillEffect` INC; [`guaranteed_chill`]).
-const SKILL_CHILL_QUALITY: &[&str] = &["chill_effect_+%", "cold_ailment_effect_+%"];
+/// Smite's aura's buff name.
+const SMITE_AURA: &str = "Smite";
+/// Vaal Smite's aura's buff name, which replaces Smite's ([`apply`]).
+const VAAL_SMITE_AURA: &str = "Vaal Smite";
+
+/// The stats that give a skill's own `EnemyShockEffect` INC
+/// (`SkillStatMap.lua` 1091 to 1107; open items S2).
+const SHOCK_EFFECT_STATS: [&str; 3] = [
+    "lightning_ailment_effect_+%",
+    "non_damaging_ailment_effect_+%",
+    "shock_effect_+%",
+];
+
+/// The stats that give a skill's own `EnemyChillEffect` INC
+/// (`SkillStatMap.lua` 1085 to 1119; open items S2).
+const CHILL_EFFECT_STATS: [&str; 3] = [
+    "chill_effect_+%",
+    "cold_ailment_effect_+%",
+    "non_damaging_ailment_effect_+%",
+];
+
+/// A skill's own more chill effect (PoB's `EnemyChillEffect` MORE,
+/// `SkillStatMap.lua` 1088).
+const SKILL_CHILL_MORE_STAT: &str = "active_skill_chill_effect_+%_final";
 
 /// The skill type that gives one unless the skill cannot chill (PoB's
 /// `NonHitChill` without the `CannotChill` flag).
@@ -6260,10 +6887,10 @@ pub const NON_HIT_CHILL: &str = "NonHitChill";
 /// test).
 ///
 /// PoB scales the chill by the skill's own `EnemyChillEffect` too
-/// (`calcLib.mod(activeSkill.skillModList, ..., "EnemyChillEffect")`): a
-/// skill whose quality gives it (Frost Shield's `cold_ailment_effect_+%`,
-/// P6-11fk) at a quality above 0 is a `skill-chill-effect` reason, the
-/// chill kept at the character's effect.
+/// (`calcLib.mod(activeSkill.skillModList, ..., "EnemyChillEffect")`): the
+/// skill's gems' chill effect stats are [`Poe1Quantity::SkillChillEffect`]
+/// beside its chill (the agent list, 2026-11-27; before, a
+/// `skill-chill-effect` reason).
 fn guaranteed_chill(
     input: &CalcInput<'_>,
     s: &GroupSkill<'_>,
@@ -6293,22 +6920,43 @@ fn guaranteed_chill(
             source: source.clone(),
         });
     }
-    // Bonechill's own `chill_effect_+%` on every level (P6-11fv) is the
-    // supported skill's `EnemyChillEffect` too.
-    let own_chill = (s.active_gem.quality > 0
-        && s.active_gem
-            .effect
-            .quality
-            .iter()
-            .any(|q| q.per_mille != 0 && SKILL_CHILL_QUALITY.contains(&q.stat.as_str())))
-        || s.supports
-            .iter()
-            .any(|sup| sup.effect.id == BONECHILL_SUPPORT);
-    if types.contains(CHILLING_AREA) && own_chill {
-        ingest.reason(UnsupportedReason::UnmodelledSkill {
-            source: source.clone(),
-            what: "skill-chill-effect",
-        });
+    // The skill's own chill effect (the agent list, 2026-11-27): its gems'
+    // `EnemyChillEffect` stats, increased and more, beside its chill: its
+    // quality's (Frost Shield's `cold_ailment_effect_+%`, P6-11fk), its
+    // supports' (Bonechill's `chill_effect_+%`, P6-11fv; Unbound Ailments'
+    // `non_damaging_ailment_effect_+%`, open items S2).
+    if types.contains(CHILLING_AREA) {
+        let mut stats: Vec<(String, i64)> = skill::instance(
+            s.active_gem.effect,
+            s.active_gem.level,
+            s.active_gem.quality,
+            input.data,
+        )
+        .stats;
+        for sup in &s.supports {
+            stats.extend(skill::instance(sup.effect, sup.level, sup.quality, input.data).stats);
+        }
+        for (id, v) in stats {
+            let op = if CHILL_EFFECT_STATS.contains(&id.as_str()) {
+                Op::Increased
+            } else if id == SKILL_CHILL_MORE_STAT {
+                Op::More
+            } else {
+                continue;
+            };
+            if v == 0 {
+                continue;
+            }
+            #[expect(clippy::cast_precision_loss, reason = "a small stat value")]
+            let value = v as f64;
+            ingest.effect(Effect {
+                quantity: Quantity::Poe1(Poe1Quantity::SkillChillEffect),
+                op,
+                value,
+                conditions: Conditions::none(),
+                source: source.clone(),
+            });
+        }
     }
     if types.contains(CHILLING_AREA) {
         ingest.effect(Effect {
@@ -6662,6 +7310,7 @@ mod tests {
                 | BuffStat::PerCount { rows: e, .. }
                 | BuffStat::PerStack { rows: e, .. }
                 | BuffStat::AtMaxStages { rows: e, .. }
+                | BuffStat::AtCount { rows: e, .. }
                 | BuffStat::Threshold(e)
                 | BuffStat::LifeThreshold(e)
                 | BuffStat::WhenState { rows: e, .. }
@@ -6808,6 +7457,20 @@ mod tests {
             // Open items S8: Adrenaline when leech is removed by filling
             // unreserved life (`NoEffect`), not a reservation.
             "chance_to_gain_adrenaline_for_2_seconds_on_leech_removed_by_filling_unreserved_life_%",
+            // The agent list (2026-11-27): exerted attacks' damage, read by
+            // `hit::exerted_attacks` from the cries' uptimes this module
+            // gives; no buff's effect or reservation.
+            "support_overexertion_damage_+%_final_if_exerted",
+            "support_overexertion_damage_+%_final_per_warcry_exerting_action",
+            "warcry_grant_damage_+%_to_exerted_attacks",
+            // The same: the extra attacks the cries exert.
+            "warcry_empowers_next_x_melee_attacks",
+            "warcries_exert_twice_as_many_attacks",
+            // The same: the warcry power the cries read.
+            "warcries_have_infinite_power",
+            "warcries_have_minimum_10_power",
+            // The same: General's Cry Support's "count as Exerted".
+            "number_of_warcries_exerting_this_action",
         ];
         for id in ids {
             for word in GUARDED_WORDS {
@@ -6912,6 +7575,18 @@ mod tests {
                 .iter()
                 .any(|(s, aura)| *s == "non_curse_aura_effect_+%" && *aura)
         );
+    }
+
+    /// The skill and support tables are binary-searched by ID (open items
+    /// S3: an entry out of order hid Cast On Critical Strike).
+    #[test]
+    fn the_gem_tables_should_be_sorted_by_id() {
+        for w in SKILLS.windows(2) {
+            assert!(w[0].0 < w[1].0, "{} before {}", w[0].0, w[1].0);
+        }
+        for w in SUPPORTS.windows(2) {
+            assert!(w[0].0 < w[1].0, "{} before {}", w[0].0, w[1].0);
+        }
     }
 
     #[test]

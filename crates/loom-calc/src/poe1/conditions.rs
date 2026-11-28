@@ -286,14 +286,43 @@ pub const NEARBY_RARE_OR_UNIQUE_INPUT: &str = "multiplierNearbyRareOrUniqueEnemi
 /// from `conditionCritRecently`, `ConfigOptions.lua` 1240; close-out).
 pub const CRIT_RECENTLY: &str = "CritRecently";
 /// "while Leeching" (P6-11bv; PoB's `Leeching`: the config's four
-/// leeching checks, `ConfigOptions.lua` 1068 to 1081; PoB also sets it
-/// for "Life Leech effects are not removed at Full Life", stats that stay
-/// reasons, `config::DEPENDS_ON`).
+/// leeching checks, `ConfigOptions.lua` 1068 to 1081; since the agent list
+/// also [`LEECH_AT_FULL_LIFE_STATS`] and [`LEECH_AT_FULL_ES_STATS`]).
 pub const LEECHING: &str = "Leeching";
 /// "while Leeching Energy Shield" (P6-11bv).
 pub const LEECHING_ENERGY_SHIELD: &str = "LeechingEnergyShield";
+/// "while Leeching Life" (P6-11bv).
+pub const LEECHING_LIFE: &str = "LeechingLife";
+/// "Life Leech effects are not removed when Unreserved Life is Filled"
+/// (PoB's `CanLeechLifeOnFullLife`, `ModParser.lua` 2998, 2999): leeching
+/// life always (`CalcPerform.lua` 873 to 876), unless [`GHOST_REAVER_STAT`].
+pub const LEECH_AT_FULL_LIFE_STATS: [&str; 1] = ["life_leech_does_not_stop_at_full_life"];
+/// "Leech Energy Shield instead of Life" (PoB's `GhostReaver`,
+/// `ModParser.lua` 2306).
+pub const GHOST_REAVER_STAT: &str = "leech_energy_shield_instead_of_life";
+/// "Energy Shield Leech effects are not removed when Energy Shield is
+/// Filled" and its attacks form (PoB's `CanLeechEnergyShieldOnFullEnergyShield`,
+/// `ModParser.lua` 3000, 3013): leeching energy shield always (877 to
+/// 880).
+pub const LEECH_AT_FULL_ES_STATS: [&str; 2] = [
+    "energy_shield_leech_does_not_stop_on_full_energy_shield",
+    "energy_shield_leech_from_attacks_does_not_stop_on_full_energy_shield",
+];
 /// "while you have Arcane Surge" (PoB's `AffectedByArcaneSurge`).
 pub const ARCANE_SURGE: &str = "AffectedByArcaneSurge";
+
+/// Blood Stance (PoB's `Condition:BloodStance`, on unless Sand Stance,
+/// `CalcSetup.lua` 538; the agent list, 2026-11-27): settled from the
+/// config's `bloodSandStance` ([`super::gems::STANCE_INPUT`]), Blood unless
+/// it is `SAND`.
+pub const BLOOD_STANCE: &str = "BloodStance";
+/// Sand Stance (PoB's `Condition:SandStance` from `bloodSandStance` `SAND`,
+/// `ConfigOptions.lua` 643 to 646).
+pub const SAND_STANCE: &str = "SandStance";
+/// "if you've changed Stance recently" (PoB's `ChangedStanceRecently`,
+/// from the config's `changedStance`, `ConfigOptions.lua` 648; the agent
+/// list, 2026-11-27).
+pub const CHANGED_STANCE_RECENTLY: &str = "ChangedStanceRecently";
 
 /// "if you've been Hit Recently" (PoB's `BeenHitRecently`, from
 /// `conditionBeenHitRecently` or a `multiplierBeenHitRecently` above 0;
@@ -322,6 +351,9 @@ pub const FULL_LIFE: &str = "FullLife";
 /// its calc modules: life reserved past the threshold (`CalcPerform.lua`
 /// 546) reads `LowLifePercentage` for display only.
 pub const LOW_LIFE: &str = "LowLife";
+/// "while not on Low Life": [`LOW_LIFE`] negated (open items S2: Petrified
+/// Blood's life cost, PoB's `Condition` `LowLife` with `neg`).
+pub const NOT_LOW_LIFE: &str = "NotLowLife";
 /// "while Ignited" (PoB's `Ignited`, from `conditionIgnited`,
 /// `ConfigOptions.lua` 1181; P6-11ei). Its implied `Burning` is the UI's.
 pub const IGNITED: &str = "Ignited";
@@ -370,6 +402,10 @@ pub const LIFETAP: &str = "Lifetap";
 /// movement speed buff, `poe1::gems`).
 pub const CHANNELLING_CYCLONE: &str = "ChannellingCyclone";
 
+/// PoB's `Condition:Phasing`, from its config check `buffPhasing`
+/// (`ConfigOptions.lua` 1025; open items S3, part 8: The Hidden Blade).
+pub const PHASING: &str = "Phasing";
+
 /// The check inputs and the condition each sets (module docs), sorted by
 /// input (a test checks); an input may set several, and several inputs
 /// one: the condition holds when any of its inputs is on (P6-11g).
@@ -380,6 +416,11 @@ pub const CHECKS: &[(&str, &str)] = &[
     ("buffLifetap", LIFETAP),
     // P6-11gp: Magmatic Strikes.
     ("buffNgamahuFlamesAdvance", NGAMAHU_FLAMES_ADVANCE),
+    // Open items S3, part 8: phasing (The Hidden Blade's trigger,
+    // `poe1::triggers`, and the "while Phasing" lines).
+    ("buffPhasing", PHASING),
+    // The agent list (2026-11-27): a stance changed recently.
+    ("changedStance", CHANGED_STANCE_RECENTLY),
     ("channellingCycloneCheck", CHANNELLING_CYCLONE),
     ("conditionAtCloseRange", AT_CLOSE_RANGE),
     // P6-11em: attacked recently; the main skill too (`settle`).
@@ -446,7 +487,7 @@ pub const CHECKS: &[(&str, &str)] = &[
     ("conditionLeechingEnergyShield", LEECHING),
     ("conditionLeechingEnergyShield", LEECHING_ENERGY_SHIELD),
     ("conditionLeechingLife", LEECHING),
-    ("conditionLeechingLife", "LeechingLife"),
+    ("conditionLeechingLife", LEECHING_LIFE),
     ("conditionLeechingMana", LEECHING),
     ("conditionLeechingMana", "LeechingMana"),
     // P6-11ei: low life (Pain Attunement, movement speed).
@@ -618,6 +659,20 @@ pub fn settle(input: &CalcInput<'_>, out: &mut BTreeMap<ConditionKey, bool>) {
         }
         Some(ConfigValue::Number(n)) => {
             out.insert(ConditionKey::new(STATIONARY), n.value().0 > 0.0);
+        }
+        Some(_) => {}
+    }
+    // The stance (the agent list, 2026-11-27): another value than a string
+    // leaves both unsettled.
+    match set.and_then(|s| last(s, super::gems::STANCE_INPUT, ConfigInputKind::Input)) {
+        None => {
+            out.insert(ConditionKey::new(BLOOD_STANCE), true);
+            out.insert(ConditionKey::new(SAND_STANCE), false);
+        }
+        Some(ConfigValue::String(s)) => {
+            let sand = s == "SAND";
+            out.insert(ConditionKey::new(BLOOD_STANCE), !sand);
+            out.insert(ConditionKey::new(SAND_STANCE), sand);
         }
         Some(_) => {}
     }
@@ -797,15 +852,41 @@ pub fn settle(input: &CalcInput<'_>, out: &mut BTreeMap<ConditionKey, bool>) {
     // Affected by a herald (P6-11ct): PoB's herald count above 0.
     let (heralds, _) = super::gems::herald_and_aura_counts(input);
     out.insert(ConditionKey::new(AFFECTED_BY_HERALD), heralds > 0);
+    // Leeching at full life or energy shield (the agent list;
+    // `CalcPerform.lua` 873 to 880): PoB's `CanLeechLifeOnFullLife`
+    // (unless `GhostReaver`, "Leech Energy Shield instead of Life") and
+    // `CanLeechEnergyShieldOnFullEnergyShield` set the leeching conditions.
+    let has = |stat: &str| super::states::build_has_stat(input, stat);
+    if LEECH_AT_FULL_LIFE_STATS.iter().any(|s| has(s)) && !has(GHOST_REAVER_STAT) {
+        out.insert(ConditionKey::new(LEECHING), true);
+        out.insert(ConditionKey::new(LEECHING_LIFE), true);
+    }
+    if LEECH_AT_FULL_ES_STATS.iter().any(|s| has(s)) {
+        out.insert(ConditionKey::new(LEECHING), true);
+        out.insert(ConditionKey::new(LEECHING_ENERGY_SHIELD), true);
+    }
     // Using a life flask (P6-11cq): the active flasks; no config check
     // sets it.
-    if let Some(v) = super::flasks::using_life_flask(input) {
+    // A flask instant on low life (the agent list) reads the settled low
+    // life.
+    let low_life = out.get(&ConditionKey::new(LOW_LIFE)).copied();
+    if let Some(v) = super::flasks::using_life_flask(input, low_life) {
         out.insert(ConditionKey::new(USING_LIFE_FLASK), v);
     }
-    // Using any flask (P6-11dz): its check, or an active flask.
+    // Using any flask (P6-11dz): its check, or an active flask; unsettled
+    // when an active flask's instant recovery depends on an unsettled low
+    // life.
     let key = ConditionKey::new(USING_FLASK);
-    if out.get(&key).copied() == Some(false) && super::flasks::using_flask(input) {
-        out.insert(key, true);
+    if out.get(&key).copied() == Some(false) {
+        match super::flasks::using_flask(input, low_life) {
+            Some(true) => {
+                out.insert(key, true);
+            }
+            Some(false) => {}
+            None => {
+                out.remove(&key);
+            }
+        }
     }
     // A rare or unique enemy nearby (P6-10b): either condition; a count of
     // another type leaves it unsettled unless the enemy is rare or unique.
@@ -943,6 +1024,8 @@ pub fn settle(input: &CalcInput<'_>, out: &mut BTreeMap<ConditionKey, bool>) {
         (EV_BYPASS, NOT_EV_BYPASS),
         // P6-11ik: the enemy not on low life.
         (ENEMY_LOW_LIFE, ENEMY_NOT_LOW_LIFE),
+        // Open items S2: not on low life.
+        (LOW_LIFE, NOT_LOW_LIFE),
     ] {
         if let Some(v) = out.get(&ConditionKey::new(key)).copied() {
             out.insert(ConditionKey::new(not), !v);

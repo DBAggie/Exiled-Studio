@@ -85,6 +85,9 @@ pub enum SkillTiming {
     CooldownRecovery,
     /// `CooldownRecovery` INC of warcries.
     WarcryCooldownRecovery,
+    /// `CooldownRecovery` INC of Intimidating Cry (its `SkillName`; the
+    /// agent list).
+    IntimidatingCryCooldownRecovery,
     /// `BuffEffect` INC of warcries ("Warcry Buff Effect").
     WarcryBuffEffect,
     /// `WarcryPower` INC ("increased total Power counted by Warcries").
@@ -102,6 +105,7 @@ impl SkillTiming {
             Self::WarcryDuration => "warcry-duration",
             Self::CooldownRecovery => "cooldown-recovery",
             Self::WarcryCooldownRecovery => "warcry-cooldown-recovery",
+            Self::IntimidatingCryCooldownRecovery => "intimidating-cry-cooldown-recovery",
             Self::WarcryBuffEffect => "warcry-buff-effect",
             Self::WarcryPower => "warcry-power",
             Self::WarcrySpeed => "warcry-speed",
@@ -124,17 +128,20 @@ pub enum Golem {
     Lightning,
     /// Summon Stone Golem.
     Stone,
+    /// Summon Carrion Golem (the agent list).
+    Carrion,
 }
 
 impl Golem {
     /// Every golem, in [`Golem`]'s order (its index in
     /// [`Totals::named_golem_buff_effect`]).
-    pub const ALL: [Self; 5] = [
+    pub const ALL: [Self; 6] = [
         Self::Chaos,
         Self::Flame,
         Self::Ice,
         Self::Lightning,
         Self::Stone,
+        Self::Carrion,
     ];
 
     /// Stable name.
@@ -146,6 +153,7 @@ impl Golem {
             Self::Ice => "ice",
             Self::Lightning => "lightning",
             Self::Stone => "stone",
+            Self::Carrion => "carrion",
         }
     }
 
@@ -159,6 +167,7 @@ impl Golem {
             Self::Ice => "summon_ice_golem",
             Self::Lightning => "summon_lightning_golem",
             Self::Stone => "summon_stone_golem",
+            Self::Carrion => "summon_carrion_golem",
         }
     }
 
@@ -200,7 +209,7 @@ type ModifierRow = (&'static str, Poe1Quantity, f64);
 ///   Effect Duration", and the warcries' duration, cooldown recovery, buff
 ///   effect, and power (PoB's `CooldownRecovery`, `Duration`, `BuffEffect`
 ///   INC, the warcry ones with `KeywordFlag.Warcry`; `WarcryPower` INC).
-pub const STATS: [ModifierRow; 36] = [
+pub const STATS: [ModifierRow; 40] = [
     // Close-out M6: "Anger has #% increased Aura Effect".
     (
         "anger_aura_effect_+%",
@@ -212,6 +221,13 @@ pub const STATS: [ModifierRow; 36] = [
     (
         "aura_effect_on_self_from_your_skills_+%",
         Poe1Quantity::SkillAuraEffectOnSelf,
+        1.0,
+    ),
+    // The agent list (a game-truth line PoB reads): "#% increased Effect of
+    // the Buff granted by your Carrion Golems" (the game's stat says bone).
+    (
+        "base_bone_golem_granted_buff_effect_+%",
+        Poe1Quantity::NamedGolemBuffEffect(Golem::Carrion),
         1.0,
     ),
     // P6-11gc: "#% increased Effect of the Buff granted by your Chaos
@@ -286,6 +302,14 @@ pub const STATS: [ModifierRow; 36] = [
         Poe1Quantity::HeraldManaReservationEfficiency,
         1.0,
     ),
+    // The agent list (a game-truth line PoB reads): "Intimidating Cry has
+    // #% increased Cooldown Recovery Rate" (`CooldownRecovery` INC, the
+    // skill's name with `includeTransfigured`, `ModParser.lua`).
+    (
+        "intimidating_cry_cooldown_speed_+%",
+        Poe1Quantity::SkillTiming(SkillTiming::IntimidatingCryCooldownRecovery),
+        1.0,
+    ),
     // Close-out M6: Malevolence's mana reservation efficiency.
     (
         "malevolence_mana_reservation_efficiency_+%",
@@ -331,6 +355,13 @@ pub const STATS: [ModifierRow; 36] = [
         Poe1Quantity::NamedSkillEffect(0),
         1.0,
     ),
+    // The agent list: "#% increased Punishment Curse Effect" (`CurseEffect`
+    // INC with the `SkillName` Punishment).
+    (
+        "punishment_curse_effect_+%",
+        Poe1Quantity::NamedSkillEffect(6),
+        1.0,
+    ),
     (
         "reservation_efficiency_-2%_per_1",
         Poe1Quantity::ReservationEfficiency(None),
@@ -347,6 +378,14 @@ pub const STATS: [ModifierRow; 36] = [
     (
         "skill_effect_duration_+%",
         Poe1Quantity::SkillTiming(SkillTiming::Duration),
+        1.0,
+    ),
+    // The agent list (a game-truth line PoB reads): "Skills Supported by
+    // Spellslinger have #% increased Mana Reservation" (`ManaReserved` INC
+    // with `Condition:SupportedBySpellslinger`).
+    (
+        "spellslinger_mana_reservation_+%",
+        Poe1Quantity::SpellslingerManaReserved,
         1.0,
     ),
     // Open items S3: "#% increased Mana Reservation Efficiency of Skills
@@ -422,7 +461,7 @@ pub enum NamedEffect {
 /// #% increased aura effect" and "#% increased <skill> curse effect"):
 /// the stat, the skill's granted effect ID, and what it modifies, by
 /// [`Poe1Quantity::NamedSkillEffect`]'s index.
-pub const NAMED_SKILL_EFFECTS: [(&str, &str, NamedEffect); 6] = [
+pub const NAMED_SKILL_EFFECTS: [(&str, &str, NamedEffect); 7] = [
     ("pride_aura_effect_+%", "Pride", NamedEffect::Aura),
     (
         "vulnerability_curse_effect_+%",
@@ -446,6 +485,14 @@ pub const NAMED_SKILL_EFFECTS: [(&str, &str, NamedEffect); 6] = [
         "zealotry_mana_reservation_efficiency_+%",
         "Zealotry",
         NamedEffect::ManaReservationEfficiency,
+    ),
+    // The agent list: "#% increased Punishment Curse Effect", and the older
+    // custom line "Punishment has #% reduced Curse Effect" (the custom
+    // pattern `punishment-curse-effect`).
+    (
+        "punishment_curse_effect_+%",
+        "Punishment",
+        NamedEffect::Curse,
     ),
 ];
 
@@ -564,6 +611,9 @@ pub struct Totals {
     /// `ManaReservationEfficiency` INC of skills Spellslinger supports
     /// (open items S3).
     pub spellslinger_mana_efficiency: f64,
+    /// `ManaReserved` INC of the skills Spellslinger supports (the agent
+    /// list).
+    pub spellslinger_mana_reserved: f64,
     /// Skills reserve life instead of mana (`BloodMagicReserved`, an
     /// unconditional flag; P6-11an).
     pub reserve_life: bool,
@@ -573,6 +623,11 @@ pub struct Totals {
     /// Your warcries grant you no buff (P6-11hw; PoB's
     /// `CannotGainWarcryBuffs`, an unconditional flag).
     pub cannot_gain_warcry_buffs: bool,
+    /// "Warcries have infinite Power" (the agent list; an unconditional
+    /// flag).
+    pub warcry_infinite_power: bool,
+    /// "Warcries have a minimum of # Power" (the agent list), the sum.
+    pub warcry_minimum_power: f64,
     /// `Duration` MORE of warcries, each as its percent (P6-11hw: Call to
     /// Arms' 100% more); [`Self::warcry_duration_more`] multiplies them.
     pub warcry_duration_more_pct: [f64; 2],
@@ -589,14 +644,14 @@ pub struct Totals {
     pub golem_buff_effect: f64,
     /// `BuffEffect` INC of each named golem skill, by [`Golem::ALL`]
     /// (P6-11gc).
-    pub named_golem_buff_effect: [f64; 5],
+    pub named_golem_buff_effect: [f64; 6],
     /// `BuffEffect` INC of herald skills (P6-11at).
     pub herald_buff_effect: f64,
     /// `BuffEffect` INC of the offering skills (P6-11gg).
     pub offering_buff_effect: f64,
     /// Each named skill effect, by [`NAMED_SKILL_EFFECTS`]' index
     /// (P6-11gn).
-    pub named_skill_effect: [f64; 6],
+    pub named_skill_effect: [f64; 7],
     /// `BuffEffectOnPlayer` INC of the offering skills (P6-11gg).
     pub offering_effect_on_you: f64,
     /// `CurseEffect` INC (P3-close).
@@ -611,6 +666,8 @@ pub struct Totals {
     pub cooldown_recovery: f64,
     /// `CooldownRecovery` INC of warcries.
     pub warcry_cooldown_recovery: f64,
+    /// `CooldownRecovery` INC of Intimidating Cry (the agent list).
+    pub intimidating_cry_cooldown_recovery: f64,
     /// `BuffEffect` INC of warcries.
     pub warcry_buff_effect: f64,
     /// `WarcryPower` INC.
@@ -674,6 +731,23 @@ impl Totals {
                 }
                 continue;
             }
+            // The agent list (2026-11-27): infinite and minimum power.
+            if q == Poe1Quantity::WarcryInfinitePower {
+                if e.op == Op::Flag && e.conditions == Conditions::none() {
+                    t.warcry_infinite_power |= e.value != 0.0;
+                } else {
+                    t.unread = true;
+                }
+                continue;
+            }
+            if q == Poe1Quantity::MinimumWarcryPower {
+                if e.op == Op::Base && e.conditions == Conditions::none() {
+                    t.warcry_minimum_power += e.value;
+                } else {
+                    t.unread = true;
+                }
+                continue;
+            }
             if q == Poe1Quantity::CannotGainWarcryBuffs {
                 if e.op == Op::Flag && e.conditions == Conditions::none() {
                     t.cannot_gain_warcry_buffs = true;
@@ -707,6 +781,7 @@ impl Totals {
                 Poe1Quantity::SpellslingerManaReservationEfficiency => {
                     &mut t.spellslinger_mana_efficiency
                 }
+                Poe1Quantity::SpellslingerManaReserved => &mut t.spellslinger_mana_reserved,
                 Poe1Quantity::Reserved(None) => &mut t.reserved,
                 Poe1Quantity::NonCurseAuraEffect => &mut t.aura_effect,
                 Poe1Quantity::SkillAuraEffectOnSelf => &mut t.aura_on_self,
@@ -723,6 +798,9 @@ impl Totals {
                     SkillTiming::WarcryDuration => &mut t.warcry_duration,
                     SkillTiming::CooldownRecovery => &mut t.cooldown_recovery,
                     SkillTiming::WarcryCooldownRecovery => &mut t.warcry_cooldown_recovery,
+                    SkillTiming::IntimidatingCryCooldownRecovery => {
+                        &mut t.intimidating_cry_cooldown_recovery
+                    }
                     SkillTiming::WarcryBuffEffect => &mut t.warcry_buff_effect,
                     SkillTiming::WarcryPower => &mut t.warcry_power,
                     SkillTiming::WarcrySpeed => &mut t.warcry_speed,
@@ -798,6 +876,9 @@ impl Totals {
         let mut own = self.mana_efficiency;
         if spellslinger {
             own += self.spellslinger_mana_efficiency;
+            // The agent list: its `ManaReserved` INC, PoB's `values.inc`
+            // with the pool's name.
+            terms.inc += self.spellslinger_mana_reserved;
         }
         // Close-out M6: the skill's named mana reservation efficiency.
         own += self.named_skill(id, NamedEffect::ManaReservationEfficiency);
@@ -823,6 +904,23 @@ impl Totals {
             .iter()
             .find(|g| g.is(active))
             .map_or(0.0, |&g| self.named_golem_buff_effect[g as usize])
+    }
+
+    /// The `CooldownRecovery` INC a skill-named modifier gives the skill
+    /// whose active skill is `active` (the agent list): Intimidating
+    /// Cry's, a transfigured one too (`includeTransfigured`), else 0.
+    #[must_use]
+    pub fn named_cooldown_recovery(&self, active: Option<&str>) -> f64 {
+        let Some(active) = active else { return 0.0 };
+        let base = active
+            .strip_suffix("_alt_x")
+            .or_else(|| active.strip_suffix("_alt_y"))
+            .unwrap_or(active);
+        if base == "intimidating_cry" {
+            self.intimidating_cry_cooldown_recovery
+        } else {
+            0.0
+        }
     }
 
     /// The `BuffEffect` INC the offering modifiers give the skill of the
@@ -1231,7 +1329,7 @@ mod tests {
         // Close-out M6: a named skill's own efficiency.
         let z = Totals {
             mana_efficiency: 10.0,
-            named_skill_effect: [0.0, 0.0, 0.0, 0.0, 0.0, 50.0],
+            named_skill_effect: [0.0, 0.0, 0.0, 0.0, 0.0, 50.0, 0.0],
             ..Totals::default()
         };
         assert_eq!(
@@ -1301,13 +1399,14 @@ mod tests {
         assert_eq!(n.named_golem(None), 0.0);
         // P6-11gn: a named skill's effect, for that skill and kind alone.
         let p = Totals {
-            named_skill_effect: [20.0, 15.0, 0.0, 0.0, 0.0, 0.0],
+            named_skill_effect: [20.0, 15.0, 0.0, 0.0, 0.0, 0.0, -50.0],
             ..Totals::default()
         };
         assert_eq!(p.named_skill("Pride", NamedEffect::Aura), 20.0);
         assert_eq!(p.named_skill("Pride", NamedEffect::Curse), 0.0);
         assert_eq!(p.named_skill("Vulnerability", NamedEffect::Curse), 15.0);
         assert_eq!(p.named_skill("Hatred", NamedEffect::Aura), 0.0);
+        assert_eq!(p.named_skill("Punishment", NamedEffect::Curse), -50.0);
         // P6-11gg: the offerings' effect, on you with the effect on you.
         let o = Totals {
             offering_buff_effect: 20.0,

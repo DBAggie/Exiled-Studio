@@ -24,7 +24,7 @@ Six slice fields, with PoB v2.67.2's formulas, order of operations, and rounding
 - **The enemy's armour** is now modelled for every physical hit, spells included (P3-9b's `physical-hit-armour` reason is gone); its cap is the monster template's `maximum_physical_damage_reduction_%` (75).
 - **Not modelled, each a reason:** other conversion and gain, luck, double damage, action speed, damage taken, the enemy's block, the hit chance modifier (their stats are unmapped), a weapon with "No Physical Damage" (`unmodelled-item`, `no-physical-damage`), the off hand's weapon (`base-properties`).
 
-New in calc result v1 (additive rule; schema and TypeScript regenerated): graph node `power` (`base ^ exponent`, `math::pow`, PoB's Lua `^`), on the pure-Rust `libm` crate (musl's `pow`; the same bits on Windows, Linux, and wasm32, a test writes them).
+New in calc result v1 (additive rule; schema and TypeScript regenerated): graph node `power` (`base ^ exponent`, `math::pow`, PoB's Lua `^`), on the pure-Rust `libm` crate (musl's `pow`; the same bits on Windows, Linux, and wasm32, a test writes them). Since 2026-11-27 it is correctly rounded in double-double arithmetic, with `libm` for the edge cases only (`docs/phase-6/stat-mop-up.md`, "A correctly rounded `math::pow`").
 
 ## Question Q11: a weapon's attack rate
 

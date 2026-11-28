@@ -1349,12 +1349,121 @@ pub const ROWS: [(&str, i64, &[&str]); 260] = [
     ),
 ];
 
-/// The row of `stat`.
+/// The item lines that trigger a socketed spell (open items S3, part 5):
+/// `(stat, granted effect)`, sorted by stat ID. PoB reads each line as
+/// an `ExtraSupport` of that trigger support at level 1 for the item's
+/// slot (`ModParser.lua` 3148 to 3176 and 5276 to 5286), and its config
+/// is the support's name ([`super::triggers`]). A row's value is a chance
+/// when its stat ends in `%` ([`TRIGGER_CHANCE_STATS`]): PoB ignores it,
+/// so the trigger reads the line only at 100.
+///
+/// Left out: "Trigger Socketed Spell on Kill" (Squirming Terror): at 100%
+/// the game's text has no "% chance" prefix, which PoB's pattern (3160)
+/// needs, so PoB applies nothing; Focus, which PoB computes with its own
+/// handler; and the lines that trigger a bow skill or a curse.
+pub const TRIGGER_ROWS: [(&str, i64, &[&str]); 13] = [
+    (
+        "body_armour_trigger_socketed_spell_on_unarmed_melee_critical_hit_cooldown",
+        1,
+        &["SupportTriggerSpellOnUnarmedMeleeCriticalHit"],
+    ),
+    // Open items S3, part 8: Kitava's Thirst (its value is the mana to
+    // spend, `gem_levels` reads it too).
+    (
+        "cast_socketed_spells_on_X_mana_spent",
+        1,
+        &["SupportCastOnManaSpent"],
+    ),
+    // Open items S3, part 8: Maloney's Mechanism.
+    (
+        "chance_to_trigger_socketed_bow_skill_on_bow_attack_%",
+        1,
+        &["SupportTriggerBowSkillOnBowAttack"],
+    ),
+    (
+        "chance_to_trigger_socketed_spell_on_bow_attack_%",
+        1,
+        &["SupportTriggerSpellOnBowAttack"],
+    ),
+    (
+        "local_shield_trigger_socketed_elemental_spell_on_block_display_cooldown",
+        1,
+        &["SupportTriggerElementalSpellOnBlock"],
+    ),
+    (
+        "local_unique_attacks_cast_socketed_lightning_spells_%",
+        1,
+        &["SupportUniqueMjolnerLightningSpellsCastOnHit"],
+    ),
+    (
+        "local_unique_cast_socketed_cold_skills_on_melee_critical_strike",
+        1,
+        &["SupportUniqueCosprisMaliceColdSpellsCastOnMeleeCriticalStrike"],
+    ),
+    (
+        "local_unique_cast_socketed_spell_on_block",
+        1,
+        &["SupportUniqueVirulenceSpellsCastOnBlock"],
+    ),
+    (
+        "local_weapon_trigger_socketed_fire_spell_on_hit_display_cooldown",
+        1,
+        &["SupportTriggerFireSpellOnHit"],
+    ),
+    (
+        "main_hand_trigger_socketed_spell_on_freezing_hit",
+        1,
+        &["SupportTriggerSpellOnBowAttackFreezeHit"],
+    ),
+    (
+        "trigger_socketed_spell_on_attack_%",
+        1,
+        &["SupportTriggerSpellOnAttack"],
+    ),
+    // The agent list: the crafted "Trigger a Socketed Spell when you Use a
+    // Skill, with a 8 second Cooldown" (PoB reads nothing for it; read in
+    // the game, `docs/phase-6/stat-mop-up.md`, "Check 4").
+    (
+        "trigger_socketed_spell_on_skill_use_%",
+        1,
+        &["SupportTriggerSpellOnSkillUse"],
+    ),
+    // Open items S3, part 8: the crafted Focus line.
+    (
+        "trigger_socketed_spells_when_you_focus_%",
+        1,
+        &["SupportTriggerSpellFromHelmet"],
+    ),
+];
+
+/// The [`TRIGGER_ROWS`] whose value is the chance to trigger.
+pub const TRIGGER_CHANCE_STATS: [&str; 6] = [
+    "chance_to_trigger_socketed_bow_skill_on_bow_attack_%",
+    "chance_to_trigger_socketed_spell_on_bow_attack_%",
+    "local_unique_attacks_cast_socketed_lightning_spells_%",
+    "trigger_socketed_spell_on_attack_%",
+    "trigger_socketed_spell_on_skill_use_%",
+    "trigger_socketed_spells_when_you_focus_%",
+];
+
+/// Kitava's Thirst's mana to spend (open items S3, part 8; PoB's
+/// `KitavaRequiredManaCost`, `ModParser.lua` 3166): also
+/// [`super::Poe1Quantity::KitavaManaSpent`].
+pub const KITAVA_MANA_STAT: &str = "cast_socketed_spells_on_X_mana_spent";
+
+/// Kitava's Thirst's chance (PoB's `KitavaTriggerChance`):
+/// [`super::Poe1Quantity::KitavaTriggerChance`].
+pub const KITAVA_CHANCE_STAT: &str = "cast_socketed_spells_on_mana_spent_%_chance";
+
+/// The row of `stat`, in [`ROWS`] or [`TRIGGER_ROWS`].
 #[must_use]
 pub fn row(stat: &str) -> Option<(&'static str, i64, &'static [&'static str])> {
-    ROWS.binary_search_by(|(id, _, _)| (*id).cmp(stat))
-        .ok()
-        .map(|i| ROWS[i])
+    let find = |rows: &'static [(&'static str, i64, &'static [&'static str])]| {
+        rows.binary_search_by(|(id, _, _)| (*id).cmp(stat))
+            .ok()
+            .map(|i| rows[i])
+    };
+    find(&ROWS).or_else(|| find(&TRIGGER_ROWS))
 }
 
 #[cfg(test)]
@@ -1378,5 +1487,24 @@ mod tests {
             ))
         );
         assert!(row("local_display_socketed_gems_supported_by_level_x_pyre").is_none());
+    }
+
+    #[test]
+    fn trigger_rows_should_be_sorted_at_level_one() {
+        assert!(TRIGGER_ROWS.windows(2).all(|w| w[0].0 < w[1].0));
+        for (stat, level, effects) in TRIGGER_ROWS {
+            assert_eq!(level, 1, "{stat}");
+            assert_eq!(effects.len(), 1, "{stat}");
+            assert!(effects[0].starts_with("Support"), "{stat}");
+            assert!(ROWS.iter().all(|(s, _, _)| *s != stat), "{stat}");
+        }
+        for stat in TRIGGER_CHANCE_STATS {
+            assert!(stat.ends_with('%'));
+            assert!(TRIGGER_ROWS.iter().any(|(s, _, _)| *s == stat), "{stat}");
+        }
+        assert_eq!(
+            row("trigger_socketed_spell_on_attack_%").map(|r| r.2),
+            Some(&["SupportTriggerSpellOnAttack"][..])
+        );
     }
 }

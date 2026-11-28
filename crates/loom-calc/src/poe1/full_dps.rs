@@ -25,7 +25,9 @@
 //! own. Each field it reads carries its reasons; a skill's hit not computed
 //! is a reason (`full-dps-skill`), counted as nothing. Not modelled, each a
 //! reason: a skill's mirage (PoB adds the mirage's own output), damage over
-//! time of a skill with a count above 1 (`DotCanStack` is not known),
+//! time of a skill with a count above 1 (`DotCanStack` is not known), a
+//! skill's stacking damage over time (its DoT field's `stacking-dot`,
+//! carried; the agent list, 2026-11-27),
 //! a skill's own burning ground and caustic ground, corrupting blood, decay, and the skills
 //! PoB counts once by a config condition (Absolution, Dominating Blow,
 //! Holy Strike).
@@ -89,20 +91,24 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         // A Vaal gem's two effects: PoB counts each by the gem's
         // `enableGlobal1` and `enableGlobal2` (`getActiveSkillCount`, 159
         // to 164; open items, S1). A Vaal skill whose gem the engine cannot
-        // read that way keeps the reason, as does a Vaal skill that summons
-        // minions: PoB's full DPS of Vaal Summon Skeletons (417) is not its
-        // minion's `TotalDPS` (115) times the count, for a cause not found
-        // (`minion-vaal-summon-skeletons-witch.xml`; open items follow-ups).
+        // read that way keeps the reason.
+        //
+        // A Vaal skill that summons minions counts its own minion, the
+        // build's choice, as the main calculation does (agent list). PoB's
+        // two effects of one gem share its saved instance, and each writes
+        // the minion it picked there (`CalcActiveSkill.lua` 689 to 691): the
+        // second effect's (Summon Skeletons of Mages' caster) is the first's
+        // in every later environment when its list has it, so PoB's full DPS
+        // of Vaal Summon Skeletons of Mages counts the caster (417), its main
+        // output the melee skeleton (115). A `pob-bug` (DIV-0783,
+        // `minion-vaal-summon-skeletons-witch.xml`; instrumented run in
+        // `docs/phase-6/minions.md`, "Vaal Summon Skeletons' full DPS").
         let gem = group.gems.typed().nth(skill.active_gem.gem);
-        let vaal_minions = skill.types.contains("Vaal")
-            && ["CreatesMinion", "Minion"]
-                .iter()
-                .any(|t| skill.types.contains(*t));
         match gem.and_then(|gem| {
             super::skill::vaal_full_dps_enabled(gem, &skill.active_gem.effect.id, input.data)
         }) {
             Some(false) => continue,
-            Some(true) if !vaal_minions => {}
+            Some(true) => {}
             None if !skill.types.contains("Vaal") => {}
             _ => {
                 reasons.partial.insert(unmodelled("full-dps-vaal"));
@@ -141,6 +147,14 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         let hit = read(Field::HitDps, &mut reasons).max(0.0);
         let impale = read(Field::Poe1(Poe1Field::ImpaleDps), &mut reasons);
         let poison = read(Field::PoisonDps, &mut reasons);
+        // A DoT the engine does not compute but PoB adds (a stacking DoT,
+        // the agent list, 2026-11-27): its reasons, the DoT counted as 0.
+        if let Some(crate::state::FieldState::Unsupported(r)) =
+            result.fields.get(&Field::DotDps).map(|f| &f.state)
+            && *r != UnsupportedReason::NotComputed
+        {
+            reasons.partial.insert(r.clone());
+        }
         let dot = read(Field::DotDps, &mut reasons);
         let ignite = read(Field::IgniteDps, &mut reasons);
         let ground = read(Field::Poe1(Poe1Field::BurningGroundDps), &mut reasons);
@@ -163,9 +177,18 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         parts.ground = parts.ground.max(ground);
         parts.bleed = parts.bleed.max(bleed).max(m_bleed);
         // The skill's cull multiplier, from its combined DPS over its parts
-        // (its Culling Strike: 10/9).
+        // (its Culling Strike: 10/9). A skill that shows its average damage
+        // (PoB's `showAverage`: its combined DPS is the average damage, open
+        // items S3) has no rate in its combined DPS to compare: PoB's full
+        // DPS still takes its `TotalDPS`.
+        let shows_average = result
+            .fields
+            .get(&Field::AverageDamage)
+            .and_then(|r| r.value)
+            .is_some_and(|avg| avg > 0.0 && (combined - avg).abs() <= avg * 1e-12)
+            && (combined - hit).abs() > combined * 1e-12;
         let base = hit + impale + (dot + poison + ignite + ground + bleed).min(DOT_DPS_CAP);
-        if base > 0.0 && combined > base * (1.0 + 1e-12) {
+        if !shows_average && base > 0.0 && combined > base * (1.0 + 1e-12) {
             parts.cull = parts.cull.max(combined / base);
         }
     }

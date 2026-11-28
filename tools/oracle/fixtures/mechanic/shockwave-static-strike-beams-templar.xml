@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, open items agent list): a level 90 Templar with a club.
+     Shockwave Support (level 10, two stored uses) with Static Strike's beams
+     (part 2), the Shockwave attack as the main skill: the source's rate is the
+     beams' hit rate (PoB's HitSpeed), the cooldown not rounded to the server tick.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Templar" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="5" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="2" mainActiveSkillCalcs="2" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Static Strike" skillId="StaticStrike" variantId="StaticStrike" gemId="Metadata/Items/Gems/SkillGemStaticStrike" level="20" quality="0" skillPart="2" skillPartCalcs="2" enabled="true" enableGlobal1="true" count="1"/>
+				<Gem nameSpec="Shockwave" skillId="SupportShockwave" variantId="SupportShockwave" gemId="Metadata/Items/Gems/SupportGemShockwave" level="10" quality="0" enabled="true" enableGlobal1="true" enableGlobal2="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items activeItemSet="1">
+		<Item id="1">
+Rarity: NORMAL
+Driftwood Club
+Quality: 0
+Implicits: 0
+		</Item>
+		<ItemSet id="1">
+			<Slot name="Weapon 1" itemId="1"/>
+		</ItemSet>
+	</Items>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<CustomModifierBlock enabled="true" title="Default">
++200 to Accuracy Rating
+Adds 10 to 20 Physical Damage to Attacks
+			</CustomModifierBlock>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>

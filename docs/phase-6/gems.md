@@ -421,3 +421,112 @@ S0 listed Skitterbots as a data run; the bundle `b-ct` has their monster varieti
 **Fixture:** `ice-nova-skitterbots-witch.xml`: Ice Nova with Skitterbots in another group and crit chance against shocked enemies; PoB's `CurrentShock` 17, `CurrentChill` 11; every computed field equals PoB.
 
 **Evidence** (`local/p6/sk` against `local/p6/gs`): public `Complete` 39,309 (+77, the fixture), 0 unexpected, 18 values toward PoB, none away; corpus 0 unexpected, 17 toward, 3 away: one build (by hash `b6098b68`) whose average damage, ignite, and hit DPS now overshoot PoB. PoB's own `CurrentShock` there is 18, the engine's too (a level 21 gem: 15 x 1.20); the build was near PoB before only through other missing terms (its fields keep their other reasons), as the close-out's batches recorded for such builds. Distinct reasons: 318 to 319 (`skitterbots-supports` new); field-reason pairs: corpus 9,434 to 9,272.
+
+
+## Vaal Grace and the chance to evade (open items S2, 2026-11-26)
+
+**PoB v2.67.2:** Vaal Grace's aura (`act_dex.lua` 8998 to 9040) has one global stat, `chance_to_evade_attacks_%` 15, `EvadeChance` BASE (an `Aura`). "+#% chance to Evade Attack Hits" on an item or a custom line is the same mod (`ModParser.lua` 254 to 258). `CalcDefence.lua` 1075 to 1096 subtracts `EvadeChance` BASE from the enemy's chance to hit: `<Kind>EvadeChance = max(0, min(95, (100 - (hitChance(evasion, accuracy) - EvadeChance BASE) x enemy hit chance mod) x calcLib.mod(EvadeChance, <Kind>EvadeChance)))`.
+
+**The engine:**
+- `Poe1Quantity::EvadeChance`: `Base`, `Increased`, and `More`. `evade` subtracts the base from the enemy's chance to hit and scales by the modifiers, as PoB does; no stat maps to `Increased` or `More` yet.
+- The mapping row `chance_to_evade_attacks_%` gives it `Base`.
+- `gems::SKILLS` has `VaalGrace` (`Kind::Buff`, an aura, that row), so its aura effect scales it as any aura's.
+- Its "Damage taken from Suppressed Hits is Unlucky" (`damage_taken_from_suppressed_hits_is_unlucky`) has no row in PoB's stat map, so PoB applies nothing. It changes the enemy's hit in the game, which the engine does not model, so it is a reason on the fields the enemy's hit reaches (`BuffStat::Defence`, review of S2): those fields are partial while Vaal Grace is up, not `Complete`.
+- `data-parity`'s `gem_effects`: the row's name `EvadeChance`; Vaal Grace's `skillEffectAppliesToSoulGainPrevention` (read only for its own soul gain prevention, `CalcOffence.lua` 1577) is a skill-data key that does not block.
+
+**Fixtures** (original, made by `local/p6/s2-fx1.py`; each run three times by PoB, identical), a level 90 Ranger with 3,000 evasion:
+- `vaal-grace-evade-chance-ranger.xml`: Vaal Grace (level 20) in its own group; the evade chances 38 (23 without it);
+- `chance-to-evade-attack-hits-ranger.xml`: "+10% chance to Evade Attack Hits" as a custom line; 33.
+- Every compared field equals PoB's; 174 targets.
+
+**Evidence** (`local/p6/s2-e1` on `b-pb`, against `local/p6/s9a`):
+- **Public:** 0 unexpected; `Complete` 49,371 to 49,545 (the fixtures).
+  - `Mirage Archer Toxic Rain.xml` (Vaal Grace): its evade chances 67 to 82 (PoB 87) and its configured not-hit chance 37 to 44.5 (PoB 50.45), toward PoB.
+  - Four of its effective HP values moved away: `TotalEHP` 27,752 to 31,512 (PoB 29,271), and its hit counts. Its life (4,158, PoB 3,974) and maximum hits (physical 10,076, PoB 8,188) were already above PoB's, from its other reasons; the larger evade chance multiplies them. The build stays indeterminate.
+- **Corpus:** 0 unexpected; documents equal but for node numbers.
+- **Tests:** the mapping test of the row, the workspace tests, the real-bundle tests, clippy, rustfmt, and wasm32.
+
+
+## Summon Skitterbots' supports, and Unbound Ailments (open items S2, 2026-11-26)
+
+**PoB v2.67.2** (`CalcPerform.lua` 1357 to 1383):
+- **The `inc` of the Skitterbots' shock and chill** is `skillModList:Sum("INC", { source = "Skill" }, "EnemyShockEffect")` (and `EnemyChillEffect`): every mod of source `Skill`, the gem's and its supports' stats.
+  - Shock: `shock_effect_+%`, `lightning_ailment_effect_+%`, `non_damaging_ailment_effect_+%`.
+  - Chill: `chill_effect_+%`, `cold_ailment_effect_+%`, `non_damaging_ailment_effect_+%` (`SkillStatMap.lua` 1085 to 1119).
+- **Bonechill on the Skitterbots** sets `HasBonechill` (they can chill) and the guaranteed Bonechill (1379 to 1380). The chilled enemy then takes increased cold damage by the chill's effect (3444).
+  - Its `SkitterbotBonechill` flag is read only for the chill on you (844), which only "the auras affect you" starts.
+
+**The engine** (`gems::skitterbots`):
+- The two overrides sum those stats over the gem and its supports (`SHOCK_EFFECT_STATS`, `CHILL_EFFECT_STATS`).
+- Bonechill gives `Poe1Quantity::Bonechill(true)`, the chilling area's guarantee, which `damage_taken` reads.
+- The `skitterbots-supports` reason (Summon Skitterbots, above) is no longer given; the unmapped stats that change the auras stay reasons.
+
+**Unbound Ailments** joins `gems::SUPPORTS`: no global stat (PoB's data has none).
+- Its `non_damaging_ailment_effect_+%` is the supported skill's own: read for the Skitterbots.
+- On a chilling area it is a `skill-chill-effect` reason (`gems::guaranteed_chill`, now also for a support's chill effect stat), as Bonechill's chill effect there.
+- `data-parity`'s `gem_effects` allows its `EnemyChillEffect` with those readings.
+
+**Fixtures** (original, made by `local/p6/s2-fx2.py`; each run three times by PoB, identical): Ice Nova with Summon Skitterbots in another group and 40% increased crit chance against shocked enemies, as `ice-nova-skitterbots-witch.xml`:
+- `ice-nova-skitterbots-unbound-ailments-witch.xml`: Unbound Ailments (level 20) on the Skitterbots; PoB's `CurrentShock` 25 and `CurrentChill` 17 (17 and 11 without it).
+- `ice-nova-skitterbots-bonechill-witch.xml`: Bonechill (level 20); `CurrentChill` 16, the average damage 864 to 982 from the cold damage taken.
+- Every compared field equals PoB's; 174 targets.
+
+**Evidence** (`local/p6/s2-e2` on `b-pb`, against `local/p6/s2-e1`):
+- **Public:** 0 unexpected; `Complete` 49,545 to 49,719 (the fixtures). Seven values moved, all toward PoB:
+  - `ethereal-knives-mines-assassin.xml` (Skitterbots with Bonechill and Unbound Ailments): its average damage, hit, ignite, full, and combined DPS, and its unreserved mana 560 to 182 (PoB 174; Unbound Ailments' reservation multiplier now counts);
+  - `forged-frostbearer-spectre-necromancer.xml`'s full DPS, 7.79 to 8.84 million (PoB 9.13 million).
+- **Corpus:** 0 unexpected; one value moved, now equal to PoB's (a build's unreserved mana, 221 to 5, PoB 5); one other document lost the reason in its reasons only.
+- **Tests:** `gems`' tests (the tables sorted), the workspace tests, the real-bundle tests, clippy, rustfmt, and wasm32.
+
+
+## Vaal Smite's aura (open items S2, 2026-11-26)
+
+**PoB v2.67.2:**
+- **Vaal Smite's aura** (`act_str.lua` 10517 to 10575) has Smite's aura's three stats without their condition: `LightningMin` and `LightningMax` BASE, and `EnemyShockChance`.
+- **Smite's aura rows** each have `Condition` `AffectedByVaalSmite` negated (10325 to 10334). PoB sets that condition while Vaal Smite's aura applies (`CalcPerform.lua` 2417 to 2419), so Vaal Smite's aura replaces Smite's.
+- **The gem has two effects,** Vaal Smite and Smite, each applied by its `enableGlobal<n>`.
+- Its `global_always_hit` (`cannotBeEvaded`) is the skill's own (`CalcOffence.lua` 2162).
+
+**The engine:**
+- `gems::SKILLS` has `VaalSmite` (`Kind::Buff`, an aura, Smite's rows; the shock chance no slice field reads, as Smite's).
+- `gems::apply` drops Smite's aura when Vaal Smite's is collected.
+- Smite as the main skill gives its aura through the hit's mapping (P3-8l), which the condition would turn off: with Vaal Smite's aura up, that is an `unmodelled-skill` `vaal-smite-over-smite` reason.
+- `data-parity`'s `gem_effects`: `cannotBeEvaded` is a skill-data key that does not block.
+
+**Fixtures** (original, made by `local/p6/s2-fx3.py`; each run three times by PoB, identical), Ice Nova (level 20) with Vaal Smite (level 20) in another group:
+- `ice-nova-vaal-smite-aura-templar.xml`: only the Vaal effect's global on; average damage 952.68;
+- `ice-nova-vaal-smite-over-smite-templar.xml`: both on, the same output as the first (PoB's hash too);
+- `ice-nova-vaal-smite-smite-only-templar.xml`: only Smite's; 877.98.
+- Every compared field equals PoB's; 261 targets.
+
+**Evidence** (`local/p6/s2-e3` on `b-pb`, against `local/p6/s2-e2`):
+- **Public:** 0 unexpected; `Complete` 49,719 to 49,980 (the fixtures). No other value moved: `flicker-strike-berserker.xml`'s Vaal Smite has its Vaal effect's global off (it loses the `unmodelled-gem` reason; its other reasons stay).
+- **Corpus:** 0 unexpected; no document changed.
+- **Tests:** `gems`' tests, the workspace tests, the real-bundle tests, clippy, rustfmt, and wasm32.
+
+
+## Petrified Blood (open items S2, 2026-11-26)
+
+**PoB v2.67.2** (`act_str.lua` 8519 to 8580): a buff that reserves 35% of mana (its levels' `manaReservationPercent`), with three global stats:
+- `skill_grants_life_cost_%_mana_cost_while_not_on_low_life`: `ManaCostAsLifeCost` BASE, `unscalable`, with `Condition` `LowLife` negated. `CalcOffence.lua` 1681 adds that share of each skill's mana cost as a life cost.
+- `petrified_blood_%_life_loss_below_half_from_hit_to_prevent`: `LifeLossBelowHalfPrevented` BASE. It enters the life hit pool, `calcLifeHitPoolWithLossPrevention` (`CalcDefence.lua` 177 to 181: `aboveLow / (1 - p) + min(life, half) / (1 - b) / (1 - p)`), and `reducePoolsByDamage` (348 to 384): the part above half takes the prevented share, and below half both shares come off what is left. `preventedLifeLossTotal` above 0 also limits the defence estimate's speed-up (2742).
+- `petrified_blood_%_prevented_life_loss_to_lose_over_time`: `LifeLossBelowHalfLost`, which no PoB module reads.
+
+**The engine:**
+- `gems::SKILLS` has `PetrifiedBlood` (`Kind::Buff`): the life cost as a `WhenState` on the new `conditions::NOT_LOW_LIFE` (settled as `LowLife` negated), unscaled (`gems::UNSCALABLE_STATS`: PoB marks that mod alone `unscalable`); the loss below half as `Poe1Quantity::LifeLossBelowHalfPrevented`; the loss over time reaches no slice field.
+- `ehp::life_hit_pool` takes the share below half, `ehp::Character::below_half` carries it (uncapped, as PoB's sum), and `reduce_full` splits the hit as PoB does; `Character::prevents_loss` is PoB's `preventedLifeLossTotal` above 0. `enemy_hit` reads the sum.
+- `data-parity`'s `gem_effects`: the rows' names; a `WhenState` whose state is `Not<var>` is PoB's condition negated (`neg`); the life cost row's `unscalable`; `LifeLossBelowHalfLost` as no slice.
+
+**Fixtures** (original, made by `local/p6/s2-fx4.py`; each run three times by PoB, identical), a level 90 Witch with Ice Nova (level 20) and Petrified Blood (level 20) in another group:
+- `ice-nova-petrified-blood-witch.xml`: Ice Nova's life cost 9 (40% of its mana cost of 23), unreserved mana 383, and the effective HP with the loss below half prevented (PoB's `TotalEHP` 994);
+- `ice-nova-petrified-blood-low-life-witch.xml`: on Low Life by the config, no life cost.
+- Every compared field equals PoB's, the effective HP fields too; 175 targets.
+
+**Evidence** (`local/p6/s2-e4` on `b-pb`, against `local/p6/s2-e3`):
+- **Public:** 0 unexpected; `Complete` 49,980 to 50,155 (the fixtures). In `poisonous-concoction-of-bouncing-pathfinder.xml` 12 values moved:
+  - Toward PoB (7): its life cost 0 to 29 (PoB 29), its unreserved mana 299 to 94 (PoB 91), the chaos and second minimal maximum hits, the effective HP and the hit counts.
+  - Away (5): the physical, fire, cold, and lightning maximum hits (cold 35,070 to 46,358, PoB 36,681) and the damaging hits.
+  - The life hit pool is PoB's form: PoB's `LifeHitPool` 8,493 from 40% of the loss prevented above half (another source) and Petrified Blood's 40% below half. The engine's maximum hit rose by PoB's ratio of pools (1.32 against 1.33).
+  - The build's maximum hit per point of pool was already 24% above PoB's (its other reasons: modifiers to damage taken the engine does not read), and its old values were near PoB's only because the share below half was missing too. The build stays partial.
+- **Corpus:** 0 unexpected; no document changed.
+- **Tests:** `ehp::the_life_hit_pool_should_count_the_loss_below_half_prevented`, the workspace tests, the real-bundle tests, clippy, rustfmt, and wasm32.

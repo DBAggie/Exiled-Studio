@@ -432,7 +432,7 @@ Several steps in one PR (maintainer, 2026-11-12: as many of the remaining tasks 
 
 ### The bandit
 
-**PoB.** `calcs.initModDB` (`CalcSetup.lua` 663 to 672) reads `env.configInput.bandit`: Alira `ElementalResist` BASE 15, Kraityn 8% increased movement speed, Oak `Life` BASE 40, anything else one passive point. Kraityn and the passive point reach no slice field.
+**PoB.** `calcs.initModDB` (`CalcSetup.lua` 663 to 672) reads `env.configInput.bandit`: Alira `ElementalResist` BASE 15, Kraityn 8% increased movement speed, Oak `Life` BASE 40, anything else one passive point. Kraityn and the passive point reach no slice field. (Since P6-10b movement speed is a slice field: Kraityn applies since the agent list, S8, below; a value PoB does not list applies nothing.)
 
 Which value PoB reads:
 - PoB loads the `<Build>` element first (`buildMode:LoadDB`) and copies its `bandit` attribute into the config's first set (`Modules/Build.lua` 648 to 651).
@@ -666,3 +666,78 @@ Config inputs the other gems now read (`docs/phase-3/other-gems.md`, "Phase 3 cl
 - `multiplierNearbyAlly` (1122) stays named-only for every reader but Rallying Cry's exerted attacks: with a modelled Rallying Cry and allies above 0 it is `rallying-cry-allies` (`poe1::gems`).
 
 The custom modifier lines (P3-12c, P3-12d) gained notes and patterns: `docs/phase-3/custom-lines.md` (ADR-015 Amendment 2).
+
+
+## The agent list (S8, 2026-11-26): the bandit's movement speed and values PoB does not list; nearby allies
+
+**The bandit** (`collect::BANDITS`, `collect::bandit`). PoB v2.67.2 applies three bandits (`Modules/CalcSetup.lua` 549 to 557):
+- Alira: `ElementalResist` BASE 15;
+- Kraityn: `MovementSpeed` INC 8;
+- Oak: `Life` BASE 40;
+- any other value: the `else` branch, one passive point (`ExtraPoints`).
+
+Two changes follow:
+- **Kraityn's 8% increased movement speed now applies.** P3-12f left it out because movement speed was no slice field then; it has been one since P6-10b, so the empty entry silently dropped it. The table carries each effect's op.
+- **A value PoB does not list applies nothing,** as in PoB, instead of a reason: "Eramir" (saved by older PoB versions), or a value of another type. Without a config set, the build's attribute stays a reason only for a bandit PoB applies, since another value applies nothing whether the attribute counts or not.
+- `killed_all_bandits` already read the choice that way.
+
+**`multiplierNearbyAlly`** joins `config::NAMED_ONLY`. It sets `Multiplier:NearbyAlly` in combat (`ConfigOptions.lua` 1122):
+- The calc modules read it only for Rallying Cry's exerted attacks (`CalcOffence.lua` 2661), which `poe1::gems` already gives its own reason (`rallying-cry-allies`) when allies are set. Rallying Cry's buff row (`act_str.lua` 9238) is a `Dummy`.
+- Otherwise only modifiers read it (`ModParser.lua` 1584, 1701, 2871, 2872). Their stats, found by "nearby Ally" in the bundle's stat descriptions, are unmapped and now in `config::DEPENDS_ON`: `accuracy_rating_+%_with_ally_nearby`, `attack_area_of_effect_+%_with_ally_nearby`, `damage_+%_final_with_at_least_1_nearby_ally`, the three Guardian lines, and Rallying Cry's `rallying_cry_damage_+%_final_from_osm_per_nearby_ally`.
+
+**Fixtures** (original, each run three times by PoB, identical; `local/p6/s8-fixtures1.py`): every field equals PoB's.
+- `config-bandit-kraityn-witch.xml`: movement speed 1.08.
+- `config-bandit-unlisted-witch.xml` ("Eramir") and `config-nearby-allies-witch.xml` (three allies): each output is the bare build's.
+- 261 fields are targets.
+
+**Evidence** (`local/p6/s8-1` on `b-pb`, against `local/p6/s9a`):
+- **Public:** 0 unexpected; `Complete` 49,371 to 49,632 (the fixtures).
+  - `rf-chieftain-league-start.xml` (Kraityn): movement speed and effective movement speed 1.19 to 1.27, now PoB's (still partial on an unresolved item line).
+  - `lacerate-bleed-gladiator.xml` ("Eramir") and `facebreaker-luminary.xml` (nearby allies) lose the reason; no value moved.
+- **Corpus:** 0 unexpected; the three Kraityn builds' movement speed rises by 0.08, each now equal to PoB's corpus oracle (1.19, 1.31, 1.21).
+- **Tests:** `the_bandit_should_be_the_config_sets_choice` (Kraityn's speed; unlisted values apply nothing), the attribute case in the test above it, the workspace tests, the real-bundle tests, clippy, rustfmt, and wasm32.
+
+
+## The agent list (S8, 2026-11-26): Elemental Equilibrium's inputs and the spectres' life
+
+Five more inputs join `config::NAMED_ONLY`. Each is read only through lines the engine leaves unmapped, so it changes no computed field:
+- **Elemental Equilibrium's inputs:**
+  - `enemyConditionHitByColdDamage`, `enemyConditionHitByFireDamage`, and `enemyConditionHitByLightningDamage` set the enemy's `Condition:HitBy<element>Damage` (`ConfigOptions.lua` 2022 to 2030);
+  - `EEIgnoreHitDamage` (2034) has no `apply`;
+  - only Elemental Equilibrium's lines read the conditions (`ModParser.lua` 2287 to 2300: its resistances and exposure);
+  - the calc modules read the conditions and the check only under its `ElementalEquilibrium` flag (`CalcOffence.lua` 3605, `CalcPerform.lua` 3565 to 3570), which only those lines set;
+  - their stats are unmapped and already in `exposure::DEPENDS_ON`.
+- **`TotalSpectreLife`:**
+  - it is the spectres' life pool as an `OVERRIDE` (line 797);
+  - PoB reads the pool only with its redirect, `takenFromSpectresBeforeYou` (`CalcDefence.lua` 2458 to 2470; `CalcPerform.lua` 3600 to 3690, shared with Companionship's only when both are set);
+  - only "#% of Damage from Hits is taken from your Raised Spectres' Life before you" (`ModParser.lua` 4992) sets that redirect: its stat, `damage_removed_from_spectres_before_life_or_es_%`, is unmapped and now in `config::DEPENDS_ON`.
+
+**Fixtures** (original, each run three times by PoB, identical; `local/p6/s8-fixtures3.py`):
+- `config-elemental-equilibrium-inputs-witch.xml`: the four inputs on, no Elemental Equilibrium;
+- `config-total-spectre-life-witch.xml`: `TotalSpectreLife` 5000, no spectre line.
+
+PoB's output for each is the bare build's (the same output hash). Every field equals PoB's; 174 fields are targets.
+
+**Evidence** (`local/p6/s8-3` on `b-pb`, against `local/p6/s8-2`):
+- **Public:** 0 unexpected; `Complete` 49,809 to 49,983 (the fixtures); no value moved. `OccVortex.xml` loses `EEIgnoreHitDamage` and `enemyConditionHitByLightningDamage`, and `forged-frostbearer-spectre-necromancer.xml` loses `TotalSpectreLife`.
+- **Corpus:** 0 unexpected; no document changed.
+- **Tests:** the table tests in `poe1::config`, the workspace tests, the real-bundle tests (`DEPENDS_ON`'s stats in the bundle), clippy, rustfmt, and wasm32.
+
+
+## The agent list (S8, 2026-11-26): the corpse's life
+
+`detonateDeadCorpseLife` joins `config::SKILL_DATA_ONLY`. It sets `corpseLife` as untagged skill data (`ConfigOptions.lua` 155), and `CalcOffence.lua` reads it in two places only:
+- for a skill whose data sets `explodeCorpse` (1856 to 1860): the corpse's life times its explosion multiplier, as the hit's fire `BonusMin` and `BonusMax`;
+- for the monster explosion's `monsterExplode` (1861 to 1867).
+
+**The skills that read it.** Fourteen skills in PoB's data read it (the generated `pob_skills` table): Bodyswap, Cremation, Death Wish, Detonate Dead, Vaal Detonate Dead, Volatile Dead, their variants, Death Walk, and the monster explosion.
+- Each is unvetted in every part: `explodeCorpse` is a base mod the hit does not read, or the skill has a function.
+- So the value reaches no `Complete` field, and no DoT reads it.
+- The table's test now accepts `explodeCorpse` beside a function as what keeps a skill unvetted.
+
+**Fixture** `config-corpse-life-witch.xml` (original, run three times by PoB, identical): corpse life 10,000 without such a skill. PoB's output is the bare build's, and every field equals PoB's (87 targets).
+
+**Evidence** (`local/p6/s8-4` on `b-pb`, against `local/p6/s8-3`):
+- **Public:** 0 unexpected; `Complete` 49,983 to 50,070 (the fixture); no value moved.
+- **Corpus:** 0 unexpected; one document loses `detonateDeadCorpseLife`; no value moved.
+- **Tests:** `skill_data_only_skills_should_stay_unvetted`, the workspace tests, the real-bundle tests, clippy, rustfmt, and wasm32.

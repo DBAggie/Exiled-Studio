@@ -22,6 +22,7 @@ pub mod conditions;
 pub mod config;
 pub mod costs;
 pub mod damage_taken;
+pub mod degen;
 pub mod devotion;
 pub mod dot;
 pub mod ehp;
@@ -44,6 +45,7 @@ pub mod minion_hit;
 pub mod minions;
 pub mod movement;
 pub mod pantheon;
+pub mod passive_buffs;
 pub mod pob_minion;
 pub mod reduction;
 pub mod regen;
@@ -146,6 +148,22 @@ pub enum Poe1Quantity {
     /// 100, `limit` 40 from the text, `limitTotal`): `Base`, the value per step, read by
     /// [`hit::spell_damage_per_mana`] in a spell's damage increase.
     SpellDamagePer100Mana,
+    /// Manaforged Arrows' more damage per mana spent (open items S3; PoB's
+    /// `Damage` MORE with `PerStat` `ManaCost`, `sup_dex.lua` 2909): `Base`,
+    /// the value per point of the skill's mana cost, read by the attack
+    /// path from the cost field ([`hit::attack_hit`]).
+    DamageMorePerManaCost,
+    /// An item line that grants a skill and triggers it (open items S3,
+    /// part 7; `triggers::GRANTED_TRIGGERS`): `Base`, its chance to trigger,
+    /// percent, for a line whose value is the chance; `Flag` for one whose
+    /// value is the level (100%). Read by `poe1::triggers` by the item.
+    GrantedTriggerChance,
+    /// Kitava's Thirst's mana to spend (open items S3, part 8; PoB's
+    /// `KitavaRequiredManaCost` BASE): read by `poe1::triggers`.
+    KitavaManaSpent,
+    /// Kitava's Thirst's chance to trigger (PoB's `KitavaTriggerChance`
+    /// BASE): read by `poe1::triggers`.
+    KitavaTriggerChance,
     /// The attack damage increase per 450 armour (P6-11cw; PoB's `PerStat`
     /// `Armour` `div` 450): `Base`, read by [`hit`] from the armour field.
     AttackDamagePer450Armour,
@@ -153,10 +171,23 @@ pub enum Poe1Quantity {
     /// with `PerStat` `Str` `div` 100): `Base`, read by [`hit`] from the
     /// strength field.
     DamagePer100Strength,
+    /// The damage over time increase per 100 maximum life (the agent list;
+    /// PoB's `Damage` INC with `ModFlag.Dot`, `PerStat` `Life` `div` 100):
+    /// `Base`, read by [`hit`] from the life field for damage over time.
+    DotDamagePer100Life,
+    /// "#% increased Spell Damage per 100 Player Maximum Life" (`Damage`
+    /// INC, `ModFlag.Spell`, `PerStat` `Life` `div` 100; the agent list):
+    /// `Base`, read by `hit`'s per-stat terms.
+    SpellDamagePer100Life,
     /// "Gain Accuracy Rating equal to twice your Strength" (P6-11gm; PoB's
     /// `Accuracy` BASE 2 with `PerStat` `Str`, `ModParser.lua` 2921): a
     /// `Flag`, read by [`hit`]'s accuracy.
     AccuracyFromStrength,
+    /// "Intelligence is added to Accuracy Rating with Wands" (the agent
+    /// list, S8; PoB's `Accuracy` BASE 1 with `PerStat` `Int` and
+    /// `ModFlag.Wand`, `ModParser.lua` 5228): a `Flag` under the wand flag,
+    /// read by [`hit`]'s accuracy.
+    AccuracyFromIntelligence,
     /// "#% increased maximum Life per Red Socket on equipped Staff" (`true`)
     /// and its Mana per Blue Socket (`false`) (P6-11go; PoB's `Life` or
     /// `Mana` INC with the `Multiplier` `RedSocketInWeapon 1` or
@@ -174,6 +205,45 @@ pub enum Poe1Quantity {
     /// `LifeGainAsEnergyShield` BASE; P6-11dd): read by the energy shield
     /// phase as one more row.
     LifeAsEnergyShield,
+    /// Maximum mana gained as extra maximum energy shield, percent (PoB's
+    /// `ManaGainAsEnergyShield` BASE; the agent list, 2026-11-27): read by
+    /// the energy shield phase as one more row, before life's.
+    ManaAsEnergyShield,
+    /// "Your Maximum Energy Shield is Equal to #% of Your Maximum Life"
+    /// (PoB's `EnergyShield` OVERRIDE with `PercentStat` `Life`; the agent
+    /// list, 2026-11-27): `Base`, the percent, read by the energy shield
+    /// phase in place of its rows.
+    EnergyShieldFromLife,
+    /// "Critical Strikes have Culling Strike" (PoB's `CriticalCullPercent`
+    /// MAX 10; the agent list, 2026-11-28): a `Flag`, read by [`hit`].
+    CriticalCulling,
+    /// The shock's maximum (PoB's `ShockMax`; the agent list, 2026-11-28):
+    /// `Base`, added to 50, and `Override`, read by [`damage_taken`].
+    ShockMaximum,
+    /// "+# to maximum number of Summoned Mirage Archers" (PoB's
+    /// `MirageArcherMaxCount` BASE; the agent list, 2026-11-28): `Base`,
+    /// added to the support's count by [`combined`].
+    MirageArcherCount,
+    /// The skill's maximum chains (PoB's `ChainCountMax`; the agent list,
+    /// 2026-11-28): `Base` and `More`, read by [`hit`] for a chaining skill.
+    ChainCountMax,
+    /// The skill's projectile count (PoB's `ProjectileCount`; the agent
+    /// list, 2026-11-28): `Base` (the additional projectiles) and `More`,
+    /// read by [`hit`] for Ice Spear's parts with all projectiles.
+    ProjectileCount,
+    /// More damage per second channelling, the total at most 60 (PoB's
+    /// `Damage` MORE per `Multiplier:ChannellingTime`, `limit` 60,
+    /// `limitTotal`; Focussed Channelling's; the agent list, 2026-11-28):
+    /// `More`, turned by [`hit`] into `Damage`.
+    ChannellingDamage,
+    /// Damage per chain (PoB's `Damage` with `PerStat` `Chain`, `false`) or
+    /// per remaining chain (`ChainRemaining`, `true`; the agent list,
+    /// 2026-11-28): `Increased` and `More`, turned by [`hit`] into `Damage`
+    /// times the count.
+    PerChainDamage(bool),
+    /// The critical cull percent the hit computes (`CalcOffence.lua` 3214
+    /// to 3217): `Base`, read by [`combined`] beside the regular cull.
+    CriticalCullPercent,
     /// Elemental resistances are capped by the highest maximum elemental
     /// resistance (PoB's `ElementalResistMaxIsHighestResistMax`, Melding of
     /// the Flesh; P6-11dh): a `Flag` the resistance phase reads.
@@ -200,6 +270,13 @@ pub enum Poe1Quantity {
     /// sources: `globalLimit` 100): a `Flag`, read by the body armour's
     /// armour row.
     BodyArmourArmourDoubled,
+    /// "Defences from Equipped Body Armour are doubled if it has no
+    /// Socketed Gems" (the agent list; PoB's `Defences` MORE 100 with the
+    /// `SlotName` Body Armour, at most once under its own limit key,
+    /// `ModParser.lua` 3039): a `Flag`; the body armour's armour, evasion,
+    /// energy shield, and ward times 2 ([`phases`]), apart from
+    /// [`Self::BodyArmourArmourDoubled`].
+    BodyArmourDefencesDoubled,
     /// The enemy's Blind effect (P6-11gq; "#% increased Blind Effect", an
     /// `EnemyModifier` of `BlindEffect` INC): `Increased`, read by
     /// [`damage_taken`]'s Blind.
@@ -236,6 +313,11 @@ pub enum Poe1Quantity {
     /// over 4 seconds instead"): `Base`, read by the enemy's hit and the
     /// defence estimate's pools.
     LifeLossPrevented,
+    /// The share of the life loss below half life from a hit that is
+    /// prevented (open items S2: Petrified Blood; PoB's
+    /// `LifeLossBelowHalfPrevented` BASE, read by
+    /// `calcLifeHitPoolWithLossPrevention`, `CalcDefence.lua` 177 to 181).
+    LifeLossBelowHalfPrevented,
     /// "#% increased Effect of Arcane Surge on you" (P6-11ch; PoB's
     /// `ArcaneSurgeEffect` INC): `Increased`, read by [`buffs`].
     ArcaneSurgeEffect,
@@ -284,6 +366,10 @@ pub enum Poe1Quantity {
     /// (P3-8i): `Base`, read once by [`gem_levels::GemLevels`] when the
     /// skills are set up, as PoB reads its `GemProperty` modifiers.
     GemLevel(&'static str),
+    /// A global gem quality stat of [`gem_levels::QUALITY_STATS`], by stat
+    /// ID (the agent list): `Base`, read by [`gem_levels::GemLevels`] as
+    /// PoB's `GemProperty` `quality` (`applyGemMods`).
+    GemQuality(&'static str),
     /// A socketed gem level stat of [`gem_levels::SOCKETED_STATS`] on the
     /// item in a slot (P6-11q): `Base`, read by [`gem_levels::GemLevels`]
     /// for the gems of the groups in that slot.
@@ -419,6 +505,13 @@ pub enum Poe1Quantity {
     /// armour reduction of a physical hit, and alone for physical damage
     /// over time ([`hit`]).
     EnemyPhysicalDamageReduction,
+    /// The character's change to the enemy's physical damage reduction
+    /// against its hits (PoB's `EnemyPhysicalDamageReduction` BASE on the
+    /// skill, "Overwhelm #% Physical Damage Reduction"; the agent list):
+    /// `Base`, added with [`Self::EnemyPhysicalDamageReduction`] to a
+    /// physical hit's armour reduction alone (`CalcOffence.lua` 3434; not
+    /// damage over time or impale, which read the enemy's alone).
+    HitEnemyPhysicalDamageReduction,
     /// Additional curses you can apply (PoB's `EnemyCurseLimit` BASE beyond
     /// the base 1; P6-9b): `Base`, read by [`gems`] for the curse slots.
     CurseLimit,
@@ -446,6 +539,11 @@ pub enum Poe1Quantity {
     /// `Condition:Adrenaline` FLAG with `KilledRecently`): a `Flag`, read by
     /// [`buffs`]' Adrenaline while killed recently is settled true.
     AdrenalineOnKill,
+    /// "You have Tailwind if you have dealt a Critical Strike Recently"
+    /// (PoB's `Condition:Tailwind` FLAG with `CritRecently`; the agent
+    /// list): a `Flag`, read by [`buffs`]' Tailwind while crit recently is
+    /// settled true.
+    TailwindOnCrit,
     /// A minion modifier for golems only ("Golems have #% increased
     /// Maximum Life"; PoB's `MinionModifier` tagged `SkillType.Golem`,
     /// `ModParser.lua` 1137; P6-7b3b): no character field reads it; the
@@ -565,6 +663,11 @@ pub enum Poe1Quantity {
     /// `<Type>Min` and `Max` BASE with `PerStat` `ArmourOnWeapon 2`,
     /// `EvasionOnWeapon 2`, div 15): `Base`, the value per step.
     ShieldAddedDamage(crate::quantity::DamageType, crate::quantity::Bound, u8),
+    /// Added damage of a type equal to a percent of maximum mana, both ends
+    /// (PoB's `<Type>Min` and `Max` BASE with `PercentStat` `Mana`; the
+    /// agent list, 2026-11-27: Kinetic Blast of Clustering): `Base`, each
+    /// mod `ceil(value x mana / 100)` ([`hit`]'s `mana_added`).
+    AddedDamagePercentOfMana(crate::quantity::DamageType),
     /// "#% increased Attack Speed per 150 Accuracy Rating" (P6-11hd; PoB's
     /// `Speed` INC with `PerStat` `Accuracy`): `Base`, the value per step,
     /// read by the attack's rate with the hand's accuracy.
@@ -591,6 +694,11 @@ pub enum Poe1Quantity {
     /// INC or MORE with the `DistanceRamp` tag `{35, 0}, {70, 1}`): `Base`,
     /// which `collect` scales by the skill's distance.
     DistanceRampDamage(bool),
+    /// Point Blank (`false`) and Far Shot (`true`) (the agent list,
+    /// 2026-11-27; PoB's `PointBlank` and `FarShot` flags, `CalcOffence.lua`
+    /// 1045 to 1053): a `Flag`, which `collect` turns into the main skill's
+    /// projectile attack `Damage` MORE by its distance ramp.
+    DistanceFlag(bool),
     /// "Deal up to #% more Melee Damage to Enemies, based on proximity" and
     /// Shield Crush's more damage from distance (P6-11ht; PoB's `Damage`
     /// MORE with the `MeleeProximity` tag, `ramp = {1, 0}`): `Base`, which
@@ -768,6 +876,11 @@ pub enum Poe1Quantity {
     /// default chill (10) per skill, which [`gems`] adds and
     /// [`damage_taken`] scales by [`Self::ChillEffect`].
     SkillChill,
+    /// A chilling skill's own chill effect (PoB's `EnemyChillEffect` on the
+    /// skill's gems: its quality's, its supports'; the agent list,
+    /// 2026-11-27): `Increased` and `More`, with the same source as its
+    /// [`Self::SkillChill`], which [`damage_taken`] scales by both.
+    SkillChillEffect,
     /// Action speed (PoB's `ActionSpeed`, P3-8n): `Increased`; a self-cast
     /// skill's rate is scaled by `max(1 + inc / 100, 0)` before the server
     /// tick cap ([`hit`]).
@@ -874,6 +987,11 @@ pub enum Poe1Quantity {
     /// The character cannot evade (PoB's `CannotEvade`; P6-10b part 11): a
     /// `Flag` [`evade`] reads.
     CannotEvade,
+    /// The chance to evade attack hits (PoB's `EvadeChance`; open items
+    /// S2): `Base` is subtracted from the enemy's chance to hit, `Increased`
+    /// and `More` scale the melee and projectile chances, read by
+    /// [`evade`].
+    EvadeChance,
     /// A stat that changes the enemy's hit in a way the engine does not
     /// model (P6-10b part 12; a gem's [`gems::BuffStat::Defence`]): a
     /// `Flag` only [`enemy_hit`] reads, as its fields' reason.
@@ -894,6 +1012,10 @@ pub enum Poe1Quantity {
     /// The enemy's damage (PoB's enemy `Damage`; P6-10b part 12):
     /// `Increased` (delirium's) and `More` (sap's too, open items S8).
     EnemyDamage,
+    /// The share of the enemy's physical damage it converts to a type (PoB's
+    /// enemy `PhysicalDamageConvertTo<Type>` BASE, from `EnemyModifier`; the
+    /// agent list, 2026-11-27): `Base`, read by [`enemy_hit`].
+    EnemyPhysicalConvert(DamageType),
     /// A share of a type's damage taken as another (PoB's
     /// `<Type>DamageTakenAs<Other>`, `ElementalDamageTakenAs<Other>`, and
     /// their `FromHits` forms when the flag is set; P6-10b part 12): `Base`.
@@ -939,6 +1061,14 @@ pub enum Poe1Quantity {
     /// engine does not model (P6-10b part 14): a `Flag` only [`ehp`]'s
     /// fields read.
     EhpReason(&'static str),
+    /// A type's degeneration of the character per second (PoB's
+    /// `<Type>Degen` BASE; open items S7, part 8): flat, or per point of a
+    /// pool (`PerStat`), read by [`degen`].
+    Degen(DamageType, DegenOf),
+    /// A stat that changes a pool's net regeneration alone in a way the
+    /// engine does not model (open items S7, part 8: a pool's own
+    /// degeneration or recovery): a `Flag` only [`degen`]'s net fields read.
+    NetRegenReason(&'static str),
     /// The elemental types' base damage reduction, percent (PoB's
     /// `ElementalDamageReduction` BASE; P6-10b part 5): read by
     /// [`reduction`] for fire, cold, and lightning.
@@ -1009,6 +1139,12 @@ pub enum Poe1Quantity {
     /// [`Poe1Quantity::RegenPercent`] by [`exposure`] when an exposure is on
     /// the enemy.
     RegenIfExposureApplied(Pool),
+    /// Critical strike chance against an enemy with an exposure of the
+    /// type (PoB's `CritChance` INC with the enemy's `Has<Type>Exposure`,
+    /// set when the exposure is applied, `CalcPerform.lua` 3583; the agent
+    /// list): `Base`, the increase, turned into `CritChance` `Increased` by
+    /// [`exposure`] when that exposure is on the enemy.
+    CritIfExposed(DamageType),
     /// "Allocates <notable>" (PoB's `GrantedPassive`, P3-8n): `Base`, the
     /// node's hash; `collect` adds the node's stats.
     GrantedPassive,
@@ -1049,11 +1185,43 @@ pub enum Poe1Quantity {
     /// `CannotGainWarcryBuffs`; P6-11hw, Call to Arms): a `Flag`, read by
     /// [`skill_modifiers::Totals`].
     CannotGainWarcryBuffs,
+    /// "Warcries have infinite Power" (PoB's `WarcryInfinitePower`, a
+    /// `WarcryPower` OVERRIDE of 999999, `CalcPerform.lua` 1308; the agent
+    /// list): a `Flag`, read by [`skill_modifiers`].
+    WarcryInfinitePower,
+    /// "Warcries have a minimum of # Power" (PoB's `MinimumWarcryPower`,
+    /// `CalcPerform.lua` 2327; the agent list): `Base`, read by
+    /// [`skill_modifiers`].
+    MinimumWarcryPower,
     /// "Damage taken from Unblocked hits always bypasses Energy Shield"
     /// (PoB's `UnblockedDamageDoesBypassES`, `CalcDefence.lua` 2282;
     /// P6-11hy, Emperor's Vigilance): a `Flag`; every type then bypasses
     /// energy shield as chaos does, read by [`enemy_hit`] and [`ehp`].
     UnblockedDamageBypassesEs,
+    /// "Chaos Damage taken does not bypass Energy Shield" (PoB's
+    /// `ChaosNotBypassEnergyShield`, `CalcDefence.lua` 2290 to 2295; the
+    /// agent list): a `Flag`; chaos's bypass is then 0, as every other
+    /// type's, read by [`enemy_hit`], [`ehp`], and [`degen`].
+    ChaosNotBypassEs,
+    /// A source that lets you gain Elusive (PoB's `Condition:CanBeElusive`;
+    /// the agent list): a `Flag`, which [`buffs`] reads with the
+    /// `buffElusive` check.
+    CanBeElusive,
+    /// Elusive's effect on you (PoB's `ElusiveEffect`; the agent list):
+    /// `Increased`, read by [`buffs`].
+    ElusiveEffect,
+    /// "+#% to all maximum Elemental Resistances if Equipped Helmet, Body
+    /// Armour, Gloves, and Boots all have Armour" (PoB's tag list of
+    /// `StatThreshold` `ArmourOn<slot>` at least 1, `ModParser.lua` 1648;
+    /// the agent list): `Base`, read by `phases`' maximum resistances.
+    MaxElementalResistIfAllPiecesArmour,
+    /// "+#% chance to Suppress Spell Damage if ... all have Evasion Rating"
+    /// (1653): `Base`, read by `phases`' suppression.
+    SuppressionIfAllPiecesEvasion,
+    /// The chance to avoid all damage from hits (PoB's
+    /// `AvoidAllDamageFromHitsChance` BASE, capped at 75; the agent list:
+    /// Elusive's), read by [`enemy_hit`].
+    AvoidAllDamageFromHits,
     /// "Gain #% increased Armour per 5 Power for 8 seconds when you Warcry,
     /// up to a maximum of 100%" (P6-11hz): `Base`, which `collect` makes
     /// `Armour` INC per 5 warcry power, at most 100 in all, while
@@ -1087,6 +1255,15 @@ pub enum Poe1Quantity {
     /// `Condition:SupportedBySpellslinger`; open items S3): `Increased`,
     /// read by [`skill_modifiers::Totals`] for those skills.
     SpellslingerManaReservationEfficiency,
+    /// Mana reservation of skills Spellslinger supports (the agent list;
+    /// PoB's `ManaReserved` INC with `Condition:SupportedBySpellslinger`):
+    /// `Increased`, read by [`skill_modifiers::Totals`] into those skills'
+    /// reservation increase.
+    SpellslingerManaReserved,
+    /// A brand's activation frequency (PoB's `BrandActivationFrequency`;
+    /// open items S3): `Increased` and `More`, read by [`triggers`] in
+    /// Arcanist Brand's own context for the spells it triggers.
+    BrandActivationFrequency,
     /// Mines thrown at once (PoB's `MineThrowCount` BASE, its base 1 in
     /// [`hit`]; P6-11fa).
     MineThrowCount,
@@ -1127,6 +1304,10 @@ pub enum Poe1Quantity {
     /// Ailments deal their damage slower (PoB's `IgniteBurnSlower` and kin;
     /// Phase 6): `Increased`.
     AilmentSlower,
+    /// A chance to inflict an additional poison on the same target, percent
+    /// (PoB's `AdditionalPoisonChance` BASE; the agent list, 2026-11-27):
+    /// read by the poison's stacks.
+    AdditionalPoisonChance,
     /// A chance to impale on hit, percent (PoB's `ImpaleChance`; Phase 6):
     /// `Base`, read by [`ailment::impale`].
     ImpaleChance,
@@ -1147,6 +1328,11 @@ pub enum Poe1Quantity {
     /// "Cannot cause Bleeding" and kin (PoB's `CannotBleed`, `CannotPoison`,
     /// `CannotIgnite`; Phase 6): a `Flag` read by [`ailment`].
     CannotInflict(ailment::Ailment),
+    /// "All Damage can Ignite" and kin (PoB's `PhysicalCanIgnite`,
+    /// `LightningCanIgnite`, `ColdCanIgnite`, `ChaosCanIgnite`; the agent
+    /// list, 2026-11-27): a `Flag` read by [`ailment`], the type's hit
+    /// damage joining the ailment's source.
+    CanInflictWith(ailment::Ailment, DamageType),
     /// The duration of ailments on the enemy (PoB's enemy
     /// `SelfIgniteDuration`, `SelfAilmentDuration`,
     /// `SelfElementalAilmentDuration`, by conditions; curses such as
@@ -1163,9 +1349,35 @@ pub enum Poe1Quantity {
     /// The effect of the ailments you inflict (PoB's `AilmentEffect`, by
     /// conditions; Phase 6): `Increased` and `More`.
     AilmentEffect,
-    /// Intimidating Cry's terms for its exerted attacks' uptime
-    /// ([`gems::WarcryValue`]; close-out): `Base`, read by [`hit`].
-    IntimidatingCry(gems::WarcryValue),
+    /// A warcry's terms for its exerted attacks' uptime
+    /// ([`gems::ExertCry`], [`gems::WarcryValue`]; close-out for
+    /// Intimidating Cry, the agent list for the others): `Base`, read by
+    /// [`hit`].
+    ExertingCry(gems::ExertCry, gems::WarcryValue),
+    /// Extra attacks your warcries exert (PoB's `ExtraExertedAttacks`;
+    /// the agent list): `Base` (added to each cry's) and `More`, read by
+    /// [`hit`].
+    ExtraExertedAttacks,
+    /// General's Cry's terms for the mirage warriors that use the main
+    /// skill ([`gems::GeneralsCryValue`]; the agent list, S5): `Base`,
+    /// from the first General's Cry in the main skill's slot (its source)
+    /// and, for the warriors, the character's lines; read by [`hit`].
+    GeneralsCry(gems::GeneralsCryValue),
+    /// The damage of exerted attacks (PoB's `ExertIncrease`; the agent
+    /// list): `Increased` and `More`, each summed and scaled by the
+    /// exerted attacks' uptime in [`hit`].
+    ExertDamage,
+    /// More damage per warcry exerting the attack (PoB's
+    /// `OverexertionExertAverageIncrease` and `EchoesExertAverageIncrease`;
+    /// the agent list): `More`, summed and scaled by the sum of the cries'
+    /// uptimes in [`hit`].
+    ExertAverageDamage,
+    /// `Damage` MORE a calc module adds to the skill's own mod list in the
+    /// middle of the calculation (PoB's `skillModList:NewMod`, a list whose
+    /// parent holds the gems' mods, `CalcPerform.lua` 1262; the agent list):
+    /// read as `Damage` MORE by [`hit`], its product rounded apart from the
+    /// gems' and the character's (`ModList:MoreInternal` per list).
+    NewModDamage,
 }
 
 /// A pool: one a skill reserves (life or mana), or one that regenerates
@@ -1272,6 +1484,33 @@ impl TakenWhen {
             Self::ProjectileAttack => "projectile-attack",
             Self::Spell => "spell",
             Self::SpellProjectile => "spell-projectile",
+        }
+    }
+}
+
+/// What a degeneration's amount is per (open items S7, part 8): PoB's
+/// `PerStat` tag on a `<Type>Degen` mod, or none.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum DegenOf {
+    /// A flat amount per second.
+    Flat,
+    /// Per point of maximum life.
+    Life,
+    /// Per point of maximum energy shield.
+    EnergyShield,
+    /// Per point of maximum mana.
+    Mana,
+}
+
+impl DegenOf {
+    /// Stable name.
+    #[must_use]
+    pub const fn name(self) -> &'static str {
+        match self {
+            Self::Flat => "flat",
+            Self::Life => "life",
+            Self::EnergyShield => "energy-shield",
+            Self::Mana => "mana",
         }
     }
 }
@@ -1428,6 +1667,20 @@ pub enum WeaponValue {
     /// speed, `floor(quality / 8 x sum)` (PoB's
     /// `AlternateQualityLocalAttackSpeedPer8Quality`, `Item.lua` 2246).
     AttackSpeedPer8Quality,
+    /// "#% increased Critical Strike Chance per 4% Quality" (the agent
+    /// list; an alternate quality's): `Base`; `collect` turns it into the
+    /// weapon's local critical strike chance, `floor(quality / 4 x sum)`
+    /// (PoB's `AlternateQualityLocalCritChancePer4Quality`, `Item.lua` 2277).
+    CritChancePer4Quality,
+    /// "Attacks with this Weapon deal Double Damage" (the agent list,
+    /// 2026-11-27; PoB's `DoubleDamageChance` BASE 100 with `ModFlag.Hit`,
+    /// the hand's `{Hand}Attack` condition, and `SkillType.Attack`,
+    /// `ModParser.lua` 3117): `Base` 1 per line, read by the hand's hit.
+    DoubleDamage,
+    /// "#% chance to Impale Enemies on Hit with Attacks" on a weapon (the
+    /// agent list, 2026-11-27; `local_attacks_impale_on_hit_%_chance`, the
+    /// weapon's hits): `Base`, read by the hand's impale.
+    ImpaleChance,
 }
 
 impl core::fmt::Display for WeaponValue {
@@ -1442,7 +1695,10 @@ impl core::fmt::Display for WeaponValue {
             Self::NoPhysicalDamage => f.write_str("no-physical-damage"),
             Self::AlternateQuality => f.write_str("alternate-quality"),
             Self::ElementalDamagePerQuality => f.write_str("elemental-damage-per-quality"),
+            Self::DoubleDamage => f.write_str("double-damage"),
+            Self::ImpaleChance => f.write_str("impale-chance"),
             Self::AttackSpeedPer8Quality => f.write_str("attack-speed-per-8-quality"),
+            Self::CritChancePer4Quality => f.write_str("crit-chance-per-4-quality"),
             Self::Accuracy => f.write_str("accuracy"),
         }
     }
@@ -1478,8 +1734,15 @@ impl core::fmt::Display for Poe1Quantity {
             Self::Ruthless(v) => write!(f, "ruthless.{}", v.name()),
             Self::SpellDamagePer100Mana => f.write_str("spell-damage-per-100-mana"),
             Self::AttackDamagePer450Armour => f.write_str("attack-damage-per-450-armour"),
+            Self::DamageMorePerManaCost => f.write_str("damage-more-per-mana-cost"),
+            Self::GrantedTriggerChance => f.write_str("granted-trigger-chance"),
+            Self::KitavaManaSpent => f.write_str("kitava-mana-spent"),
+            Self::KitavaTriggerChance => f.write_str("kitava-trigger-chance"),
             Self::DamagePer100Strength => f.write_str("damage-per-100-strength"),
+            Self::DotDamagePer100Life => f.write_str("dot-damage-per-100-life"),
+            Self::SpellDamagePer100Life => f.write_str("spell-damage-per-100-life"),
             Self::AccuracyFromStrength => f.write_str("accuracy-from-strength"),
+            Self::AccuracyFromIntelligence => f.write_str("accuracy-from-intelligence"),
             Self::PerStaffSocket(life) => f.write_str(if *life {
                 "life-per-red-staff-socket"
             } else {
@@ -1490,6 +1753,22 @@ impl core::fmt::Display for Poe1Quantity {
             } else {
                 "evasion-per-green-main-hand-socket"
             }),
+            Self::ManaAsEnergyShield => f.write_str("mana-as-energy-shield"),
+            Self::EnergyShieldFromLife => f.write_str("energy-shield-from-life"),
+            Self::CriticalCulling => f.write_str("critical-culling"),
+            Self::ShockMaximum => f.write_str("shock-maximum"),
+            Self::MirageArcherCount => f.write_str("mirage-archer-count"),
+            Self::ChainCountMax => f.write_str("chain-count-max"),
+            Self::ProjectileCount => f.write_str("projectile-count"),
+            Self::ChannellingDamage => f.write_str("channelling-damage"),
+            Self::PerChainDamage(remaining) => {
+                if *remaining {
+                    f.write_str("per-remaining-chain-damage")
+                } else {
+                    f.write_str("per-chain-damage")
+                }
+            }
+            Self::CriticalCullPercent => f.write_str("critical-cull-percent"),
             Self::LifeAsEnergyShield => f.write_str("life-as-energy-shield"),
             Self::ElementalResistMaxIsHighest => f.write_str("elemental-resist-max-is-highest"),
             Self::TrapThrowingSpeed => f.write_str("trap-throwing-speed"),
@@ -1497,12 +1776,14 @@ impl core::fmt::Display for Poe1Quantity {
             Self::InvertElementalResistChance => f.write_str("invert-elemental-resist-chance"),
             Self::BodyArmourIfHybridPieces => f.write_str("body-armour-if-hybrid-pieces"),
             Self::BodyArmourArmourDoubled => f.write_str("body-armour-armour-doubled"),
+            Self::BodyArmourDefencesDoubled => f.write_str("body-armour-defences-doubled"),
             Self::EnemyBlindEffect => f.write_str("enemy-blind-effect"),
             Self::IgnitedEnemyDamageTaken => f.write_str("ignited-enemy-damage-taken"),
             Self::ConsecratedEnemyDamageTaken => f.write_str("consecrated-enemy-damage-taken"),
             Self::ConsecratedCritChance => f.write_str("consecrated-crit-chance"),
             Self::EnergyShieldFromSpellBlock => f.write_str("energy-shield-from-spell-block"),
             Self::LifeLossPrevented => f.write_str("life-loss-prevented"),
+            Self::LifeLossBelowHalfPrevented => f.write_str("life-loss-below-half-prevented"),
             Self::ArcaneSurgeEffect => f.write_str("arcane-surge-effect"),
             Self::ArcaneSurgeDamage => f.write_str("arcane-surge-damage"),
             Self::EnergyShieldFromChaosResistance => {
@@ -1525,6 +1806,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::LocalFlaskEffect => f.write_str("local-flask-effect"),
             Self::Charge(kind, value) => write!(f, "charge.{}.{}", kind.name(), value.name()),
             Self::GemLevel(stat) => write!(f, "gem-level.{stat}"),
+            Self::GemQuality(stat) => write!(f, "gem-quality.{stat}"),
             Self::SocketedCostMultiplier(slot) => write!(f, "socketed-cost-multiplier.{slot:?}"),
             Self::SocketedGemLevel(stat, slot) => {
                 write!(f, "socketed-gem-level.{}.{stat}", slot.name())
@@ -1539,6 +1821,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::ArcaneSurgeWhen(c) => write!(f, "arcane-surge-when.{c}"),
             Self::ReplaceShieldBlock => f.write_str("replace-shield-block"),
             Self::AdrenalineOnKill => f.write_str("adrenaline-on-kill"),
+            Self::TailwindOnCrit => f.write_str("tailwind-on-crit"),
             Self::CurseLimitIsMaximumPowerCharges => {
                 f.write_str("curse-limit-is-maximum-power-charges")
             }
@@ -1563,12 +1846,14 @@ impl core::fmt::Display for Poe1Quantity {
             Self::CannotLeech(p) => write!(f, "cannot-leech.{}", p.name()),
             Self::EnemyAccuracy => f.write_str("enemy-accuracy"),
             Self::CannotEvade => f.write_str("cannot-evade"),
+            Self::EvadeChance => f.write_str("evade-chance"),
             Self::EnemyHitReason(stat) => write!(f, "enemy-hit-reason.{stat}"),
             Self::PoolReason(stat) => write!(f, "pool-reason.{stat}"),
             Self::DotTakenReason(stat) => write!(f, "dot-taken-reason.{stat}"),
             Self::EnemyCritChance => f.write_str("enemy-crit-chance"),
             Self::CritExtraDamageReduction => f.write_str("crit-extra-damage-reduction"),
             Self::EnemyDamage => f.write_str("enemy-damage"),
+            Self::EnemyPhysicalConvert(t) => write!(f, "enemy-physical-convert.{}", t.name()),
             Self::DamageTakenAs(from, to, hits) => write!(
                 f,
                 "damage-taken-as.{}.{}{}",
@@ -1588,6 +1873,8 @@ impl core::fmt::Display for Poe1Quantity {
             Self::BlockEffect => f.write_str("block-effect"),
             Self::AvoidProjectiles => f.write_str("avoid-projectiles"),
             Self::EhpReason(stat) => write!(f, "ehp-reason.{stat}"),
+            Self::Degen(t, of) => write!(f, "degen.{}.{}", t.name(), of.name()),
+            Self::NetRegenReason(stat) => write!(f, "net-regen-reason.{stat}"),
             Self::SelfDamageTaken(w, o) => write!(f, "self-damage-taken.{}.{}", w.name(), o.name()),
             Self::EnergyShieldRecharge => f.write_str("energy-shield-recharge"),
             Self::EnergyShieldRechargeFaster => f.write_str("energy-shield-recharge-faster"),
@@ -1607,6 +1894,9 @@ impl core::fmt::Display for Poe1Quantity {
             Self::ArcaneSurgeManaRegen => f.write_str("arcane-surge-mana-regen"),
             Self::ConsecratedWhileStationary => f.write_str("consecrated-while-stationary"),
             Self::EnemyPhysicalDamageReduction => f.write_str("enemy-physical-damage-reduction"),
+            Self::HitEnemyPhysicalDamageReduction => {
+                f.write_str("hit-enemy-physical-damage-reduction")
+            }
             Self::BlockPer5(true) => f.write_str("spell-block-per-5-block"),
             Self::BlockPer5(false) => f.write_str("block-per-5-shield-block"),
             Self::MinionToYou(value, percent) => {
@@ -1656,6 +1946,9 @@ impl core::fmt::Display for Poe1Quantity {
             Self::ShieldAttackDamage(t, b) => {
                 write!(f, "shield-attack-damage.{}.{}", t.name(), b.name())
             }
+            Self::AddedDamagePercentOfMana(t) => {
+                write!(f, "added-damage-percent-of-mana.{}", t.name())
+            }
             Self::ShieldAddedDamage(t, b, mask) => {
                 write!(f, "shield-added-damage.{}.{}.{mask}", t.name(), b.name())
             }
@@ -1664,6 +1957,11 @@ impl core::fmt::Display for Poe1Quantity {
             Self::EnemyResistOverrideOn(t) => write!(f, "enemy-resist-override-on.{}", t.name()),
             Self::ProjectileSpeed => f.write_str("projectile-speed"),
             Self::ProjectileSpeedToBowDamage => f.write_str("projectile-speed-to-bow-damage"),
+            Self::DistanceFlag(far) => f.write_str(if *far {
+                "distance-flag.far-shot"
+            } else {
+                "distance-flag.point-blank"
+            }),
             Self::DistanceRampDamage(more) => f.write_str(if *more {
                 "distance-ramp-more"
             } else {
@@ -1725,6 +2023,7 @@ impl core::fmt::Display for Poe1Quantity {
             }),
             Self::ChillEffect => f.write_str("chill-effect"),
             Self::SkillChill => f.write_str("skill-chill"),
+            Self::SkillChillEffect => f.write_str("skill-chill-effect"),
             Self::ActionSpeed => f.write_str("action-speed"),
             Self::ActionSpeedNotBelowBase => f.write_str("action-speed-not-below-base"),
             Self::MovementSpeedNotBelowBase => f.write_str("movement-speed-not-below-base"),
@@ -1774,6 +2073,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::RegenIfExposureApplied(p) => {
                 write!(f, "regen-if-exposure-applied.{}", p.name())
             }
+            Self::CritIfExposed(t) => write!(f, "crit-if-exposed.{}", t.name()),
             Self::GrantedPassive => f.write_str("granted-passive"),
             Self::ForbiddenNode(flesh) => {
                 write!(
@@ -1789,7 +2089,17 @@ impl core::fmt::Display for Poe1Quantity {
             Self::OfferingEffectOnYou => f.write_str("offering-effect-on-you"),
             Self::OfferingsAffectYou => f.write_str("offerings-affect-you"),
             Self::CannotGainWarcryBuffs => f.write_str("cannot-gain-warcry-buffs"),
+            Self::WarcryInfinitePower => f.write_str("warcry-infinite-power"),
+            Self::MinimumWarcryPower => f.write_str("minimum-warcry-power"),
             Self::UnblockedDamageBypassesEs => f.write_str("unblocked-damage-bypasses-es"),
+            Self::ChaosNotBypassEs => f.write_str("chaos-not-bypass-es"),
+            Self::CanBeElusive => f.write_str("can-be-elusive"),
+            Self::ElusiveEffect => f.write_str("elusive-effect"),
+            Self::AvoidAllDamageFromHits => f.write_str("avoid-all-damage-from-hits"),
+            Self::MaxElementalResistIfAllPiecesArmour => {
+                f.write_str("max-elemental-resist-if-all-pieces-armour")
+            }
+            Self::SuppressionIfAllPiecesEvasion => f.write_str("suppression-if-all-pieces-evasion"),
             Self::ArmourPerWarcryPower => f.write_str("armour-per-warcry-power"),
             Self::TailwindEffect => f.write_str("tailwind-effect"),
             Self::MaxElementalResistIfReservedLifeAndMana => {
@@ -1803,12 +2113,19 @@ impl core::fmt::Display for Poe1Quantity {
             Self::SpellslingerManaReservationEfficiency => {
                 f.write_str("spellslinger-mana-reservation-efficiency")
             }
+            Self::SpellslingerManaReserved => f.write_str("spellslinger-mana-reserved"),
+            Self::BrandActivationFrequency => f.write_str("brand-activation-frequency"),
             Self::HeraldBuffEffect => f.write_str("herald-buff-effect"),
             Self::CurseEffect => f.write_str("curse-effect"),
             Self::MarkCurseEffect => f.write_str("mark-curse-effect"),
             Self::SkillExposure(t) => write!(f, "skill-exposure.{}", t.name()),
             Self::GainAs(from, to) => write!(f, "gain-as.{}.{}", from.name(), to.name()),
-            Self::IntimidatingCry(v) => write!(f, "intimidating-cry.{}", v.name()),
+            Self::ExertingCry(c, v) => write!(f, "{}.{}", c.name(), v.name()),
+            Self::ExtraExertedAttacks => f.write_str("extra-exerted-attacks"),
+            Self::GeneralsCry(v) => write!(f, "generals-cry.{}", v.name()),
+            Self::ExertDamage => f.write_str("exert-damage"),
+            Self::ExertAverageDamage => f.write_str("exert-average-damage"),
+            Self::NewModDamage => f.write_str("new-mod-damage"),
             Self::AilmentChance(a) => write!(f, "ailment-chance.{}", a.name()),
             Self::AilmentDuration => f.write_str("ailment-duration"),
             Self::AilmentFaster => f.write_str("ailment-faster"),
@@ -1818,7 +2135,9 @@ impl core::fmt::Display for Poe1Quantity {
             Self::EnemyAilmentDuration => f.write_str("enemy-ailment-duration"),
             Self::EnemyBuffExpireFaster => f.write_str("enemy-buff-expire-faster"),
             Self::CannotInflict(a) => write!(f, "cannot-inflict.{}", a.name()),
+            Self::CanInflictWith(a, t) => write!(f, "can-inflict-with.{}.{}", a.name(), t.name()),
             Self::ImpaleChance => f.write_str("impale-chance"),
+            Self::AdditionalPoisonChance => f.write_str("additional-poison-chance"),
             Self::ImpaleEffect => f.write_str("impale-effect"),
             Self::ImpaleStacksMax => f.write_str("impale-stacks-max"),
             Self::SpellBlockPerOvercappedBlock => f.write_str("spell-block-per-overcapped-block"),
@@ -1967,6 +2286,10 @@ pub enum PieceValue {
     /// A shield's chance to block: `Base` is the base's and the local
     /// flat lines, `Increased` the local increases.
     Block,
+    /// "Quality does not increase Defences" (the agent list; PoB's
+    /// `AlternateQualityArmour`, `Item.lua` 2319: the quality scalar 0): a
+    /// `Flag`; the piece's defences then take no quality ([`phases`]).
+    AlternateQuality,
 }
 
 impl core::fmt::Display for PieceValue {
@@ -1979,6 +2302,7 @@ impl core::fmt::Display for PieceValue {
             Self::Shown(d) => write!(f, "shown.{}", d.name()),
             Self::Quality => f.write_str("quality"),
             Self::Block => f.write_str("block"),
+            Self::AlternateQuality => f.write_str("alternate-quality"),
         }
     }
 }
@@ -2089,6 +2413,23 @@ pub enum Poe1Field {
     ConfiguredNotHitChance,
     /// The effective health pool (PoB's `TotalEHP`).
     TotalEhp,
+    /// A type's total pool: recoverable life, mana through mind over
+    /// matter, and energy shield unless the type bypasses it (PoB's
+    /// `<Type>TotalPool`; open items S7).
+    TotalPool(DamageType),
+    /// The effective health pool against a type's damage over time (PoB's
+    /// `<Type>DotEHP`: the total pool over `<Type>TakenDotMult`; open items
+    /// S7).
+    DotEhp(DamageType),
+    /// The build's degeneration per second, each type's times its damage
+    /// taken over time (PoB's `TotalBuildDegen`; open items S7, part 8).
+    /// Present only when above 0.
+    TotalBuildDegen,
+    /// A pool's regeneration less its share of the build's degeneration
+    /// (PoB's `Net<Pool>Regen`). Present with [`Self::TotalBuildDegen`].
+    NetRegen(Pool),
+    /// The three net regenerations' sum (PoB's `TotalNetRegen`).
+    TotalNetRegen,
 }
 
 impl Poe1Field {
@@ -2147,6 +2488,27 @@ impl Poe1Field {
             Self::ConfiguredDamageChance => "configured-damage-chance",
             Self::ConfiguredNotHitChance => "configured-not-hit-chance",
             Self::TotalEhp => "total-ehp",
+            Self::TotalPool(t) => match t {
+                DamageType::Physical => "physical-total-pool",
+                DamageType::Fire => "fire-total-pool",
+                DamageType::Cold => "cold-total-pool",
+                DamageType::Lightning => "lightning-total-pool",
+                DamageType::Chaos => "chaos-total-pool",
+            },
+            Self::TotalBuildDegen => "total-build-degen",
+            Self::NetRegen(p) => match p {
+                Pool::Life => "net-life-regen",
+                Pool::Mana => "net-mana-regen",
+                Pool::EnergyShield => "net-energy-shield-regen",
+            },
+            Self::TotalNetRegen => "total-net-regen",
+            Self::DotEhp(t) => match t {
+                DamageType::Physical => "physical-dot-ehp",
+                DamageType::Fire => "fire-dot-ehp",
+                DamageType::Cold => "cold-dot-ehp",
+                DamageType::Lightning => "lightning-dot-ehp",
+                DamageType::Chaos => "chaos-dot-ehp",
+            },
             Self::DamageReduction(t) => match t {
                 DamageType::Physical => "physical-damage-reduction",
                 DamageType::Fire => "fire-damage-reduction",
@@ -2355,12 +2717,14 @@ mod tests {
                 "damage-taken",
                 "enemy-hit",
                 "regeneration",
+                "degeneration",
                 "leech",
                 "movement",
                 "minion",
+                "costs",
                 "hit",
                 "dot",
-                "costs",
+                "cost-per-second",
                 "combined",
                 "minion-hit",
                 "full-dps"

@@ -329,6 +329,11 @@ impl<'d, 'b> Resolver<'d, 'b> {
         {
             resolution = folded;
             adapted = Some(Adapted::CaseFolded);
+        } else if let Some(signed) =
+            tolerance::sign_added(index, text, &resolution, composed.composition.is_some())
+        {
+            resolution = signed;
+            adapted = Some(Adapted::SignAdded);
         }
         match &resolution.outcome {
             // Only a one-line description: the block's lines are read alone.
@@ -525,6 +530,11 @@ impl<'d, 'b> Resolver<'d, 'b> {
             }) {
                 resolution = folded;
                 adapted = Some(Adapted::CaseFolded);
+            } else if let Some(signed) = texts.get(at).and_then(|t| {
+                tolerance::sign_added(index, t, &resolution, composed.composition.is_some())
+            }) {
+                resolution = signed;
+                adapted = Some(Adapted::SignAdded);
             }
             let start = at;
             at += resolution.lines;

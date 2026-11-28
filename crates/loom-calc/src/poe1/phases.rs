@@ -28,7 +28,7 @@ use crate::state::{Reasons, StateKind};
 use crate::store::Query;
 
 /// The phases, in order.
-pub const PHASES: [Phase; 20] = [
+pub const PHASES: [Phase; 22] = [
     Phase {
         name: "attributes",
         run: attributes,
@@ -73,6 +73,12 @@ pub const PHASES: [Phase; 20] = [
         name: "regeneration",
         run: super::regen::phase,
     },
+    // The build's degeneration and net regeneration (open items S7, part
+    // 8), after regeneration and the damage taken over time.
+    Phase {
+        name: "degeneration",
+        run: super::degen::phase,
+    },
     Phase {
         name: "leech",
         run: super::leech::phase,
@@ -85,6 +91,14 @@ pub const PHASES: [Phase; 20] = [
         name: "minion",
         run: super::minion_actor::phase,
     },
+    // The costs before the hit, as PoB computes them before the passes'
+    // damage (open items S3: Manaforged Arrows' damage per mana spent);
+    // their costs per second after the hit's and the damage over time's
+    // speed.
+    Phase {
+        name: "costs",
+        run: super::costs::phase,
+    },
     Phase {
         name: "hit",
         run: super::hit::hit,
@@ -94,8 +108,8 @@ pub const PHASES: [Phase; 20] = [
         run: super::dot::dot,
     },
     Phase {
-        name: "costs",
-        run: super::costs::phase,
+        name: "cost-per-second",
+        run: super::costs::per_second_phase,
     },
     Phase {
         name: "combined",
@@ -738,13 +752,7 @@ pub(super) fn resistance_parts(
         ) {
         highest_maximum_resistance(calc, &mut reasons)?
     } else {
-        let max_base = sum(
-            calc,
-            Quantity::MaximumResistance(t),
-            Op::Base,
-            Term::Step("maximum-sum"),
-            &mut reasons,
-        )?;
+        let max_base = maximum_sum(calc, t, &mut reasons)?;
         let cap = constant(calc, "maximum-resistance-cap", MAX_RESIST_CAP)?;
         pair(calc, max_base, cap, Term::Step("maximum-capped"), true)?
     };
@@ -755,6 +763,34 @@ pub(super) fn resistance_parts(
     let capped = pair(calc, total, max, Term::Step("capped"), true)?;
     let value = pair(calc, capped, min, Term::Result, false)?;
     Ok((value, total, reasons))
+}
+
+/// A maximum resistance's `Base` sum; an elemental one also takes "+#% to
+/// all maximum Elemental Resistances if ... all have Armour" when the four
+/// pieces do (the agent list).
+fn maximum_sum(
+    calc: &mut Calc<'_>,
+    t: DamageType,
+    reasons: &mut Reasons,
+) -> Result<Valued, CalcError> {
+    if is_elemental(t) {
+        sum_with_all_pieces(
+            calc,
+            Quantity::MaximumResistance(t),
+            Poe1Quantity::MaxElementalResistIfAllPiecesArmour,
+            Defence::Armour,
+            Term::Step("maximum-sum"),
+            reasons,
+        )
+    } else {
+        sum(
+            calc,
+            Quantity::MaximumResistance(t),
+            Op::Base,
+            Term::Step("maximum-sum"),
+            reasons,
+        )
+    }
 }
 
 /// Whether `t` is an elemental damage type (PoB's `isElemental`).
@@ -776,13 +812,7 @@ fn highest_maximum_resistance(
     let cap = constant(calc, "maximum-resistance-cap", MAX_RESIST_CAP)?;
     let mut highest = constant(calc, "no-highest-maximum", 0.0)?;
     for t in RESISTANCES.into_iter().filter(|t| is_elemental(*t)) {
-        let max_base = sum(
-            calc,
-            Quantity::MaximumResistance(t),
-            Op::Base,
-            Term::Step("maximum-sum"),
-            reasons,
-        )?;
+        let max_base = maximum_sum(calc, t, reasons)?;
         let capped = pair(calc, max_base, cap, Term::Step("maximum-capped"), true)?;
         highest = pair(calc, highest, capped, Term::Step("highest-maximum"), false)?;
     }
@@ -1031,10 +1061,13 @@ fn spell_block(
     );
 
     let mut reasons = Reasons::new();
-    let base = sum(
+    // With "... if ... all have Evasion Rating" when the four pieces do
+    // (the agent list).
+    let base = sum_with_all_pieces(
         calc,
         Quantity::Poe1(Poe1Quantity::SpellSuppressionChance),
-        Op::Base,
+        Poe1Quantity::SuppressionIfAllPiecesEvasion,
+        Defence::Evasion,
         Term::Base,
         &mut reasons,
     )?;
@@ -1180,13 +1213,19 @@ pub(super) fn piece(
         reasons,
     )?;
     let inc = factor(calc, inc, Term::Step("piece-increased"))?;
-    let quality = sum(
-        calc,
-        q(PieceValue::Quality),
-        Op::Base,
-        Term::Step("piece-quality-sum"),
-        reasons,
-    )?;
+    // "Quality does not increase Defences" (the agent list): PoB's quality
+    // scalar 0 (`Item.lua` 2319), for the percentile too.
+    let quality = if has(calc, q(PieceValue::AlternateQuality)) {
+        constant(calc, "alternate-quality", 0.0)?
+    } else {
+        sum(
+            calc,
+            q(PieceValue::Quality),
+            Op::Base,
+            Term::Step("piece-quality-sum"),
+            reasons,
+        )?
+    };
     let quality = factor(calc, quality, Term::Step("piece-quality"))?;
     let percentile = if has(calc, q(PieceValue::Percentile(defence))) {
         sum(
@@ -1254,7 +1293,16 @@ pub(super) fn ward(calc: &mut Calc<'_>, reasons: &mut Reasons) -> Result<f64, Ca
             } else {
                 0.0
             };
-            rows.push((base.value, own));
+            // The body armour's defences doubled (the agent list): PoB's
+            // `Defences` MORE in the slot's `calcLib.mod`.
+            let doubled = slot == ArmourSlot::BodyArmour
+                && flag_of(calc, Poe1Quantity::BodyArmourDefencesDoubled, reasons)?.is_some();
+            let base = if doubled {
+                base.value * 2.0
+            } else {
+                base.value
+            };
+            rows.push((base, own));
         }
     }
     let flat = sum(calc, q, Op::Base, Term::Step("ward-flat"), reasons)?.value;
@@ -1425,13 +1473,19 @@ fn primary_defences(calc: &mut Calc<'_>) -> Result<(), CalcError> {
                 "evasion-from-dexterity",
             )?
         };
-    // Life gained as energy shield (P6-11dd): one more row of energy
-    // shield, which reads life's base and so strength.
+    // Mana gained as energy shield (the agent list, 2026-11-27), then life
+    // (P6-11dd): rows of energy shield, which read mana's base and so
+    // intelligence, and life's and so strength.
     let mut life_reasons = Reasons::new();
+    let mana_row = mana_as_energy_shield(calc, int_bonus, &mut life_reasons)?;
+    if mana_row.is_some() {
+        es_deps.push(Field::Intelligence);
+    }
     let life_row = life_as_energy_shield(calc, int_bonus, true, &mut life_reasons)?;
     if life_row.is_some() {
         es_deps.push(Field::Strength);
     }
+    let conversions: Vec<Valued> = mana_row.into_iter().chain(life_row).collect();
     for (defence, field, quantity, extra, dep) in [
         (
             Defence::EnergyShield,
@@ -1449,15 +1503,41 @@ fn primary_defences(calc: &mut Calc<'_>) -> Result<(), CalcError> {
             &[Field::Dexterity],
         ),
     ] {
-        let row = if matches!(defence, Defence::EnergyShield) {
-            life_row
+        let rows: &[Valued] = if matches!(defence, Defence::EnergyShield) {
+            &conversions
+        } else {
+            &[]
+        };
+        let (value, mut reasons) = primary_defence(calc, defence, quantity, extra, rows)?;
+        if !rows.is_empty() {
+            reasons.extend(&life_reasons);
+        }
+        // "Your Maximum Energy Shield is Equal to #% of Your Maximum Life"
+        // (the agent list, 2026-11-27; `CalcDefence.lua` 1046: the override,
+        // `Life x percent / 100`, rounded as PoB's output shows, in place of
+        // the rows).
+        let over = if matches!(defence, Defence::EnergyShield) {
+            energy_shield_from_life(calc, &mut reasons)?
         } else {
             None
         };
-        let (value, mut reasons) = primary_defence(calc, defence, quantity, extra, row)?;
-        if row.is_some() {
-            reasons.extend(&life_reasons);
-        }
+        let (value, dep) = match over {
+            Some(by) => {
+                // PoB's breakdown keeps the replaced rows.
+                let node = calc.graph_mut().derive(crate::graph::Node::Override {
+                    by: by.node,
+                    replaced: value.node,
+                })?;
+                (
+                    Valued {
+                        node,
+                        value: by.value,
+                    },
+                    &[Field::Life][..],
+                )
+            }
+            _ => (value, dep),
+        };
         if dep.is_empty() {
             calc.set(field, query(value, reasons));
         } else {
@@ -1583,17 +1663,185 @@ pub(super) fn life_as_energy_shield(
     Ok(Some(row))
 }
 
+/// Energy shield as a percent of life ([`Poe1Quantity::EnergyShieldFromLife`]):
+/// `round(Life x percent / 100)` (PoB's output is whole), `None` without
+/// the stat. PoB's `Override` takes
+/// the first override; two or more lines are summed, which is the same only
+/// for one (a reason otherwise).
+///
+/// # Errors
+/// A graph error.
+fn energy_shield_from_life(
+    calc: &mut Calc<'_>,
+    reasons: &mut Reasons,
+) -> Result<Option<Valued>, CalcError> {
+    let q = Quantity::Poe1(Poe1Quantity::EnergyShieldFromLife);
+    let count = calc
+        .store()
+        .effects()
+        .iter()
+        .filter(|e| e.quantity == q && e.op == Op::Base)
+        .count();
+    if count == 0 {
+        return Ok(None);
+    }
+    if count > 1 {
+        reasons
+            .partial
+            .insert(crate::state::UnsupportedReason::UnmappedStat {
+                stat: loom_domain::StatId::new("maximum_energy_shield_is_x%_of_maximum_life"),
+                source: crate::source::Source::Rule("energy-shield-override"),
+            });
+    }
+    let percent = sum(
+        calc,
+        q,
+        Op::Base,
+        Term::Step("energy-shield-from-life-percent"),
+        reasons,
+    )?;
+    let Some(life) = calc.field(Field::Life).and_then(|f| {
+        Some(Valued {
+            node: f.node?,
+            value: f.value?,
+        })
+    }) else {
+        return Ok(None);
+    };
+    let hundred = constant(calc, "hundred", 100.0)?;
+    let scaled = product(
+        calc,
+        &[life, percent],
+        Term::Step("energy-shield-from-life-scaled"),
+    )?;
+    let value = binary(
+        calc,
+        Binary::Quotient,
+        scaled,
+        hundred,
+        "energy-shield-from-life",
+    )?;
+    Ok(Some(round(
+        calc,
+        value,
+        Term::Step("energy-shield-from-life-rounded"),
+    )?))
+}
+
+/// Mana gained as extra energy shield (the agent list, 2026-11-27;
+/// `CalcDefence.lua` 1001 to 1007): `Mana BASE x percent / 100`, times
+/// `calcLib.mod(modDB, nil, "Mana", "EnergyShield", "Defences")`, as
+/// [`life_as_energy_shield`]'s (no Chaos Inoculation case). Mana's base is
+/// its BASE effects and the intelligence bonus, as `life_mana`'s. `None`
+/// without the stat.
+///
+/// # Errors
+/// A graph error.
+pub(super) fn mana_as_energy_shield(
+    calc: &mut Calc<'_>,
+    es_inc: Option<Valued>,
+    reasons: &mut Reasons,
+) -> Result<Option<Valued>, CalcError> {
+    let q = Quantity::Poe1(Poe1Quantity::ManaAsEnergyShield);
+    if !has(calc, q) {
+        return Ok(None);
+    }
+    let percent = sum(
+        calc,
+        q,
+        Op::Base,
+        Term::Step("mana-as-energy-shield-percent"),
+        reasons,
+    )?;
+    if percent.value <= 0.0 {
+        return Ok(None);
+    }
+    let int_bonus = bonus(
+        calc,
+        Field::Intelligence,
+        0.5,
+        "half",
+        "mana-from-intelligence",
+    )?;
+    let mana_effects = sum(
+        calc,
+        Quantity::Mana,
+        Op::Base,
+        Term::Step("mana-base-effects"),
+        reasons,
+    )?;
+    let mut base_terms = vec![mana_effects];
+    base_terms.extend(int_bonus);
+    let mana_base = total(calc, &base_terms, Term::Step("mana-base"))?;
+    let scaled = product(
+        calc,
+        &[mana_base, percent],
+        Term::Step("mana-as-energy-shield-scaled"),
+    )?;
+    let hundred = constant(calc, "hundred", 100.0)?;
+    let base = binary(
+        calc,
+        Binary::Quotient,
+        scaled,
+        hundred,
+        "mana-as-energy-shield-base",
+    )?;
+    let base = total(calc, &[base], Term::Base)?;
+    let mut incs = vec![
+        sum(
+            calc,
+            Quantity::Mana,
+            Op::Increased,
+            Term::Step("mana-increased-effects"),
+            reasons,
+        )?,
+        sum(
+            calc,
+            Quantity::EnergyShield,
+            Op::Increased,
+            Term::Step("increased-effects"),
+            reasons,
+        )?,
+    ];
+    incs.extend(es_inc);
+    let inc = total(calc, &incs, Term::Step("increased-sum"))?;
+    let inc = factor(calc, inc, Term::Increased)?;
+    let cx = calc.context(Flags::NONE);
+    let (store, graph) = calc.parts();
+    let mana_more = store.more_rounded(graph, Quantity::Mana, &cx)?;
+    let es_more = store.more_rounded(graph, Quantity::EnergyShield, &cx)?;
+    reasons.extend(&mana_more.reasons);
+    reasons.extend(&es_more.reasons);
+    let row = product(
+        calc,
+        &[
+            base,
+            inc,
+            Valued {
+                node: mana_more.node,
+                value: mana_more.value,
+            },
+            Valued {
+                node: es_more.node,
+                value: es_more.value,
+            },
+        ],
+        Term::Step("slot.conversion.mana-to-energy-shield"),
+    )?;
+    Ok(Some(row))
+}
+
 /// One primary defence of the current actor ([`primary_defences`];
 /// P6-7b3a: the minion's too, whose store has no armour piece): each
-/// piece's row and the global row, times the modifier, rounded. `life_row`
-/// is energy shield's row from life ([`life_as_energy_shield`]), last as in
-/// PoB.
+/// piece's row and the global row, times the modifier, rounded.
+/// `conversions` are energy shield's rows from mana and life
+/// ([`mana_as_energy_shield`], [`life_as_energy_shield`]), last as in PoB.
 pub(super) fn primary_defence(
     calc: &mut Calc<'_>,
     defence: Defence,
     quantity: Quantity,
     extra: Option<Valued>,
-    life_row: Option<Valued>,
+    conversions: &[Valued],
 ) -> Result<(Valued, Reasons), CalcError> {
     let mut reasons = Reasons::new();
     // Iron Reflexes (P6-11ek): evasion's rows go to armour.
@@ -1610,10 +1858,18 @@ pub(super) fn primary_defence(
     let modifier = defence_modifier(calc, quantity, extra, &mut reasons)?;
     // "Armour from Equipped Body Armour is doubled" (P6-11gq): the body
     // armour's armour row times 2, once (PoB's `globalLimit` 100).
-    let doubled = if defence == Defence::Armour {
+    let armour_doubled = if defence == Defence::Armour {
         body_armour_doubled(calc, &mut reasons)?
     } else {
         None
+    };
+    // "Defences from Equipped Body Armour are doubled if it has no Socketed
+    // Gems" (the agent list): every defence of the body armour times 2,
+    // under its own limit, so with the armour's doubling too, 4.
+    let oath = body_armour_defences_doubled(calc, &mut reasons)?;
+    let doubled = match (armour_doubled, oath) {
+        (Some(a), Some(b)) => Some(product(calc, &[a, b], Term::Step("body-armour-doublings"))?),
+        (a, b) => a.or(b),
     };
     let mut rows = Vec::new();
     for slot in ArmourSlot::ALL {
@@ -1689,7 +1945,7 @@ pub(super) fn primary_defence(
     if let Some(flag) = iron_reflexes {
         iron_reflexes_rows(calc, flag, doubled, &mut rows, &mut reasons)?;
     }
-    rows.extend(life_row);
+    rows.extend_from_slice(conversions);
     let sum = total(calc, &rows, Term::Step("slots"))?;
     let rounded = round(calc, sum, Term::Step("rounded"))?;
     let value = at_least(calc, rounded, "minimum", 0.0)?;
@@ -1711,6 +1967,24 @@ fn body_armour_doubled(
         calc,
         &[flag, two],
         Term::Step("body-armour-armour-doubled"),
+    )?))
+}
+
+/// "Defences from Equipped Body Armour are doubled if it has no Socketed
+/// Gems" when on (the agent list; PoB's `Defences` MORE 100 with the
+/// `SlotName` Body Armour, at most once): the flag times 2.
+fn body_armour_defences_doubled(
+    calc: &mut Calc<'_>,
+    reasons: &mut Reasons,
+) -> Result<Option<Valued>, CalcError> {
+    let Some(flag) = flag_of(calc, Poe1Quantity::BodyArmourDefencesDoubled, reasons)? else {
+        return Ok(None);
+    };
+    let two = constant(calc, "body-armour-defences-doubled", 2.0)?;
+    Ok(Some(product(
+        calc,
+        &[flag, two],
+        Term::Step("body-armour-defences-doubled"),
     )?))
 }
 
@@ -1851,6 +2125,50 @@ fn iron_reflexes_modifier(
 
 /// Whether the helmet, gloves, and boots are each equipped with armour and
 /// energy shield above 0 ([`Poe1Quantity::BodyArmourIfHybridPieces`]).
+/// Whether the equipped helmet, body armour, gloves, and boots each have
+/// `defence` (the agent list; PoB's `StatThreshold` on `<Defence>On<slot>`,
+/// each piece's own value, at least 1, `ModParser.lua` 1648 to 1657).
+fn all_pieces_have(
+    calc: &mut Calc<'_>,
+    defence: Defence,
+    reasons: &mut Reasons,
+) -> Result<bool, CalcError> {
+    for slot in [
+        ArmourSlot::Helmet,
+        ArmourSlot::BodyArmour,
+        ArmourSlot::Gloves,
+        ArmourSlot::Boots,
+    ] {
+        if !has(
+            calc,
+            Quantity::Poe1(Poe1Quantity::Piece(slot, PieceValue::Equipped)),
+        ) || piece(calc, slot, defence, reasons)?.value < 1.0
+        {
+            return Ok(false);
+        }
+    }
+    Ok(true)
+}
+
+/// The `Base` sum of `quantity`, also with `extra`'s when `extra` is in the
+/// build and the four pieces all have `defence` ([`all_pieces_have`]).
+fn sum_with_all_pieces(
+    calc: &mut Calc<'_>,
+    quantity: Quantity,
+    extra: Poe1Quantity,
+    defence: Defence,
+    term: Term,
+    reasons: &mut Reasons,
+) -> Result<Valued, CalcError> {
+    let base = sum(calc, quantity, Op::Base, term, reasons)?;
+    let extra = Quantity::Poe1(extra);
+    if !has(calc, extra) || !all_pieces_have(calc, defence, reasons)? {
+        return Ok(base);
+    }
+    let more = sum(calc, extra, Op::Base, Term::Step("if-all-pieces"), reasons)?;
+    total(calc, &[base, more], Term::Step("with-all-pieces"))
+}
+
 fn hybrid_pieces(calc: &mut Calc<'_>, reasons: &mut Reasons) -> Result<bool, CalcError> {
     for slot in [ArmourSlot::Helmet, ArmourSlot::Gloves, ArmourSlot::Boots] {
         if !has(

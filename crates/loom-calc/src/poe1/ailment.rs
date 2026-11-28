@@ -19,7 +19,10 @@
 //!      than one ignite would stack.
 //! 5. **Source damage:** the hit's fire damage recomputed in the ignite's
 //!    config (`calcAilmentSourceDamage`: `calcDamage` with the hit's bases
-//!    and conversion, times the share fire keeps), then `(min + (max - min)
+//!    and conversion, times the share fire keeps), with each other type
+//!    whose flag "All Damage can Ignite" sets, read with fire's modifiers
+//!    too, summed in PoB's order (physical, lightning, cold, fire, chaos;
+//!    the agent list, 2026-11-27), then `(min + (max - min)
 //!    x roll / 100) x (1 + DoT multiplier / 100)`; from crits, the DoT
 //!    multiplier also has the character's +50 for critical ailments
 //!    (`critical_ailment_dot_multiplier_+`).
@@ -34,13 +37,14 @@
 //!
 //! Not modelled, each a reason through its unmapped stat or the reasons
 //! below:
-//! - ignites that stack, ignite to chaos, other types that can ignite;
+//! - ignites that stack, ignite to chaos, `FireCannotIgnite`;
 //! - Ruthless Blow, Fist of War, and warcry ailment effects (1 without
 //!   their stats);
 //! - the enemy's ailment avoidance (no source modelled);
 //! - burning ground from ignite;
-//! - dual wielding's per-hand ailments (P6-2a: the field is `NotComputed`
-//!   for a dual-wielding attack).
+//! - a dual-wielding attack's burning ground (PoB does not combine it).
+//!   Its ailments are each hand's, combined (open items S7,
+//!   `hit::combine_ailment`).
 
 use super::enemy::Enemy;
 use super::hit::{self, HitSources};
@@ -203,8 +207,12 @@ enum Roll {
 
 /// What differs between the damaging ailments (module docs).
 struct Spec {
-    /// The damage types whose hit damage the ailment deals, in PoB's order.
-    sources: &'static [DamageType],
+    /// The damage types whose hit damage the ailment deals, in PoB's order:
+    /// each with whether it needs its [`Poe1Quantity::CanInflictWith`]
+    /// flag ("All Damage can Ignite"), its damage then read with the
+    /// modifiers of [`Spec::gate`]'s type too (PoB's
+    /// `calcAilmentSourceDamage(..., dmgTypeFlags.<gate>)`).
+    sources: &'static [(DamageType, bool)],
     /// The type that must be dealable (`canDeal`).
     gate: DamageType,
     /// The type of its damage over time (its DoT multiplier and the enemy's
@@ -233,8 +241,17 @@ struct Spec {
 
 const fn spec(ailment: Ailment) -> Spec {
     match ailment {
+        // PoB's order (`CalcOffence.lua` 4979 to 5012): physical,
+        // lightning, cold with their flags, fire unless `FireCannotIgnite`
+        // (unmapped), chaos with its flag.
         Ailment::Ignite => Spec {
-            sources: &[DamageType::Fire],
+            sources: &[
+                (DamageType::Physical, true),
+                (DamageType::Lightning, true),
+                (DamageType::Cold, true),
+                (DamageType::Fire, false),
+                (DamageType::Chaos, true),
+            ],
             gate: DamageType::Fire,
             dot_type: DamageType::Fire,
             duration_base: IGNITE_DURATION_BASE,
@@ -246,7 +263,7 @@ const fn spec(ailment: Ailment) -> Spec {
             skill_keys: &[],
         },
         Ailment::Bleed => Spec {
-            sources: &[DamageType::Physical],
+            sources: &[(DamageType::Physical, false)],
             gate: DamageType::Physical,
             dot_type: DamageType::Physical,
             duration_base: BLEED_DURATION_BASE,
@@ -265,7 +282,7 @@ const fn spec(ailment: Ailment) -> Spec {
         // (physical always; lightning, cold, and fire with their flags, not
         // modelled).
         Ailment::Poison => Spec {
-            sources: &[DamageType::Chaos, DamageType::Physical],
+            sources: &[(DamageType::Chaos, false), (DamageType::Physical, false)],
             gate: DamageType::Chaos,
             dot_type: DamageType::Chaos,
             duration_base: POISON_DURATION_BASE,
@@ -286,6 +303,7 @@ const fn spec(ailment: Ailment) -> Spec {
 fn source_damage(
     calc: &mut Calc<'_>,
     hit: &AilmentHit<'_>,
+    ailment: Ailment,
     spec: &Spec,
     cx: &QueryContext,
     hit_cx: &QueryContext,
@@ -294,15 +312,22 @@ fn source_damage(
     let mut mins = Vec::new();
     let mut maxes = Vec::new();
     let mut zero = None;
-    for &t in spec.sources {
+    for &(t, flagged) in spec.sources {
         let Some(index) = hit::TYPES.iter().position(|x| *x == t) else {
             continue;
         };
         if hit::cannot_deal(calc, t, hit_cx, reasons)? {
             continue;
         }
-        let extra = if spec.physical_as_chaos && t == DamageType::Physical {
-            Flags::damage(DamageType::Chaos)
+        // `skillModList:Flag(cfg, "<Type>CanIgnite")` in the hit's config.
+        if flagged {
+            let can = Quantity::Poe1(Poe1Quantity::CanInflictWith(ailment, t));
+            if !phases::has(calc, can) || hit::flag_of(calc, can, hit_cx, reasons)?.is_none() {
+                continue;
+            }
+        }
+        let extra = if flagged || (spec.physical_as_chaos && t == DamageType::Physical) {
+            Flags::damage(spec.gate)
         } else {
             Flags::NONE
         };
@@ -353,7 +378,7 @@ pub(super) fn damaging(
     enemy: &Enemy,
     data: &dyn CalcData,
     ailment: Ailment,
-) -> Result<Option<(Valued, Reasons, Option<Valued>)>, CalcError> {
+) -> Result<Option<Damaging>, CalcError> {
     let spec = spec(ailment);
     let mut reasons = Reasons::new();
     if spec.attack_only && !hit.flags.contains(Flags::ATTACK) {
@@ -426,7 +451,7 @@ pub(super) fn damaging(
     // Step 5 first: no source damage, no ailment.
     let ailment_flags = ailment.flag() | Flags::dot_keyword(spec.dot_type);
     let cx = ailment_context(calc, hit, ailment_flags);
-    let [min, max] = source_damage(calc, hit, &spec, &cx, &hit_cx, &mut reasons)?;
+    let [min, max] = source_damage(calc, hit, ailment, &spec, &cx, &hit_cx, &mut reasons)?;
     if min.value == 0.0 && max.value == 0.0 {
         return Ok(None);
     }
@@ -528,6 +553,36 @@ pub(super) fn damaging(
         &[hit_share, chance],
         Term::Step("ailment-applications"),
     )?;
+    // A poison's additional poisons (the agent list, 2026-11-27;
+    // `CalcOffence.lua` 4596 to 4599): `1 + min(AdditionalPoisonChance /
+    // 100, 1)` poisons per poisoning hit.
+    let additional = Quantity::Poe1(Poe1Quantity::AdditionalPoisonChance);
+    let stacks = if ailment == Ailment::Poison && phases::has(calc, additional) {
+        let chance = hit::sum_of(
+            calc,
+            additional,
+            Op::Base,
+            &hit_cx,
+            Term::Step("additional-poison-chance"),
+            &mut reasons,
+        )?;
+        let share = hit::percent_of(calc, chance, Term::Step("additional-poison-share"))?;
+        let share = phases::pair(
+            calc,
+            share,
+            one,
+            Term::Step("additional-poison-capped"),
+            true,
+        )?;
+        let poisons = phases::total(calc, &[one, share], Term::Step("poisons-per-hit"))?;
+        phases::product(
+            calc,
+            &[stacks, poisons],
+            Term::Step("ailment-applications-poisons"),
+        )?
+    } else {
+        stacks
+    };
     let stacks = phases::product(
         calc,
         &[stacks, duration, hit.rate],
@@ -792,7 +847,25 @@ pub(super) fn damaging(
     } else {
         None
     };
-    Ok(Some((dps, reasons, ground)))
+    Ok(Some(Damaging {
+        dps,
+        reasons,
+        ground,
+        stacks,
+    }))
+}
+
+/// One damaging ailment of one hit pass ([`damaging`]).
+pub(super) struct Damaging {
+    /// The field's value (poison: every poison's).
+    pub(super) dps: Valued,
+    /// The reasons of what it read.
+    pub(super) reasons: Reasons,
+    /// The ignite's share as burning ground, when the skill has one.
+    pub(super) ground: Option<Valued>,
+    /// The ailments the pass keeps on the enemy (PoB's `bleedStacks`,
+    /// `PoisonStacks`, ignite's stacks), before any cap.
+    pub(super) stacks: Valued,
 }
 
 /// PoB's `data.misc.ImpaleStoredDamageBase` (`Modules/Data.lua` 262): an
@@ -812,16 +885,18 @@ pub const IMPALE_STACKS_STAT: &str = "impaled_debuff_number_of_reflected_hits";
 /// damage taken from hits: `stored hit x ((1 + modifier) - 1) x hit chance
 /// / 100 x rate`. A configured number of impales on the enemy is an
 /// unmodelled config input (a reason); so are the additional duration
-/// chance and the impale's own physical damage reduction stats.
+/// chance and the impale's own physical damage reduction stats. This part
+/// is the pass's, before its rate ([`ImpaleParts`]); [`impale`] and the
+/// dual-wield path finish it.
 ///
 /// # Errors
 /// A graph error.
-pub(super) fn impale(
+pub(super) fn impale_parts(
     calc: &mut Calc<'_>,
     hit: &AilmentHit<'_>,
     enemy: &Enemy,
     data: &dyn CalcData,
-) -> Result<Option<(Valued, Reasons)>, CalcError> {
+) -> Result<Option<ImpaleParts>, CalcError> {
     let mut reasons = Reasons::new();
     let [Some(stored_hit), Some(stored_crit)] = hit.sources.physical else {
         return Ok(None);
@@ -843,6 +918,30 @@ pub(super) fn impale(
         Term::Step("impale-chance-sum"),
         &mut reasons,
     )?;
+    // The hand's weapon's own chance (the agent list, 2026-11-27): an
+    // attack's pass alone.
+    let chance = if hit.flags.contains(Flags::ATTACK) {
+        let hand = if hit.flags.contains(Flags::OFF_HAND_ATTACK) {
+            super::Hand::Off
+        } else {
+            super::Hand::Main
+        };
+        let local = hit::sum_of(
+            calc,
+            hand.weapon(super::WeaponValue::ImpaleChance),
+            Op::Base,
+            &hit_cx,
+            Term::Step("weapon-impale-chance"),
+            &mut reasons,
+        )?;
+        phases::total(
+            calc,
+            &[chance, local],
+            Term::Step("impale-chance-with-weapon"),
+        )?
+    } else {
+        chance
+    };
     let hundred = phases::constant(calc, "hundred", 100.0)?;
     let chance = phases::pair(calc, chance, hundred, Term::Step("impale-chance"), true)?;
     if chance.value == 0.0 {
@@ -910,23 +1009,7 @@ pub(super) fn impale(
     } else {
         stacks
     };
-    // The stored hit: `0 + crit average x crit + hit average x (1 - crit)`
-    // (PoB adds the crit pass first, 3415 to 3420).
-    let from_crit_pass = phases::product(
-        calc,
-        &[stored_crit, crit],
-        Term::Step("impale-stored-from-crits"),
-    )?;
-    let from_hit_pass = phases::product(
-        calc,
-        &[stored_hit, non_crit],
-        Term::Step("impale-stored-from-hits"),
-    )?;
-    let stored_hit = phases::total(
-        calc,
-        &[from_crit_pass, from_hit_pass],
-        Term::Step("impale-stored-hit"),
-    )?;
+    let stored_hit = stored_from(calc, stored_hit, stored_crit, crit, non_crit)?;
     // `storedExpectedDamageModifier = (1 + inc / 100) x round(more, 2)`.
     let effect = Quantity::Poe1(Poe1Quantity::ImpaleEffect);
     let inc = hit::sum_of(
@@ -959,17 +1042,98 @@ pub(super) fn impale(
     }
     let damage_mod = phases::product(calc, &factors, Term::Step("impale-damage-modifier"))?;
     let modifier = phases::total(calc, &[one, damage_mod], Term::Step("impale-modifier"))?;
-    // `ImpaleDPS = stored hit x (modifier - 1) x hit chance / 100 x 1`, then
-    // `x rate`.
     let gain = hit::minus(calc, modifier, one, Term::Step("impale-gain"))?;
+    Ok(Some(ImpaleParts {
+        stored_hit,
+        modifier,
+        gain,
+        chance,
+        reasons,
+    }))
+}
+
+/// The physical hit a pass stores for impale (PoB's `impaleStoredHitAvg`,
+/// `CalcOffence.lua` 3415 to 3420), whether or not the pass impales: a
+/// dual wielder's combined stored hit averages both hands' (3901; open
+/// items S7, part 9). `None` without a physical hit.
+///
+/// # Errors
+/// A graph error.
+pub(super) fn impale_stored_hit(
+    calc: &mut Calc<'_>,
+    hit: &AilmentHit<'_>,
+) -> Result<Option<Valued>, CalcError> {
+    let [Some(stored_hit), Some(stored_crit)] = hit.sources.physical else {
+        return Ok(None);
+    };
+    let one = phases::constant(calc, "one", 1.0)?;
+    let crit = hit::percent_of(calc, hit.crit, Term::Step("crit-share"))?;
+    let non_crit = hit::minus(calc, one, crit, Term::Step("non-crit-share"))?;
+    stored_from(calc, stored_hit, stored_crit, crit, non_crit).map(Some)
+}
+
+/// The stored hit: `0 + crit average x crit + hit average x (1 - crit)`
+/// (PoB adds the crit pass first, 3415 to 3420).
+fn stored_from(
+    calc: &mut Calc<'_>,
+    stored_hit: Valued,
+    stored_crit: Valued,
+    crit: Valued,
+    non_crit: Valued,
+) -> Result<Valued, CalcError> {
+    let from_crit_pass = phases::product(
+        calc,
+        &[stored_crit, crit],
+        Term::Step("impale-stored-from-crits"),
+    )?;
+    let from_hit_pass = phases::product(
+        calc,
+        &[stored_hit, non_crit],
+        Term::Step("impale-stored-from-hits"),
+    )?;
+    phases::total(
+        calc,
+        &[from_crit_pass, from_hit_pass],
+        Term::Step("impale-stored-hit"),
+    )
+}
+
+/// One pass's impale before its rate ([`impale`]; PoB's
+/// `impaleStoredHitAvg`, `ImpaleModifier`, `ImpaleChance`).
+pub(super) struct ImpaleParts {
+    /// The physical hit an impale stores (`impaleStoredHitAvg`).
+    pub(super) stored_hit: Valued,
+    /// `ImpaleModifier`, and it less 1.
+    pub(super) modifier: Valued,
+    pub(super) gain: Valued,
+    /// `ImpaleChance`, `min(100, sum)`.
+    pub(super) chance: Valued,
+    pub(super) reasons: Reasons,
+}
+
+/// The main skill's impale DPS from one pass ([`impale_parts`]): `stored
+/// hit x (modifier - 1) x hit chance / 100 x 1`, then `x rate`; `None`
+/// when the hit cannot impale or the DPS is 0.
+///
+/// # Errors
+/// A graph error.
+pub(super) fn impale(
+    calc: &mut Calc<'_>,
+    hit: &AilmentHit<'_>,
+    enemy: &Enemy,
+    data: &dyn CalcData,
+) -> Result<Option<(Valued, Reasons)>, CalcError> {
+    let Some(parts) = impale_parts(calc, hit, enemy, data)? else {
+        return Ok(None);
+    };
     let hit_share = hit::percent_of(calc, hit.hit_chance, Term::Step("hit-share"))?;
     let per_hit = phases::product(
         calc,
-        &[stored_hit, gain, hit_share],
+        &[parts.stored_hit, parts.gain, hit_share],
         Term::Step("impale-per-hit"),
     )?;
     let dps = phases::product(calc, &[per_hit, hit.rate], Term::Result)?;
-    Ok((dps.value > 0.0).then_some((dps, reasons)))
+    Ok((dps.value > 0.0).then_some((dps, parts.reasons)))
 }
 
 #[cfg(test)]
@@ -1015,5 +1179,22 @@ mod tests {
         assert!(spec(Ailment::Poison).physical_as_chaos);
         assert!(!spec(Ailment::Bleed).physical_as_chaos);
         assert!(!spec(Ailment::Ignite).physical_as_chaos);
+    }
+
+    #[test]
+    fn ignite_should_read_other_types_only_by_their_flags_in_pobs_order() {
+        use DamageType::{Chaos, Cold, Fire, Lightning, Physical};
+        assert_eq!(
+            spec(Ailment::Ignite).sources,
+            &[
+                (Physical, true),
+                (Lightning, true),
+                (Cold, true),
+                (Fire, false),
+                (Chaos, true)
+            ]
+        );
+        assert!(spec(Ailment::Bleed).sources.iter().all(|(_, f)| !f));
+        assert!(spec(Ailment::Poison).sources.iter().all(|(_, f)| !f));
     }
 }

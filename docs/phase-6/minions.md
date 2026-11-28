@@ -646,3 +646,90 @@ Every one of these fields is `Partial` or `Indeterminate` with its reasons, so n
 **Not done:**
 - The buffs and curse limit an active spectre gives (PoB's `AllyModifier`, `MinionModifier`, `PlayerModifier`, and `EnemyCurseLimit` mods in a spectre's list, `CalcPerform.lua` 2156 to 2215; 28 lines of `Data/Spectres.lua`). The fixture's active spectre has none. A spectre whose template carries one is a `minion-template-mod` reason on the minion; **the character's own fields take no reason for it yet** (open: a reason there too).
 - No fixture was added: the fields are not complete, so a fixture would assert nothing. `local/rv12/fx/spectre-main.xml` is the one to add when they are.
+
+
+## Vaal Summon Skeletons' full DPS (the agent list, 2026-11-26)
+
+**The question** (open items follow-ups, S1). For `minion-vaal-summon-skeletons-witch.xml` (Vaal Summon Skeletons of Mages, level 20, counted in full DPS), PoB's `FullDPS` is 416.996, while its main output's minion `TotalDPS` is 115.298 and the count 1. Until now the engine left the field partial (`full-dps-vaal`) for any Vaal skill that summons minions.
+
+**The cause, found with an instrumented PoB run:** PoB's full DPS counts another minion than its main output does.
+- **The gem has two active effects.** PoB's data makes the variant from the Vaal gem (`Modules/Data.lua` 1098 to 1118): the first is `VaalSummonSkeletons` (minions: melee, caster, archer), the second `SummonSkeletonsAltY` (Summon Skeletons of Mages, the caster only).
+- **The two effects share one gem instance,** and each writes the minion it picked there (`CalcActiveSkill.lua` 689 to 691, `srcInstance.skillMinion`; 685 to 687, `skillMinionCalcs`, for the main skill's Calcs view). The second effect writes `RaisedSkeletonCaster`.
+- **Every later environment reads that choice for the first effect,** which lists the caster too. The main output is the Calcs view (`skillMinionCalcs`, the melee skeleton, 115). The full DPS pass, and the MAIN mode, count the caster (417).
+- **The game:** the skill summons every type at once; the build chose none, and PoB's default is the first, the melee skeleton.
+- **Where it flips:** only when the second effect's minion is also in the first's list. For the plain Vaal Summon Skeletons, the second effect's `RaisedSkeleton` is not in the Vaal list, so the first effect falls back to its first minion.
+
+**The decision: a `pob-bug` entry, as S4's** (`docs/phase-6/full-dps-levels.md`). The engine counts the skill's own minion, the build's choice, as its main calculation does (`poe1::full_dps`: the `full-dps-vaal` reason is no longer given to a Vaal skill that summons minions). PoB's carried-over value is registered as DIV-0783. The engine's value is 103.72: the melee skeleton at the game's minion level (DIV-0124).
+
+**The instrumented run.** No PoB file was changed: neither `local/oracle/pob` nor `D:\POE Dev\PathOfBuilding`. The run used a scratchpad copy of the adapter (`tools/oracle/adapter/oracle.lua` and its four modules), run as `oracle-run` runs it, with the S4 run's method and arguments (`docs/phase-6/full-dps-levels.md`, "The instrumented run") plus `opaque=sourceGem`. The stage below was spliced in before `local stages = {` and listed after `{ "calculate", calculate },`. The output, in full:
+
+```text
+before group 1 gem 1 skillMinion=RaisedSkeletonCaster skillMinionCalcs=RaisedSkeletonMeleeVaal
+pass 1 mode=MAIN main=VaalSummonSkeletons minion=RaisedSkeletonCaster srcInstance.skillMinion=RaisedSkeletonCaster
+  active 1 VaalSummonSkeletons minion=RaisedSkeletonCaster
+  active 2 SummonSkeletonsAltY minion=RaisedSkeletonCaster
+  minion TotalDPS=416.99583333333
+pass 2 mode=CALCULATOR main=VaalSummonSkeletons minion=RaisedSkeletonCaster srcInstance.skillMinion=RaisedSkeletonCaster
+  active 1 VaalSummonSkeletons minion=RaisedSkeletonCaster
+  active 2 SummonSkeletonsAltY minion=RaisedSkeletonCaster
+  minion TotalDPS=416.99583333333
+after group 1 gem 1 skillMinion=RaisedSkeletonCaster skillMinionCalcs=RaisedSkeletonMeleeVaal
+```
+
+The fixture saves no `skillMinion`. After the adapter's first calculation the instance holds the caster: the second effect wrote it. The stage:
+
+```lua
+-- Minion probe (scratchpad only; spliced into a copy of the adapter before
+-- `local stages =`). Logs, for every calcs.perform call of one more
+-- calcs.buildOutput(build, "MAIN"), the main skill, its minion, and the
+-- gem instance's skillMinion; and each active skill's minion. No PoB file
+-- is changed.
+local function minionProbe()
+	local calcs = build.calcsTab.calcs
+	local origPerform = calcs.perform
+	local lines = {}
+	local function gemState(tag)
+		for gi, group in ipairs(build.skillsTab.socketGroupList) do
+			for ii, gem in ipairs(group.gemList) do
+				lines[#lines + 1] = string.format("%s group %d gem %d skillMinion=%s skillMinionCalcs=%s",
+					tag, gi, ii, tostring(gem.skillMinion), tostring(gem.skillMinionCalcs))
+			end
+		end
+	end
+	gemState("before")
+	local pass = 0
+	calcs.perform = function(env, skipEHP)
+		pass = pass + 1
+		local skill = env.player.mainSkill
+		lines[#lines + 1] = string.format("pass %d mode=%s main=%s minion=%s srcInstance.skillMinion=%s",
+			pass, tostring(env.mode), tostring(skill.activeEffect.grantedEffect.id),
+			tostring(skill.minion and skill.minion.type),
+			tostring(skill.activeEffect.srcInstance and skill.activeEffect.srcInstance.skillMinion))
+		for i, s in ipairs(env.player.activeSkillList) do
+			lines[#lines + 1] = string.format("  active %d %s minion=%s", i, tostring(s.activeEffect.grantedEffect.id),
+				tostring(s.minion and s.minion.type))
+		end
+		origPerform(env, skipEHP)
+		lines[#lines + 1] = string.format("  minion TotalDPS=%s", tostring(env.minion and env.minion.output.TotalDPS))
+	end
+	local ok, err = xpcall(function()
+		calcs.buildOutput(build, "MAIN")
+	end, traceback)
+	calcs.perform = origPerform
+	gemState("after")
+	local f = openFile(outputPath .. ".minion.txt", "w")
+	f:write(table.concat(lines, "\n"), "\n")
+	f:close()
+	if not ok then
+		fail("lua", "probe: " .. tostring(err))
+		return false
+	end
+	return true
+end
+```
+
+**Evidence** (`local/p6/vss` on `b-pb`, against `local/p6/ss`):
+- **Public:** 0 unexpected; `Complete` 49,370 to 49,371 (the fixture's `FullDPS`, 103.72, registered DIV-0783).
+- **No other value moved.**
+- **Corpus:** 0 unexpected; one document changed in its reasons only: a build's `FullDPS` lost `full-dps-vaal`; it stays indeterminate on its other reasons, its value unchanged.
+- **Tests:** the workspace tests, the real-bundle tests, clippy, rustfmt, and wasm32.

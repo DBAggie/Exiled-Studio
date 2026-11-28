@@ -110,6 +110,10 @@ pub enum ChargeValue {
     /// An effect per charge (a mod with PoB's `Multiplier:<Kind>Charge`
     /// tag).
     Per(PerCharge),
+    /// An effect while at the maximum (PoB's `StatThreshold` of
+    /// `<Kind>Charges` at `<Kind>ChargesMax`; the agent list, 2026-11-27):
+    /// its value once when the count is the maximum (and above 0).
+    AtMaximum(PerCharge),
 }
 
 impl ChargeValue {
@@ -125,6 +129,8 @@ impl ChargeValue {
             Self::BrutalMaximumIsEndurance => "brutal-maximum-is-endurance",
             Self::BrutalMinimumIsEndurance => "brutal-minimum-is-endurance",
             Self::Per(p) => p.name(),
+            Self::AtMaximum(PerCharge::AttackPoisonChance) => "at-maximum.attack-poison-chance",
+            Self::AtMaximum(_) => "at-maximum",
         }
     }
 }
@@ -193,6 +199,12 @@ pub enum PerCharge {
     PoisonDotMultiplier,
     /// More accuracy rating (`Accuracy` MORE; close-out M2).
     MoreAccuracy,
+    /// Increased effect of Elusive on you (`ElusiveEffect` INC; the agent
+    /// list).
+    ElusiveEffect,
+    /// A chance to poison with attacks (`PoisonChance` BASE with
+    /// `ModFlag.Attack`; the agent list, 2026-11-27).
+    AttackPoisonChance,
 }
 
 impl PerCharge {
@@ -225,6 +237,8 @@ impl PerCharge {
             Self::BleedDotMultiplier => "per.bleed-dot-multiplier",
             Self::PoisonDotMultiplier => "per.poison-dot-multiplier",
             Self::MoreAccuracy => "per.more-accuracy",
+            Self::ElusiveEffect => "per.elusive-effect",
+            Self::AttackPoisonChance => "per.attack-poison-chance",
         }
     }
 
@@ -286,6 +300,18 @@ impl PerCharge {
             Self::BleedDotMultiplier => (Quantity::DotMultiplier, Op::Base, Flags::BLEED),
             Self::PoisonDotMultiplier => (Quantity::DotMultiplier, Op::Base, Flags::POISON),
             Self::MoreAccuracy => (Quantity::Accuracy, Op::More, Flags::NONE),
+            Self::ElusiveEffect => (
+                Quantity::Poe1(super::Poe1Quantity::ElusiveEffect),
+                Op::Increased,
+                Flags::NONE,
+            ),
+            Self::AttackPoisonChance => (
+                Quantity::Poe1(super::Poe1Quantity::AilmentChance(
+                    super::ailment::Ailment::Poison,
+                )),
+                Op::Base,
+                Flags::ATTACK,
+            ),
             Self::PhysicalDamageReduction => (
                 Quantity::Poe1(super::Poe1Quantity::DamageReduction(
                     crate::quantity::DamageType::Physical,
@@ -359,6 +385,14 @@ pub const MODIFIERS: &[(&str, ChargeKind, ChargeValue)] = &[
         "accuracy_rating_+_per_frenzy_charge",
         ChargeKind::Frenzy,
         ChargeValue::Per(PerCharge::FlatAccuracy),
+    ),
+    // The agent list (2026-11-27): "Attacks have #% chance to Poison while at
+    // maximum Frenzy Charges" (`PoisonChance` BASE, `ModFlag.Attack`,
+    // `StatThreshold` `FrenzyCharges` at `FrenzyChargesMax`).
+    (
+        "attacks_chance_to_poison_%_on_max_frenzy_charges",
+        ChargeKind::Frenzy,
+        ChargeValue::AtMaximum(PerCharge::AttackPoisonChance),
     ),
     // P6-11db: "#% increased Attack Speed per Frenzy Charge" (`Speed` INC
     // with `ModFlag.Attack` per `Multiplier:FrenzyCharge`).
@@ -444,6 +478,14 @@ pub const MODIFIERS: &[(&str, ChargeKind, ChargeValue)] = &[
         "elemental_damage_reduction_%_per_endurance_charge",
         ChargeKind::Endurance,
         ChargeValue::Per(PerCharge::ElementalDamageReduction),
+    ),
+    // "#% increased Effect of Elusive on you per Power Charge" (the agent
+    // list; `ElusiveEffect` INC per `Multiplier:PowerCharge`), read by
+    // `buffs`' Elusive.
+    (
+        "elusive_effect_on_self_+%_per_power_charge",
+        ChargeKind::Power,
+        ChargeValue::Per(PerCharge::ElusiveEffect),
     ),
     // P6-11dp: Endurance Charge on Melee Stun's more damage per endurance
     // charge (`sup_str.lua` 2005: `Damage` MORE per
@@ -776,8 +818,20 @@ pub fn charges(set: Option<&ConfigSet>, data: &dyn CalcData, ingest: &mut Ingest
             })
             .cloned()
             .collect();
+        let at_maximum: Vec<Effect> = ingest
+            .effects()
+            .iter()
+            .filter(|e| {
+                matches!(
+                    e.quantity,
+                    Quantity::Poe1(Poe1Quantity::Charge(k, ChargeValue::AtMaximum(_))) if k == charge.kind
+                ) && e.op == Op::Base
+                    && e.conditions == Conditions::none()
+            })
+            .cloned()
+            .collect();
         // No effect on a slice field: nothing to count.
-        if charge.effects.is_empty() && per.is_empty() {
+        if charge.effects.is_empty() && per.is_empty() && at_maximum.is_empty() {
             continue;
         }
         let (min, min_source) = modifiers(ingest, charge.kind, ChargeValue::Minimum);
@@ -913,6 +967,23 @@ pub fn charges(set: Option<&ConfigSet>, data: &dyn CalcData, ingest: &mut Ingest
                     table: "character_constants",
                     key: stat.to_owned(),
                 }),
+            }
+        }
+        // At the maximum: each effect once (the agent list, 2026-11-27).
+        if count >= max {
+            for e in at_maximum {
+                let Quantity::Poe1(Poe1Quantity::Charge(_, ChargeValue::AtMaximum(p))) = e.quantity
+                else {
+                    continue;
+                };
+                let (quantity, op, flags) = p.target();
+                ingest.effect(Effect {
+                    quantity,
+                    op,
+                    value: e.value * p.scale(),
+                    conditions: Conditions::none().with_all(flags),
+                    source: e.source,
+                });
             }
         }
         for e in per {

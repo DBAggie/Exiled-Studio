@@ -78,6 +78,10 @@ pub const PATTERN_MODS: &[(&str, &str, &str)] = &[
     ("more-block-chance", "BlockChance", "MORE"),
     ("more-damage", "Damage", "MORE"),
     ("more-spell-block-chance", "SpellBlockChance", "MORE"),
+    // The agent list: PoB's `CurseEffect` INC with the `SkillName` Punishment
+    // (the tag is not compared here; the fixture
+    // `ice-nova-punishment-curse-effect-witch.xml` shows its effect).
+    ("punishment-curse-effect", "CurseEffect", "INC"),
 ];
 
 /// One line's entry in the report.

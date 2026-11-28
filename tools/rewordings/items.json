@@ -56,6 +56,56 @@
       "old": "#% reduced Stun Recovery",
       "current": "#% reduced Stun and Block Recovery",
       "why": "As above, the negative form."
+    },
+    {
+      "old": "+# Life gained for each Enemy hit by your Attacks",
+      "current": "Gain # Life per Enemy Hit with Attacks",
+      "why": "life_gain_per_target; the old \"+# Life gained for each Enemy hit by your Attacks\" became \"Gain # Life per Enemy Hit with Attacks\". PoB: LifeOnHit BASE with the Attack flag for both."
+    },
+    {
+      "old": "#% increased Cooldown Recovery",
+      "current": "#% increased Cooldown Recovery Rate",
+      "why": "base_cooldown_speed_+%; \"Rate\" added to the wording. PoB: CooldownRecovery INC for both."
+    },
+    {
+      "old": "#% reduced Cooldown Recovery",
+      "current": "#% reduced Cooldown Recovery Rate",
+      "why": "As above, the negative form."
+    },
+    {
+      "old": "#% increased Movement Speed during Flask effect",
+      "current": "#% increased Movement Speed during Effect",
+      "why": "a flask's \"during Flask effect\" became \"during Effect\" (as the accepted Attack Speed pair). PoB: MovementSpeed INC while UsingFlask for both."
+    },
+    {
+      "old": "#% increased Area of Effect during Flask Effect",
+      "current": "#% increased Area of Effect during Effect",
+      "why": "a flask's \"during Flask effect\" became \"during Effect\" (as the accepted Attack Speed pair). PoB: AreaOfEffect INC while UsingFlask for both."
+    },
+    {
+      "old": "#% increased Damage Over Time during Flask Effect",
+      "current": "#% increased Damage Over Time during Effect",
+      "why": "a flask's \"during Flask effect\" became \"during Effect\" (as the accepted Attack Speed pair). PoB: Damage INC with the Dot flag while UsingFlask for both."
+    },
+    {
+      "old": "#% reduced Damage Over Time during Flask Effect",
+      "current": "#% reduced Damage Over Time during Effect",
+      "why": "As above, the negative form."
+    },
+    {
+      "old": "Skills fire # additional Projectiles during Flask Effect",
+      "current": "Skills fire # additional Projectiles during Effect",
+      "why": "a flask's \"during Flask effect\" became \"during Effect\" (as the accepted Attack Speed pair). PoB: ProjectileCount BASE while UsingFlask for both."
+    },
+    {
+      "old": "Grants Level # Despair Curse Aura during Flask Effect",
+      "current": "Grants Level # Despair Curse Aura during Effect",
+      "why": "a flask's \"during Flask effect\" became \"during Effect\" (as the accepted Attack Speed pair). PoB: the same ExtraCurse of Despair while UsingFlask for both."
+    },
+    {
+      "old": "#% of Chaos Damage Leeched as Life during Flask effect",
+      "current": "#% of Chaos Damage Leeched as Life during Effect",
+      "why": "a flask's \"during Flask effect\" became \"during Effect\" (as the accepted Attack Speed pair). PoB: ChaosDamageLifeLeech BASE while UsingFlask for both."
     }
   ],
   "rejected": [
@@ -83,6 +133,21 @@
       "old": "Wave of Conviction's Exposure applies -#% Elemental Resistance",
       "current": "Wave of Conviction's Exposure applies an extra -#% to Elemental Resistance",
       "why": "PoB reads both as the same skill stat (purge_expose_resist_%_matching_highest_element_damage), but the game's current line is another stat (purge_additional_enemy_resistance_%, \"an extra\"): same numbers, not shown to be the same mechanic."
+    },
+    {
+      "old": "Trigger Level # Assassin's Mark when you Hit a Rare or Unique Enemy",
+      "current": "Trigger Level # Assassin's Mark when you Hit a Rare or Unique Enemy and have no Mark",
+      "why": "The current wording adds a condition (\"and have no Mark\"): not shown to be a change of wording alone."
+    },
+    {
+      "old": "Trigger Level # Poacher's Mark when you Hit a Rare or Unique Enemy",
+      "current": "Trigger Level # Poacher's Mark when you Hit a Rare or Unique Enemy and have no Mark",
+      "why": "As above."
+    },
+    {
+      "old": "+# Life gained on Kill",
+      "current": "Gain # Life per Enemy Killed",
+      "why": "PoB parses only the current wording (LifeOnKill BASE); the old \"+# Life gained on Kill\" leaves text over in PoB, so it applies nothing and there is no evidence the two read the same."
     }
   ]
 }

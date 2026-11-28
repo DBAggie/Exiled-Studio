@@ -1,7 +1,9 @@
 //! The enemy's hit on the character (Phase 6 P6-10b, part 12): PoB
 //! v2.67.2's `<Type>TakenHitMult` and `<Type>DamageReduction`
 //! (`Modules/CalcDefence.lua` 1635 to 2105, `calcs.buildDefenceEstimations`),
-//! for the config's default damage category, `Average`.
+//! for the config's damage category: `Average` (the default), or since
+//! open items S7 `Melee`, `Projectile`, `Spell`, or `SpellProjectile`
+//! ([`Category`]).
 //!
 //! What PoB does:
 //! - **The enemy's crit:** `EnemyCritChance = clamp(crit x (1 +
@@ -20,7 +22,12 @@
 //!   `mult` 1, `stdBossDPSMult` 4/4.4, `pinnacleBossDPSMult` 8/4.4,
 //!   `uberBossDPSMult` 10/4.25; physical alone for a non-boss; chaos the
 //!   rounded fifth over 2.5, or over 4 for the Uber boss), times the
-//!   enemy's damage modifier and the crit effect. The penetration is the
+//!   enemy's damage modifier and the crit effect. The enemy's physical
+//!   damage converted to other types (`PhysicalDamageConvertTo<Type>`,
+//!   "Enemies Ignited by you have #% of Physical Damage they deal
+//!   converted to Fire" and kin; the agent list, 2026-11-27) leaves
+//!   physical and joins each type the same way, the total at most 100
+//!   (1720 to 1777). The penetration is the
 //!   config's `enemy<Type>Pen` or the placeholder (`pinnacleBossPen` 3,
 //!   `uberBossPen` 8 for the elements).
 //! - **Taken as:** each type's share moved to another
@@ -49,8 +56,8 @@
 //!   effective suppression chance of 100, else 1 (`SuppressionEffect` 40
 //!   plus `SpellSuppressionEffect` BASE).
 //!
-//! Not modelled, so reasons on these fields: another damage category, an
-//! unlucky estimate, a boss skill preset, the enemy's impale, armour based
+//! Not modelled, so reasons on these fields: the `Untyped` and
+//! `DamageOverTime` damage categories, an unlucky estimate, a boss skill preset, the enemy's impale, armour based
 //! on ward, ignored resistances or reductions, and the enemy's modifiers
 //! the engine does not carry (curses that lower its damage are a marker,
 //! [`super::gems::BuffStat::Defence`]).
@@ -94,23 +101,77 @@ const SUPPRESSION_EFFECT: f64 = 40.0;
 /// The character constant of the largest damage reduction.
 const MAX_STAT: &str = "maximum_physical_damage_reduction_%";
 
-/// The config inputs that change the estimate in a way not modelled: a
-/// damage category other than `Average`, an unlucky estimate, a boss skill
-/// preset (their default values aside).
-const UNMODELLED: [(&str, &str); 3] = [
-    ("enemyDamageType", "Average"),
-    ("EHPUnluckyWorstOf", "1"),
-    ("presetBossSkills", "None"),
-];
+/// The config inputs that change the estimate in a way not modelled: an
+/// unlucky estimate, a boss skill preset (their default values aside). The
+/// damage category is [`CATEGORY_INPUT`].
+const UNMODELLED: [(&str, &str); 2] = [("EHPUnluckyWorstOf", "1"), ("presetBossSkills", "None")];
+
+/// The config's damage category of the enemy's hit (`enemyDamageType`,
+/// `CalcDefence.lua` 1643: `Average` when unset).
+pub const CATEGORY_INPUT: &str = "enemyDamageType";
+
+/// The enemy's damage category (PoB's `damageCategoryConfig`; open items
+/// S7): `Average`, the four hit categories, and `Untyped` (part 9: a hit
+/// neither attack nor spell, which no evasion, suppression, or spell block
+/// meets). `DamageOverTime` has no hit estimate and stays a reason.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum Category {
+    Average,
+    Melee,
+    Projectile,
+    Spell,
+    SpellProjectile,
+    Untyped,
+}
+
+impl Category {
+    /// The category of the config's value; `None` for one not modelled.
+    fn of(value: Option<&ConfigValue>) -> Option<Self> {
+        match value {
+            None => Some(Self::Average),
+            Some(ConfigValue::String(s)) => match s.as_str() {
+                "Average" => Some(Self::Average),
+                "Melee" => Some(Self::Melee),
+                "Projectile" => Some(Self::Projectile),
+                "Spell" => Some(Self::Spell),
+                "SpellProjectile" => Some(Self::SpellProjectile),
+                "Untyped" => Some(Self::Untyped),
+                _ => None,
+            },
+            Some(_) => None,
+        }
+    }
+
+    /// A category spell suppression meets (`CalcDefence.lua` 2026 to 2030,
+    /// 2771): the spells' and `Average`.
+    const fn suppressed(self) -> bool {
+        matches!(self, Self::Spell | Self::SpellProjectile | Self::Average)
+    }
+
+    /// A spell category.
+    pub(super) const fn spell(self) -> bool {
+        matches!(self, Self::Spell | Self::SpellProjectile)
+    }
+}
 
 /// Summon Stone Golem of Safeguarding (P6-11ar): its granted effect, the
 /// config input that overrides its life (`ConfigOptions.lua` 809), and the
-/// share of its redirect under the `Average` damage category, the only one
-/// the engine computes (`CalcDefence.lua` 2463: melee only, so a quarter).
+/// share of its redirect by damage category (`CalcDefence.lua` 2463: melee
+/// only, all of it for `Melee`, a quarter for `Average`, none otherwise).
 const STONE_GOLEM: &str = "SummonStoneGolemAltY";
 /// The config input that overrides the golem's life.
 pub const STONE_GOLEM_LIFE_INPUT: &str = "TotalStoneGolemLife";
 const STONE_GOLEM_AVERAGE_SHARE: f64 = 0.25;
+
+/// The golem's share of its redirect for `category` (`CalcDefence.lua`
+/// 2463).
+const fn stone_golem_share(category: Category) -> f64 {
+    match category {
+        Category::Melee => 1.0,
+        Category::Average => STONE_GOLEM_AVERAGE_SHARE,
+        _ => 0.0,
+    }
+}
 
 /// The life of Summon Stone Golem of Safeguarding, the pool its redirect
 /// drains (P6-11ar; `CalcPerform.lua` 3597 to 3677): the config override
@@ -214,6 +275,21 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
             return Ok(());
         }
     }
+    let Some(category) = Category::of(
+        set.and_then(|s| super::config::last_input(s, CATEGORY_INPUT, ConfigInputKind::Input)),
+    ) else {
+        for ty in TYPES {
+            for f in fields(ty) {
+                calc.set_unsupported(
+                    f,
+                    UnsupportedReason::UnmodelledConfig {
+                        input: CATEGORY_INPUT.to_owned(),
+                    },
+                );
+            }
+        }
+        return Ok(());
+    };
     let read = |calc: &Calc<'_>, f: Field| {
         calc.field(f).and_then(|r| {
             Some(Valued {
@@ -287,7 +363,14 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         &cx,
         &mut reasons,
     )?;
-    let evade = (melee.value + projectile.value) / 4.0;
+    // `ConfiguredEvadeChance` (1656): the category's, `Average` PoB's sum of
+    // the two over four; a spell's and an untyped hit's none.
+    let evade = match category {
+        Category::Average => (melee.value + projectile.value) / 4.0,
+        Category::Melee => melee.value,
+        Category::Projectile => projectile.value,
+        Category::Spell | Category::SpellProjectile | Category::Untyped => 0.0,
+    };
     // The enemy's `NeverCrit` (Hexpass, P6-11fl): 0 (`CalcDefence.lua`
     // 1694).
     let never = {
@@ -346,14 +429,48 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         (inc.value, more.value)
     };
     let damage_mult = inc * more;
-    // Each type's damage from the enemy.
+    // The enemy's physical damage converted (1720 to 1761; the agent list,
+    // 2026-11-27): each type's `PhysicalDamageConvertTo<Type>`, scaled to a
+    // total of 100 when above; the skill conversions and gains are not
+    // mapped.
+    let mut convert = [0.0; 5];
+    for (j, to) in TYPES.into_iter().enumerate() {
+        let q = Poe1Quantity::EnemyPhysicalConvert(to);
+        if j > 0 && phases::has(calc, Quantity::Poe1(q)) {
+            convert[j] = sum(calc, q, Op::Base, &cx, &mut reasons)?;
+        }
+    }
+    let mut convert_total: f64 = convert.iter().sum();
+    if convert_total > 100.0 {
+        let scale = 100.0 / convert_total;
+        convert_total *= scale;
+        for c in &mut convert {
+            *c *= scale;
+        }
+    }
+    // Each type's damage from the enemy, with what physical converts to it
+    // (1769 to 1777: the remainder, then each converted part times the
+    // damage modifier and the crit effect).
     let mut enemy_damage = [0.0; 5];
     let mut damage_in = 0.0;
+    let mut physical = 0.0;
     for (i, ty) in TYPES.into_iter().enumerate() {
         let name = format!("enemy{}Damage", pob_type(ty));
         let damage = number(&name).unwrap_or_else(|| placeholder(ty));
         damage_in += damage;
-        enemy_damage[i] = damage * damage_mult * crit_effect;
+        if i == 0 {
+            physical = damage;
+            enemy_damage[i] = if convert_total > 0.0 {
+                damage * (1.0 - convert_total / 100.0) * damage_mult * crit_effect
+            } else {
+                damage * damage_mult * crit_effect
+            };
+        } else {
+            enemy_damage[i] = damage * damage_mult * crit_effect;
+            if convert[i] > 0.0 {
+                enemy_damage[i] += physical * (convert[i] / 100.0) * damage_mult * crit_effect;
+            }
+        }
     }
     // Taken as (1802 to 1879): each type's shift table, the same type's
     // share first, then each type's moved shares in PoB's order.
@@ -406,7 +523,9 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
     let suppression =
         read(calc, Field::Poe1(Poe1Field::SpellSuppressionChance)).map_or(0.0, |v| v.value);
     let suppression = effective_suppression(calc, suppression, &cx, &mut reasons)?;
-    let suppress_mult = if suppression >= 100.0 {
+    // At a 100% chance (2026 to 2030): all of the effect against a spell,
+    // half for `Average`, none against an attack or an untyped hit.
+    let suppress_mult = if suppression >= 100.0 && category.suppressed() {
         let effect = (SUPPRESSION_EFFECT
             + sum(
                 calc,
@@ -416,7 +535,11 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
                 &mut reasons,
             )?)
         .max(0.0);
-        1.0 - effect / 100.0 / 2.0
+        if category.spell() {
+            1.0 - effect / 100.0
+        } else {
+            1.0 - effect / 100.0 / 2.0
+        }
     } else {
         1.0
     };
@@ -496,20 +619,57 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         )?;
         let spell = ((1.0 + (hit_inc + spell_inc) / 100.0) * (hit_more * spell_more)).max(0.0);
         let attack = ((1.0 + (hit_inc + attack_inc) / 100.0) * (hit_more * attack_more)).max(0.0);
-        let taken_mult = (spell + attack) / 2.0;
-        // The flat damage taken.
+        // The category's multiplier (2024 to 2030): the attack's, the
+        // spell's, or their mean; an untyped hit's the type's own when hit
+        // (`<Type>TakenHitMult`, 1896).
+        let taken_mult = match category {
+            Category::Average => (spell + attack) / 2.0,
+            Category::Melee | Category::Projectile => attack,
+            Category::Spell | Category::SpellProjectile => spell,
+            Category::Untyped => ((1.0 + hit_inc / 100.0) * hit_more).max(0.0),
+        };
+        // The flat damage taken (1976 to 1982), by category: each source
+        // with its share and whether PoB sums the type's alone.
+        let flat_sources: &[(TakenWhen, f64, bool)] = match category {
+            Category::Average => &[
+                (TakenWhen::Always, 1.0, false),
+                (TakenWhen::Hit, 1.0, false),
+                (TakenWhen::Attack, 0.5, false),
+                (TakenWhen::ProjectileAttack, 0.25, true),
+                (TakenWhen::Spell, 0.5, false),
+                (TakenWhen::SpellProjectile, 0.25, false),
+            ],
+            // A melee attack's own flat damage taken (the type's
+            // `DamageTakenFromMeleeAttacks`) has no modelled source.
+            Category::Melee => &[
+                (TakenWhen::Always, 1.0, false),
+                (TakenWhen::Hit, 1.0, false),
+                (TakenWhen::Attack, 1.0, false),
+            ],
+            Category::Projectile => &[
+                (TakenWhen::Always, 1.0, false),
+                (TakenWhen::Hit, 1.0, false),
+                (TakenWhen::Attack, 1.0, false),
+                (TakenWhen::ProjectileAttack, 1.0, true),
+            ],
+            // Both spell categories: the spells', and the type's spell
+            // projectiles' (PoB's sum for either).
+            Category::Spell | Category::SpellProjectile => &[
+                (TakenWhen::Always, 1.0, false),
+                (TakenWhen::Hit, 1.0, false),
+                (TakenWhen::Spell, 1.0, false),
+                (TakenWhen::SpellProjectile, 1.0, true),
+            ],
+            // An untyped hit: the type's always and when hit alone (1976).
+            Category::Untyped => &[
+                (TakenWhen::Always, 1.0, false),
+                (TakenWhen::Hit, 1.0, false),
+            ],
+        };
         let mut flat = 0.0;
-        for (when, share) in [
-            (TakenWhen::Always, 1.0),
-            (TakenWhen::Hit, 1.0),
-            (TakenWhen::Attack, 0.5),
-            (TakenWhen::ProjectileAttack, 0.25),
-            (TakenWhen::Spell, 0.5),
-            (TakenWhen::SpellProjectile, 0.25),
-        ] {
+        for &(when, share, type_only) in flat_sources {
             let mut part = 0.0;
-            // PoB sums the type's projectile attack damage alone.
-            let names: &[TakenOf] = if when == TakenWhen::ProjectileAttack {
+            let names: &[TakenOf] = if type_only {
                 &[TakenOf::Type(ty)]
             } else {
                 &[TakenOf::All, TakenOf::Type(ty)]
@@ -561,7 +721,16 @@ pub fn phase(calc: &mut Calc<'_>) -> Result<(), CalcError> {
             reasons: type_reasons,
         });
     }
-    maximum_hit(calc, set, &parts, &shares, max, damage_mult, damage_in)
+    maximum_hit(
+        calc,
+        set,
+        &parts,
+        &shares,
+        max,
+        damage_mult,
+        damage_in,
+        category,
+    )
 }
 
 /// One type's values of the hit that maximum hit reads (PoB's
@@ -628,9 +797,14 @@ fn frost_shield(
 ///   with no armour applied, `max(pool / share / (resMult x (1 -
 ///   DamageReduction / 100)) - flat, 0) / takenMult`; with armour, PoB's
 ///   quadratic in the raw hit, `floor(max(min(RAW, maxDR), noDR))`;
-/// - `<Type>MaximumHitTaken = round(min / enemy damage multiplier)`; a hit
-///   that converts (PoB's smoothing passes) is not computed;
+/// - `<Type>MaximumHitTaken = round(min / enemy damage multiplier)`; for a
+///   hit partly taken as another type with armour applied, PoB's smoothing
+///   passes first ([`smoothed`]; open items S7);
 /// - `SecondMinimalMaximumHitTaken` the second smallest of the five.
+#[expect(
+    clippy::too_many_arguments,
+    reason = "the estimate's values the phase computed, in PoB's order"
+)]
 fn maximum_hit(
     calc: &mut Calc<'_>,
     set: Option<&loom_domain::ConfigSet>,
@@ -639,12 +813,20 @@ fn maximum_hit(
     max: f64,
     enemy_damage_mult: f64,
     damage_in: f64,
+    category: Category,
 ) -> Result<(), CalcError> {
     let fields = TYPES.map(|t| Field::Poe1(Poe1Field::MaximumHitTaken(t)));
     let second = Field::Poe1(Poe1Field::SecondMinimalMaximumHitTaken);
+    let total_fields = TYPES.map(|t| Field::Poe1(Poe1Field::TotalPool(t)));
+    let dot_fields = TYPES.map(|t| Field::Poe1(Poe1Field::DotEhp(t)));
     for name in POOL_INPUTS {
         if super::conditions::check(set, name).is_none() {
-            for f in fields.into_iter().chain([second]) {
+            for f in fields
+                .into_iter()
+                .chain([second])
+                .chain(total_fields)
+                .chain(dot_fields)
+            {
                 calc.set_unsupported(
                     f,
                     UnsupportedReason::UnmodelledConfig {
@@ -685,7 +867,9 @@ fn maximum_hit(
         } else {
             LOW_POOL_THRESHOLD
         };
-        (life * threshold).min(unreserved)
+        // PoB's order: `Life x LowLifePercentage / 100`, the percentage
+        // `100 x` the threshold (`CalcPerform.lua` 75).
+        (life * (100.0 * threshold) / 100.0).min(unreserved)
     } else {
         unreserved
     }
@@ -728,6 +912,14 @@ fn maximum_hit(
         pool_reasons.extend(&q.reasons);
         q.value != 0.0
     };
+    // "Chaos Damage taken does not bypass Energy Shield" (the agent list;
+    // `CalcDefence.lua` 2290 to 2295).
+    let chaos_not_bypass = phases::has(calc, Quantity::Poe1(Poe1Quantity::ChaosNotBypassEs)) && {
+        let (store, graph) = calc.parts();
+        let q = store.flag(graph, Quantity::Poe1(Poe1Quantity::ChaosNotBypassEs), &cx)?;
+        pool_reasons.extend(&q.reasons);
+        q.value != 0.0
+    };
     let armour_value = value(calc, Field::Armour).unwrap_or(0.0);
     let low_es = super::conditions::check(set, LOW_ES_INPUT) == Some(true);
     let capping = (armour_cap && armour_value < es) || low_es;
@@ -741,6 +933,9 @@ fn maximum_hit(
     } else {
         es
     };
+    // The total pools' reasons (open items S7): what they read, not the hit
+    // pools' guard, allies, recoup, or loss prevented.
+    let mut total_reasons = pool_reasons.clone();
     // Any recoup (PoB's `anyRecoup`, `CalcDefence.lua` 1385 to 1465):
     // Divine Shield's pseudo recoup, and mana (P6-11as) and life (P6-10a)
     // recoup times their recovery rates (read only when present).
@@ -830,7 +1025,7 @@ fn maximum_hit(
         Op::Base,
         &cx,
         &mut pool_reasons,
-    )? * STONE_GOLEM_AVERAGE_SHARE;
+    )? * stone_golem_share(category);
     let (golem_rate, golem) = if golem_rate > 0.0 {
         match stone_golem_life(calc, set, &mut pool_reasons) {
             Some(l) if l > 0.0 => (golem_rate.min(100.0), l),
@@ -849,7 +1044,16 @@ fn maximum_hit(
         &mut pool_reasons,
     )?
     .min(100.0);
-    let life_pool = super::ehp::life_hit_pool(recoverable, life, prevented);
+    // The loss below half life prevented (open items S2: Petrified Blood;
+    // PoB's `LifeLossBelowHalfPrevented` BASE, uncapped).
+    let below_half = sum(
+        calc,
+        Poe1Quantity::LifeLossBelowHalfPrevented,
+        Op::Base,
+        &cx,
+        &mut pool_reasons,
+    )?;
+    let life_pool = super::ehp::life_hit_pool(recoverable, life, prevented, below_half);
     // The shared elemental aegis (P6-11hl; `CalcDefence.lua` 2419: the
     // largest `ElementalAegisValue`).
     let elemental_aegis = calc
@@ -868,12 +1072,13 @@ fn maximum_hit(
     let mana = value(calc, Field::ManaUnreserved).unwrap_or(0.0).max(0.0);
     // Mind over matter (P6-10b part 15; `CalcDefence.lua` 2303 to 2377):
     // the shared share, and each type's own on top of it.
+    let mut mom_reasons = Reasons::new();
     let shared = sum(
         calc,
         Poe1Quantity::ManaBeforeLife(TakenOf::All),
         Op::Base,
         &cx,
-        &mut pool_reasons,
+        &mut mom_reasons,
     )?
     .min(100.0);
     let mut mom = [0.0; 5];
@@ -883,16 +1088,32 @@ fn maximum_hit(
             Poe1Quantity::ManaBeforeLife(TakenOf::Type(ty)),
             Op::Base,
             &cx,
-            &mut pool_reasons,
+            &mut mom_reasons,
         )?
         .min(100.0 - shared);
         mom[i] = (shared + own) / 100.0;
     }
+    pool_reasons.extend(&mom_reasons);
+    total_reasons.extend(&mom_reasons);
+    total_pools(
+        calc,
+        TotalPools {
+            recoverable,
+            mana,
+            es,
+            mom,
+            eb,
+            all_bypass,
+            chaos_not_bypass,
+        },
+        &total_reasons,
+    )?;
     let mut pools = [0.0; 5];
     for (i, ty) in TYPES.into_iter().enumerate() {
-        // Chaos bypasses energy shield (`CalcDefence.lua` 2282 to 2291),
-        // and every type with Emperor's Vigilance (P6-11hy).
-        let bypass = if ty == DamageType::Chaos || all_bypass {
+        // Chaos bypasses energy shield (`CalcDefence.lua` 2282 to 2291)
+        // unless "does not bypass" (the agent list), and every type with
+        // Emperor's Vigilance (P6-11hy).
+        let bypass = if super::ehp::bypasses(ty, all_bypass, chaos_not_bypass) {
             100.0
         } else {
             0.0
@@ -949,6 +1170,30 @@ fn maximum_hit(
             }
         }
     }
+    // The full pools the smoothing passes take a hit from (PoB's
+    // `reducePoolsByDamage(nil, ...)`: the outputs' pools).
+    let full = super::ehp::Character {
+        life: recoverable,
+        max_life: life,
+        energy_shield: es,
+        mana,
+        mom,
+        guard_rate,
+        guard,
+        recoup,
+        eb,
+        all_bypass,
+        chaos_not_bypass,
+        golem_rate,
+        golem,
+        prevented,
+        below_half,
+        elemental_aegis,
+        missing_life: 0.0,
+        ward,
+        frost_rate,
+        frost,
+    };
     let mut results = [None; 5];
     for (i, ty) in TYPES.into_iter().enumerate() {
         let Some(part) = &parts[i] else { continue };
@@ -997,14 +1242,15 @@ fn maximum_hit(
             };
             part_min = part_min.min(hit);
         }
-        if smoothing {
-            calc.set_unsupported(fields[i], UnsupportedReason::NotComputed);
-            continue;
-        }
         if !part_min.is_finite() {
             continue;
         }
-        let max_hit = crate::math::round_half_up(part_min / enemy_damage_mult);
+        let incoming = if smoothing {
+            smoothed(part_min, i, parts, shares, max, &pools, &full)
+        } else {
+            part_min
+        };
+        let max_hit = crate::math::round_half_up(incoming / enemy_damage_mult);
         results[i] = Some(max_hit);
         let node = phases::constant(calc, "maximum-hit", max_hit)?;
         let result = phases::total(calc, &[node], Term::Result)?;
@@ -1135,6 +1381,7 @@ fn maximum_hit(
                 );
         let spell_dodge = spell_dodge(calc, &cx, &mut reasons)?;
         let mitigation = super::ehp::Mitigation {
+            category,
             life_on_block,
             energy_shield_on_block,
             energy_shield_on_spell_block,
@@ -1158,7 +1405,15 @@ fn maximum_hit(
             avoid_projectiles,
             attack_dodge: 0.0,
             spell_dodge,
-            avoid_all: 0.0,
+            // Elusive's chance (the agent list; `CalcDefence.lua` 1546).
+            avoid_all: sum(
+                calc,
+                Poe1Quantity::AvoidAllDamageFromHits,
+                Op::Base,
+                &cx,
+                &mut reasons,
+            )?
+            .min(AVOID_CHANCE_CAP),
         };
         let character = super::ehp::Character {
             life: recoverable,
@@ -1171,9 +1426,11 @@ fn maximum_hit(
             recoup,
             eb,
             all_bypass,
+            chaos_not_bypass,
             golem_rate,
             golem,
             prevented,
+            below_half,
             elemental_aegis,
             ward: phases::ward(calc, &mut reasons)?,
             frost_rate: frost_shield(calc, &cx, &mut reasons)?.0,
@@ -1196,6 +1453,106 @@ fn maximum_hit(
         )?;
     }
     Ok(())
+}
+
+/// PoB's `data.misc.maxHitSmoothingPasses` (`Data.lua` 289).
+const SMOOTHING_PASSES: u32 = 8;
+
+/// PoB's `calcs.takenHitFromDamage(raw, type, actor)` (`CalcDefence.lua`
+/// 149 to 175; open items S7): the damage each type takes of a raw hit of
+/// type `from`, after its conversion share, resistance, armour (PoB's
+/// unrounded `armourReductionF`), the base reduction, overwhelm, the flat
+/// damage taken, and the multiplier after reduction:
+/// `round(max(converted x mitigation + flat, 0) x after)`. A type is in the
+/// result when its share or its flat damage is not 0, and then when its
+/// damage is above 0 or its share is. Vaal Arctic Armour's mitigation is
+/// not modelled here, as in the rest of maximum hit.
+fn taken_hit_from_damage(
+    raw: f64,
+    from: usize,
+    parts: &[Option<TypeHit>; 5],
+    shares: &[[f64; 5]; 5],
+    max: f64,
+) -> [Option<f64>; 5] {
+    let mut damages = [None; 5];
+    for (c, part) in parts.iter().enumerate() {
+        let Some(conv) = part else { continue };
+        let percent = shares[from][c];
+        if !(percent > 0.0 || conv.flat != 0.0) {
+            continue;
+        }
+        let converted = raw * percent / 100.0;
+        let armour_dr = {
+            let after_res = converted * conv.res_mult;
+            if conv.effective_armour == 0.0 && after_res == 0.0 {
+                0.0
+            } else {
+                conv.effective_armour / (conv.effective_armour + after_res * 5.0) * 100.0
+            }
+        };
+        let total_dr = max.min(armour_dr + conv.flat_dr * 100.0);
+        let dr_multi = 1.0 - (max.min(total_dr - conv.overwhelm)).max(0.0) / 100.0;
+        let reduced = crate::math::round_half_up(
+            (converted * conv.res_mult * dr_multi + conv.flat).max(0.0) * conv.after,
+        );
+        if reduced > 0.0 || percent > 0.0 {
+            damages[c] = Some(reduced);
+        }
+    }
+    damages
+}
+
+/// PoB's smoothing passes for a hit that is partly taken as another type
+/// (`CalcDefence.lua` 3229 to 3258; open items S7): from the smallest of
+/// the parts' maximum hits, up to 8 passes each take the hit from full
+/// pools ([`taken_hit_from_damage`], [`super::ehp::overkill_from_full`])
+/// and move the incoming damage by the overkill left over the pool left,
+/// until it is within 1. Returns the incoming damage before the enemy's
+/// damage multiplier.
+fn smoothed(
+    start: f64,
+    from: usize,
+    parts: &[Option<TypeHit>; 5],
+    shares: &[[f64; 5]; 5],
+    max: f64,
+    pools: &[f64; 5],
+    full: &super::ehp::Character,
+) -> f64 {
+    let mut incoming = start;
+    let mut previous: Option<f64> = None;
+    for n in 1..=SMOOTHING_PASSES {
+        let damages = taken_hit_from_damage(incoming, from, parts, shares, max);
+        let (overkill, remaining) = super::ehp::overkill_from_full(&damages, full);
+        let pass_overkill = overkill - remaining;
+        // PoB iterates the damage table after `reducePoolsByDamage` has
+        // dropped its parts of 0 or less.
+        let mut ratio = 0.0_f64;
+        for (c, d) in damages.iter().enumerate() {
+            if d.is_some_and(|v| v > 0.0) && pools[c] > 0.0 {
+                ratio = ratio.max((pass_overkill + pools[c]) / pools[c]);
+            }
+        }
+        if ratio <= 0.0 {
+            ratio = 1.0;
+        }
+        let step_size = match previous {
+            Some(p) if n > 1 && p != 0.0 && !p.is_nan() => ((pass_overkill - p) / p).abs().min(2.0),
+            _ => 1.0,
+        };
+        let step_adjust = if step_size > 1.0 {
+            -pass_overkill / step_size
+        } else if n > 1 {
+            -pass_overkill * step_size
+        } else {
+            0.0
+        };
+        previous = Some(pass_overkill);
+        incoming = (incoming + step_adjust) / crate::math::sqrt(ratio);
+        if pass_overkill < 1.0 && pass_overkill > -1.0 {
+            break;
+        }
+    }
+    incoming
 }
 
 /// The fortification stacks (`CalcPerform.lua` 632 to 653), `None` when
@@ -1260,6 +1617,80 @@ fn mom_hit_pool(life_pool: f64, share: f64, mana: f64, es: Option<f64>) -> f64 {
     life_pool + used + shield
 }
 
+/// What a type's total pool reads ([`total_pools`]).
+struct TotalPools {
+    /// `LifeRecoverable`.
+    recoverable: f64,
+    /// `ManaUnreserved`, at least 0.
+    mana: f64,
+    /// `EnergyShieldRecoveryCap`.
+    es: f64,
+    /// Each type's mind over matter share, a fraction.
+    mom: [f64; 5],
+    /// Eldritch Battery (`EnergyShieldProtectsMana`).
+    eb: bool,
+    /// Every type bypasses energy shield (`UnblockedDamageDoesBypassES`).
+    all_bypass: bool,
+    /// Chaos does not bypass energy shield (`ChaosNotBypassEnergyShield`).
+    chaos_not_bypass: bool,
+}
+
+/// Each type's total pool and its effective health pool against damage
+/// over time (open items S7): PoB's `<Type>TotalPool` (`CalcDefence.lua`
+/// 2307 to 2377, 2535 to 2553) and `<Type>DotEHP` (3327 to 3337).
+///
+/// - `<Type>ManaEffectiveLife`: `calcMoMEBPool` on `LifeRecoverable` with
+///   the type's mind over matter share and bypass (the same as the hit
+///   pool's [`mom_hit_pool`], on recoverable life);
+/// - `<Type>TotalPool`: that, plus `EnergyShieldRecoveryCap` unless the type
+///   bypasses energy shield (chaos, or every type with Emperor's
+///   Vigilance) or Eldritch Battery puts the shield in the mind over matter
+///   pool; a bypass between 0 and 100 has no modelled source;
+/// - `<Type>DotEHP = <Type>TotalPool / <Type>TakenDotMult`.
+fn total_pools(calc: &mut Calc<'_>, p: TotalPools, reasons: &Reasons) -> Result<(), CalcError> {
+    for (i, ty) in TYPES.into_iter().enumerate() {
+        let bypasses = super::ehp::bypasses(ty, p.all_bypass, p.chaos_not_bypass);
+        let with_mana = mom_hit_pool(
+            p.recoverable,
+            p.mom[i],
+            p.mana,
+            (p.eb && !bypasses).then_some(p.es),
+        );
+        let total = if !bypasses && !p.eb {
+            with_mana + p.es
+        } else {
+            with_mana
+        };
+        let field = Field::Poe1(Poe1Field::TotalPool(ty));
+        let node = phases::constant(calc, "total-pool", total)?;
+        let result = phases::total(calc, &[node], Term::Result)?;
+        calc.set_derived(
+            field,
+            phases::query(result, reasons.clone()),
+            &[
+                Field::LifeUnreserved,
+                Field::ManaUnreserved,
+                Field::EnergyShield,
+            ],
+        );
+        let dot_mult = Field::Poe1(Poe1Field::TakenDotMult(ty));
+        let Some(mult) = calc.field(dot_mult).and_then(|r| r.value) else {
+            continue;
+        };
+        if mult == 0.0 {
+            continue;
+        }
+        let node = phases::constant(calc, "dot-ehp", total / mult)?;
+        let result = phases::total(calc, &[node], Term::Result)?;
+        calc.set_derived(
+            Field::Poe1(Poe1Field::DotEhp(ty)),
+            phases::query(result, reasons.clone()),
+            &[field, dot_mult],
+        );
+    }
+    Ok(())
+}
+
 /// PoB's `data.misc.AvoidChanceCap`.
 const AVOID_CHANCE_CAP: f64 = 75.0;
 
@@ -1276,7 +1707,7 @@ const fn pob_type(ty: DamageType) -> &'static str {
 
 /// The names a type's damage taken as reads: the type's, and the
 /// elemental types' for fire, cold, and lightning.
-fn taken_as_sources(from: DamageType) -> Vec<TakenOf> {
+pub(super) fn taken_as_sources(from: DamageType) -> Vec<TakenOf> {
     let mut of = vec![TakenOf::Type(from)];
     if matches!(
         from,

@@ -288,6 +288,7 @@ fn minion_skill<'d>(
         },
         active,
         item_granted: false,
+        source: None,
         supports: Vec::new(),
         unapplied: Vec::new(),
         types,
@@ -312,6 +313,7 @@ fn minion_skill<'d>(
         double_hits: false,
         arrow,
         part,
+        part_index: 0,
         known_parts: hit::pob_vetted(id, 0),
         shield: None,
         skill,
@@ -357,6 +359,7 @@ fn spell<'d>(
             },
             active,
             item_granted: false,
+            source: None,
             supports: Vec::new(),
             unapplied: Vec::new(),
             types,
@@ -372,6 +375,12 @@ fn spell<'d>(
         projectile: part.projectile,
         melee: part.melee,
         vetted: true,
+        vetted_triggered: true,
+        // No minion skill's part sets a `dpsMultiplier` (the agent list,
+        // 2026-11-27); an untagged one (a spectre's) keeps the skill
+        // unvetted.
+        dps_multiplier: 1.0,
+        part_index: 0,
     }))
 }
 

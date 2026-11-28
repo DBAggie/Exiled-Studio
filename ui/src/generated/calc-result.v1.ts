@@ -132,7 +132,8 @@ export type IndeterminateReason =
 /**
  * An import tolerance a line needed.
  */
-export type Adapted = 'case-folded' | 'split-section' | 'reworded'
+export type Adapted =
+  'case-folded' | 'split-section' | 'reworded' | 'sign-added'
 /**
  * Why a field is not complete, or not computed.
  */

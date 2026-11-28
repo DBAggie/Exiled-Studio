@@ -34,7 +34,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use loom_calc::poe1::gems::{self, BuffStat, Kind};
-use loom_calc::poe1::{LeechSource, Poe1Quantity, Pool, TakenOf, TakenWhen};
+use loom_calc::poe1::{DegenOf, LeechSource, Poe1Quantity, Pool, TakenOf, TakenWhen};
 use loom_calc::{Flags, Op, Quantity};
 use serde_json::{Value, json};
 
@@ -100,6 +100,13 @@ const DISPLAY_KEYS: &[&str] = &[
     "radiusSecondaryLabel",
     "radiusTertiary",
     "radiusTertiaryLabel",
+    // Open items S2: Vaal Grace's soul gain prevention, read for its own
+    // `SoulGainPreventionDuration` only (`CalcOffence.lua` 1577), which no
+    // slice field reads.
+    "skillEffectAppliesToSoulGainPrevention",
+    // Open items S2: Vaal Smite's own hits cannot be evaded, read for the
+    // skill being calculated only (`CalcOffence.lua` 2162).
+    "cannotBeEvaded",
     // Righteous Fire's own burn (close-out).
     "RFManaMultiplier",
     "repeatFrequency",
@@ -217,16 +224,34 @@ const WARCRY_FORBIDDEN: &[&str] = &[
     "Trigger",
 ];
 
+/// Stats the engine's table lists for a skill PoB gives no global mod
+/// (the agent list, 2026-11-27): Vaal Grace's "Suppressed Spell Damage
+/// dealt to you is Unlucky", which PoB's stat map leaves out and the engine
+/// keeps as a reason (open items S2, `docs/phase-6/gems.md`).
+const ENGINE_ONLY_GLOBAL: &[(&str, &str)] =
+    &[("VaalGrace", "damage_taken_from_suppressed_hits_is_unlucky")];
+
 /// Types a modelled active skill may have after all, with why
 /// (close-out): golems, Herald of Purity, and Convocation create or buff
 /// minions, whose own skills give the character nothing but Lightning
 /// Golem's Wrath (`gems::wrath`); Shockwave Support's attack is triggered
 /// and hits on its own.
 const ALLOWED_TYPES: &[(&str, &str)] = &[
+    // Open items S3, part 7: the skills items grant and trigger
+    // (`poe1::triggers`, their item's line and PoB's config).
+    ("BoneNova", "Triggered"),
+    ("GoreShockwave", "Triggered"),
+    ("IcicleBurst", "Triggered"),
+    ("TentacleSmash", "Triggered"),
+    ("TriggeredMoltenStrike", "Triggered"),
+    ("TriggeredStarfall", "Triggered"),
     // P6-11fs: a brand beside the main skill has no global effect (the
     // brands attached are the config's, P6-11ed); Combust and the Frost
     // enchantment are triggered by their own rule.
     ("ArmageddonBrand", "Brand"),
+    // Open items S3: Arcanist Brand, the spells it triggers reading its
+    // activation in its own context (`poe1::triggers`).
+    ("BrandSupport", "Brand"),
     ("Combust", "Triggered"),
     ("EnchantmentOfFrostOnKill4", "Triggered"),
     ("PenanceBrand", "Brand"),
@@ -391,6 +416,11 @@ const ALLOWED_BLOCKED: &[(&str, &str)] = &[
     // override reads (`gems::skitterbots`).
     ("SummonSkitterbots", "EnemyChillEffect"),
     ("SupportBonechill", "supportBonechill"),
+    // Open items S2: Unbound Ailments' non-damaging ailment effect, the
+    // supported skill's own: read for Summon Skitterbots' auras
+    // (`gems::skitterbots`), a `skill-chill-effect` reason on a chilling
+    // area (`gems::guaranteed_chill`).
+    ("SupportUnboundAilments", "EnemyChillEffect"),
     // P6-11ft: Generosity's aura does not affect you
     // (`gems::AURA_NOT_ON_SELF_SUPPORTS`); its aura effect is the skill's own
     // (`gems::OWN_EFFECT_STATS`).
@@ -493,6 +523,56 @@ const ALLOWED_BLOCKED: &[(&str, &str)] = &[
     // reads the wand damage share, `poe1::triggers` the trigger mark.
     ("SupportSpellslinger", "gainPercentBaseWandDamageToSpells"),
     ("SupportSpellslinger", "triggeredBySpellSlinger"),
+    // Open items S3: Arcanist Brand's support part, the trigger mark
+    // (`poe1::triggers`).
+    ("SupportBrandSupport", "triggeredByBrand"),
+    // Open items S3: Cast on Death's marks, read by its support's ID
+    // (`poe1::triggers`: PoB's stand-in time and `showAverage`).
+    ("SupportCastOnDeath", "triggered"),
+    // Open items S3, part 7: two skills items grant and trigger, PoB's
+    // `triggered` mark (`poe1::triggers` reads the item's line).
+    ("BoneNova", "triggered"),
+    ("IcicleBurst", "triggered"),
+    // Open items S3, part 8: Kitava's Thirst's, Maloney's Mechanism's, and
+    // the crafted Focus line's supports and The Hidden Blade's skill, their
+    // marks (`poe1::triggers` reads the support or the item's line).
+    ("SupportCastOnManaSpent", "triggeredByKitavaThirst"),
+    ("SupportTriggerBowSkillOnBowAttack", "triggeredByUnique"),
+    ("SupportTriggerSpellFromHelmet", "chanceToTriggerOnFocus"),
+    ("UnseenStrike", "triggeredByUnique"),
+    ("SupportCastOnDeath", "triggeredOnDeath"),
+    // Open items S3, part 5: the item trigger supports' marks, read by
+    // the support's ID (`poe1::triggers`: the rotation, the crit chance).
+    (
+        "SupportTriggerFireSpellOnHit",
+        "triggeredBySettlersEnchantTrigger",
+    ),
+    ("SupportTriggerSpellOnAttack", "triggeredByUnique"),
+    ("SupportTriggerSpellOnBowAttack", "triggeredByUnique"),
+    (
+        "SupportTriggerSpellOnBowAttackFreezeHit",
+        "triggeredByUnique",
+    ),
+    (
+        "SupportTriggerSpellOnUnarmedMeleeCriticalHit",
+        "triggerOnCrit",
+    ),
+    (
+        "SupportTriggerSpellOnUnarmedMeleeCriticalHit",
+        "triggeredBySevenTeachings",
+    ),
+    (
+        "SupportUniqueCosprisMaliceColdSpellsCastOnMeleeCriticalStrike",
+        "triggerOnCrit",
+    ),
+    (
+        "SupportUniqueCosprisMaliceColdSpellsCastOnMeleeCriticalStrike",
+        "triggeredByCospris",
+    ),
+    (
+        "SupportUniqueMjolnerLightningSpellsCastOnHit",
+        "triggeredByMjolner",
+    ),
     // The trigger supports' `SkillData` (P6-8a): `poe1::triggers` reads
     // their stats (the chance on crit, the threshold, the triggered marks).
     (
@@ -525,6 +605,9 @@ const ALLOWED_BLOCKED: &[(&str, &str)] = &[
         "SupportCastWhileChannellingTriggeredPlus",
         "triggeredWhileChannelling",
     ),
+    // Check 4 (2026-11-26): the crafted socketed-spell trigger, ported as
+    // PoB's "trigger craft" (`triggers::Config::SkillUse`).
+    ("SupportTriggerSpellOnSkillUse", "triggeredByCraft"),
     // Tempest Shield's counterattack trigger on block (P6-9e): a `SkillData`
     // for attack skills (`SkillType` 2) it triggers, none of its own.
     ("TempestShield", "chanceToTriggerCounterattackOnBlock"),
@@ -600,6 +683,9 @@ const NO_SLICE_NAMES: &[&str] = &[
     "FireDamageTakenWhenHit",
     "FreezeImmune",
     "LifeRegen",
+    // Open items S2: Petrified Blood's loss over time, which no PoB module
+    // reads.
+    "LifeLossBelowHalfLost",
     // Enduring Cry's regeneration per warcry power (P6-9d).
     "LifeRegenPercent",
     "ManaRegen",
@@ -687,6 +773,31 @@ const ALLOWED_ADD_TYPES: &[(&str, &str)] = &[
     // (`RESERVING_SUPPORTS`).
     ("SupportSpellslinger", "Triggered"),
     ("SupportSpellslinger", "HasReservation"),
+    // Open items S3: Arcanist Brand triggers the spells it supports
+    // (`poe1::triggers`).
+    ("SupportBrandSupport", "Triggered"),
+    // Open items S3: Cast on Death's spell (`poe1::triggers`).
+    ("SupportCastOnDeath", "Triggered"),
+    // Check 4 (2026-11-26): the crafted socketed-spell trigger.
+    ("SupportTriggerSpellOnSkillUse", "Triggered"),
+    // Open items S3, part 5: the supports an item's trigger line gives
+    // its socketed spells (`poe1::triggers`).
+    ("SupportTriggerElementalSpellOnBlock", "Triggered"),
+    ("SupportTriggerFireSpellOnHit", "Triggered"),
+    ("SupportTriggerSpellOnAttack", "Triggered"),
+    ("SupportTriggerSpellOnBowAttack", "Triggered"),
+    ("SupportTriggerSpellOnBowAttackFreezeHit", "Triggered"),
+    ("SupportTriggerSpellOnUnarmedMeleeCriticalHit", "Triggered"),
+    (
+        "SupportUniqueCosprisMaliceColdSpellsCastOnMeleeCriticalStrike",
+        "Triggered",
+    ),
+    ("SupportUniqueMjolnerLightningSpellsCastOnHit", "Triggered"),
+    ("SupportUniqueVirulenceSpellsCastOnBlock", "Triggered"),
+    // Open items S3, part 8.
+    ("SupportCastOnManaSpent", "Triggered"),
+    ("SupportTriggerBowSkillOnBowAttack", "Triggered"),
+    ("SupportTriggerSpellFromHelmet", "Triggered"),
     ("SupportMomentum", "Buff"),
     ("SupportSummonPhantasm", "CreatesMinion"),
 ];
@@ -754,6 +865,16 @@ fn is_not_minion(t: &BTreeMap<String, Value>) -> bool {
         && t.len() == 3
 }
 
+/// PoB's minions' copy of a buff row (the agent list, 2026-11-27: Sigil of
+/// Power): a `Multiplier` read from the parent (`actor = "parent"`), the
+/// count the config sets on the character. The engine gives a buff's rows
+/// to minions through the minion actor with the character's count, so the
+/// copy is not a row of its own.
+fn is_parent_multiplier(t: &BTreeMap<String, Value>) -> bool {
+    t.get("type").and_then(Value::as_str) == Some("Multiplier")
+        && t.get("actor").and_then(Value::as_str) == Some("parent")
+}
+
 /// A mod in a canonical form both sides share.
 fn pob_form(m: &ModRecord, div: Option<f64>, mult: Option<f64>) -> String {
     let flags = m.flags.unwrap_or(0);
@@ -810,8 +931,8 @@ fn pob_form(m: &ModRecord, div: Option<f64>, mult: Option<f64>) -> String {
         .filter(|t| !is_melee_skill_type(t))
         .filter(|t| !is_not_totem_skill_type(t))
         // Smite's aura's `AffectedByVaalSmite` condition, negated (P6-8a):
-        // Vaal Smite has no entry in the engine's tables, so a build with it
-        // carries an `unmodelled-gem` reason and the condition is off.
+        // `gems::apply` drops Smite's aura while Vaal Smite's applies (open
+        // items S2), so the rows carry no condition of their own.
         .filter(|t| !is_not_vaal_smite(t))
         .map(|t| serde_json::to_string(t).unwrap_or_default())
         .collect();
@@ -929,9 +1050,18 @@ fn pob_name(q: Quantity) -> String {
         Quantity::Poe1(Poe1Quantity::ArcaneSurgeManaRegen) => "ArcaneSurgeManaRegen".into(),
         Quantity::Poe1(Poe1Quantity::EnergyShieldRecharge) => "EnergyShieldRecharge".into(),
         Quantity::Poe1(Poe1Quantity::MovementSpeed) => "MovementSpeed".into(),
+        // Open items S2: Vaal Grace's.
+        Quantity::Poe1(Poe1Quantity::EvadeChance) => "EvadeChance".into(),
+        // Open items S2: Petrified Blood's.
+        Quantity::Poe1(Poe1Quantity::ManaCostAsLifeCost) => "ManaCostAsLifeCost".into(),
+        Quantity::Poe1(Poe1Quantity::LifeLossBelowHalfPrevented) => {
+            "LifeLossBelowHalfPrevented".into()
+        }
         // P6-10b parts 11 and 12: a curse's on the enemy.
         Quantity::Poe1(Poe1Quantity::EnemyAccuracy) => "Accuracy".into(),
         Quantity::Poe1(Poe1Quantity::EnemyDamage) => "Damage".into(),
+        // The agent list (2026-11-27): a type's degeneration.
+        Quantity::Poe1(Poe1Quantity::Degen(t, _)) => format!("{}Degen", title(t.name())),
         // P6-11cv: Temporal Chains' on the enemy.
         Quantity::Poe1(Poe1Quantity::EnemyBuffExpireFaster) => "BuffExpireFaster".into(),
         // P6-11dt: Berserk's rage effect.
@@ -1057,6 +1187,14 @@ fn variant_form(b: &BuffStat, enemy: bool) -> Vec<String> {
                 format!(" tags global {}", json!({ "unscalable": true }))
             },
         ),
+        // The agent list (2026-11-27): Sigil of Power's less enemy damage.
+        BuffStat::AtCount { var, rows, .. } => (
+            rows,
+            format!(
+                " tags {}",
+                json!({ "actor": "enemy", "type": "MultiplierThreshold", "var": var })
+            ),
+        ),
         BuffStat::PerCount { var, rows, .. } => (
             rows,
             format!(" tags {}", json!({ "type": "Multiplier", "var": var })),
@@ -1119,14 +1257,22 @@ fn variant_form(b: &BuffStat, enemy: bool) -> Vec<String> {
                 json!({ "div": *div as i64, "limit": *limit as i64 })
             ),
         ),
-        BuffStat::WhenState { var, rows, .. } => (
+        BuffStat::WhenState { state, var, rows } => (
             rows,
             format!(
                 " tags {}{}",
-                json!({ "type": "Condition", "var": var }),
-                // Cyclone's buff is `unscalable` (P6-8a,
-                // `poe1::gems::UNSCALABLE`).
-                if *var == "ChannellingCyclone" {
+                // A state named `Not<var>` is PoB's condition negated (open
+                // items S2: Petrified Blood's `NotLowLife`).
+                if *state == format!("Not{var}") {
+                    json!({ "neg": true, "type": "Condition", "var": var })
+                } else {
+                    json!({ "type": "Condition", "var": var })
+                },
+                // Cyclone's and Petrified Blood's buffs are `unscalable`
+                // (P6-8a, open items S2; `poe1::gems::UNSCALABLE`).
+                if *var == "ChannellingCyclone"
+                    || *state == loom_calc::poe1::conditions::NOT_LOW_LIFE
+                {
                     format!(";global {}", json!({ "unscalable": true }))
                 } else {
                     String::new()
@@ -1155,7 +1301,13 @@ fn variant_form(b: &BuffStat, enemy: bool) -> Vec<String> {
     if rows.iter().all(|r| {
         matches!(
             r.0,
-            Quantity::Poe1(Poe1Quantity::RegenReason(..) | Poe1Quantity::MovementReason(_))
+            Quantity::Poe1(
+                Poe1Quantity::RegenReason(..)
+                    | Poe1Quantity::MovementReason(_)
+                    // Frost Shield's energy shield loss (the agent list,
+                    // 2026-11-27): the net regeneration fields' reason.
+                    | Poe1Quantity::NetRegenReason(_)
+            )
         )
     }) {
         return Vec::new();
@@ -1176,6 +1328,33 @@ fn variant_form(b: &BuffStat, enemy: bool) -> Vec<String> {
             {
                 return f.replacen(" BASE ", " MAX ", 1)
                     + &format!(" tags global {}", json!({ "unscalable": true }));
+            }
+            // A degeneration per point of a pool (the agent list,
+            // 2026-11-27: Blood Rage, Righteous Fire): PoB's `PerStat` tag,
+            // before the variant's tags.
+            if let Quantity::Poe1(Poe1Quantity::Degen(_, of)) = row.0 {
+                let stat = match of {
+                    DegenOf::Flat => None,
+                    DegenOf::Life => Some("Life"),
+                    DegenOf::EnergyShield => Some("EnergyShield"),
+                    DegenOf::Mana => Some("Mana"),
+                };
+                if let Some(stat) = stat {
+                    let per = json!({ "div": 1, "stat": stat, "type": "PerStat" });
+                    let mut out = match suffix.strip_prefix(" tags ") {
+                        Some(rest) => format!("{f} tags {per};{rest}"),
+                        None => format!("{f} tags {per}"),
+                    };
+                    // Per point of mana PoB also needs mana (Righteous Fire
+                    // of Arcane Devotion), which the per-point value implies.
+                    if of == DegenOf::Mana {
+                        out.push_str(&format!(
+                            ";{}",
+                            json!({ "stat": "Mana", "threshold": 1, "type": "StatThreshold" })
+                        ));
+                    }
+                    return out;
+                }
             }
             f + &suffix
         })
@@ -1390,7 +1569,11 @@ fn check_one(
         .filter(|s| s.mods.iter().any(|m| global(m).is_some()))
         .map(|s| s.stat.clone())
         .collect();
-    let ours: BTreeSet<String> = stats.iter().map(|(s, _)| (*s).to_owned()).collect();
+    let ours: BTreeSet<String> = stats
+        .iter()
+        .filter(|(s, _)| !ENGINE_ONLY_GLOBAL.contains(&(id, *s)))
+        .map(|(s, _)| (*s).to_owned())
+        .collect();
     out.check(
         TABLE,
         id,
@@ -1492,6 +1675,7 @@ fn check_one(
             | BuffStat::PerCount { .. }
             | BuffStat::PerStack { .. }
             | BuffStat::AtMaxStages { .. }
+            | BuffStat::AtCount { .. }
             | BuffStat::CheckModCond { .. }
             | BuffStat::Threshold(_)
             | BuffStat::LifeThreshold(_)
@@ -1516,6 +1700,7 @@ fn check_one(
                 s.mods
                     .iter()
                     .filter(|m| !POB_ROW_COMPANIONS.contains(&(*stat, m.name.as_str())))
+                    .filter(|m| !m.tags.iter().any(is_parent_multiplier))
                     .map(move |m| pob_form(m, s.div, s.mult))
             })
             .collect();

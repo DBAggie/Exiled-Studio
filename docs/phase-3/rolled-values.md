@@ -112,3 +112,38 @@ $lpc calc-run $public --bundle $b --scope $scope --data-overlay local/p3/p3-1d/p
 $lpc calc-parity <out>/oracle <out>/public --slice docs/phase-3/slice-fields.json --out <out>/parity --register docs/parity/divergence-register.json --overlay-run <out>/public-overlay --manifest tools/oracle/fixtures/fixtures.json
 $lpc calc-run "<corpus>" --anonymous --bundle $b --scope $scope --out <out>/corpus
 ```
+
+## The agent list (S9, 2026-11-26): an untagged line on a catalysed unique
+
+A catalyst scales a line in PoB by the line's own `{tags}` (`Item.lua` 31 to 62, `getCatalystScalar`), and a unique's lines in a saved build often carry none: Mageblood's "Leftmost (2-4) Magic Utility Flasks...", Nimis' "(25-35)% increased Projectile Damage". PoB leaves such a line unscaled. The game scales a mod by its own tags. So the engine had made every untagged ranged line on a catalysed item a reason (`scaled-line`, `catalyst`): the game might scale it.
+
+**What the game data settles.** The bundle's unique mod rows carry their implicit tags (data schema 3, `ModEntry::implicit_tags`). For an untagged ranged line on a catalysed unique, `loom_pipeline` looks up the unique rows whose stats are the line's reading: the rows of the generation types the item rules fit to a unique's explicit lines, with their stats other than `(0, 0)`.
+- **None of them has a catalyst tag:** the game leaves the line unscaled too. Mageblood's flask row has no tags; Headhunter's `damage_+%_vs_rare_monsters` row is `damage`, and Intrinsic scales attributes. Then the line is rolled as any other (`pob_item::line_values_full`), equal to PoB's.
+- **A row has one, or no row matches:** the line stays a reason, as before.
+- **A rare item's untagged line** is not read this way; it stays a reason.
+
+**Evidence** (the S9 agent: `local/p6/s9-2` on `b-s9`, against `local/p6/s9-1`):
+- **Public:** 0 unexpected; `Complete` unchanged (49,371). The `catalyst` reason is gone from every public build: 583 fields lost it (7 builds).
+  - Eight values moved, all toward PoB, none away: `elemental-hit-of-the-spectrum-deadeye.xml` and `lightning-trap-of-sparking-elementalist.xml` (Nimis' projectile damage now counts), their average damage, hit DPS, combined and full DPS.
+  - The other five builds changed in their reasons only.
+- **Corpus:** 0 unexpected; no document changed.
+- **Tests:** `pob_item::values::tests::an_untagged_unique_line_should_roll_when_its_rows_lack_the_tags`; the workspace tests, the real-bundle tests, clippy, rustfmt, and wasm32.
+
+## The agent list (S9, 2026-11-26): modifier magnitudes PoB does not apply
+
+An item line such as "8% increased Explicit Defence Modifier magnitudes" (a crafted or Heist enchantment, Eyes of the Greatwolf's "are doubled") scales other lines of its item. The engine made every modifier line of such an item a reason (`scaled-line`, `modifier-magnitude`) and left them all out of the calculation.
+
+**PoB applies the magnitudes only to an advanced copy or a crafted item** (`Item.lua` 1377: `if self.advancedCopy or self.crafted`). An item is an advanced copy when a line has a `{range:}` prefix (938 to 940), a `(a-b)` range (932 to 935), or the advanced `{ ` form (551 to 556), and crafted with a `Crafted` spec (768). Otherwise PoB reads each line's printed value. That is also what the game prints: an item's text shows its values with the magnitudes applied.
+
+**The engine now does the same** (`pob_item::values::magnitudes_apply`): on an item that is neither, its lines are read as printed; on an advanced copy or a crafted item they stay the reason.
+
+**A PoB check.** `lacerate-bleed-gladiator.xml`'s axe (Kraken Etcher: "8% increased Explicit Physical Modifier magnitudes" with fixed lines) was run through PoB twice, with and without that line: the same average damage (24,757.0) and the same weapon base (876.5 to 2,279.6). PoB reads the lines as printed.
+
+**Evidence** (the S9 agent: `local/p6/s9-3` on `b-s9`, against `local/p6/s9-2`):
+- **Public:** 0 unexpected; `Complete` unchanged (49,371; these builds have other reasons). `modifier-magnitude` went from 410 fields in 5 builds to 165 in 2 (the advanced copies).
+  - 77 values moved: 69 toward PoB, 9 of them now equal (Lacerate's armour, fire and chaos resistances, physical damage reduction; Flicker Strike's chaos resistance), and 8 away.
+  - **The 8 away, each a field another reason already set apart:**
+    - Lacerate's average damage, hit DPS, and leech: 23,006 to 122,577 against PoB's 24,757. The axe's lines now count, and its Deadly Ailments' `support_better_ailments_hit_damage_+%_final` (80% less damage with hits) is unmapped, already a reason on those fields. 122,577 x 0.2 is 24,515. Its configured damage chance moved too.
+    - Flicker Strike's energy shield recharge and net regenerations, and RF Chieftain's degeneration, which follow the energy shield and life these items now add.
+- **Corpus:** 0 unexpected; 79 values moved, 74 toward PoB (30 now equal), 5 away: two builds' net regeneration and degeneration, by under 0.4 each.
+- **Tests:** `pob_item::values::tests::corrupted_range_and_magnitude_lines_should_be_scaled` (an advanced copy and a crafted item scaled, a plain one not); the workspace tests, the real-bundle tests, clippy, rustfmt, and wasm32.

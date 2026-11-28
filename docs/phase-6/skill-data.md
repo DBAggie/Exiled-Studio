@@ -133,7 +133,7 @@ The open items survey (S0, `dev/active/open-items/open-items-inventory.md`) foun
 Two other reasons, narrowed the same way:
 
 - **`reservation-becomes-cost`** (`poe1::costs`) only when a reservation reaches the cost: PoB adds the active level's flat or percent mana reservation, or a support level's `manaReservationPercent` (`CalcOffence.lua` 1693 to 1700, `CalcActiveSkill.lua` 516). Trap and totem supports add the type to skills that reserve nothing.
-- **`full-dps-vaal`** (`poe1::full_dps`): PoB's `getActiveSkillCount` (`Calcs.lua` 150 to 174) counts a Vaal gem's first effect when `enableGlobal1` is on (the default) and its second when `enableGlobal2` is (`skill::vaal_full_dps_enabled`; the game's `IsVaalGem`, the bundle's `gems.json` `vaal`). A Vaal skill that summons minions keeps the reason: PoB's full DPS of Vaal Summon Skeletons (417) is not its minion's `TotalDPS` (115) times the count, for a cause not found (open items follow-ups).
+- **`full-dps-vaal`** (`poe1::full_dps`): PoB's `getActiveSkillCount` (`Calcs.lua` 150 to 174) counts a Vaal gem's first effect when `enableGlobal1` is on (the default) and its second when `enableGlobal2` is (`skill::vaal_full_dps_enabled`; the game's `IsVaalGem`, the bundle's `gems.json` `vaal`). A Vaal skill that summons minions kept the reason until the agent list found the cause (2026-11-26): PoB's full DPS of Vaal Summon Skeletons of Mages counts another minion than its main output, a `pob-bug` (DIV-0783; `docs/phase-6/minions.md`, "Vaal Summon Skeletons' full DPS"). It now counts its own minion.
 
 **Evidence** (`local/p6/s1c`, bundle `b-ct`, against `local/p6/n` at `dev` `6deeb5da`):
 
@@ -145,3 +145,96 @@ Two other reasons, narrowed the same way:
 **Totems** (S1 part 2): `totem-data` narrowed to what PoB reads and the engine does not (`docs/phase-6/totems.md`, "Open items S1"); public `Complete` 38,869 to 38,922, the Ballista fixtures' Q11 entries DIV-0684 to DIV-0693.
 
 **Not reached in S1** (open items follow-ups, "Planned for the session, may not be reached"): Static Strike's part 1, the trigger builds (S3).
+
+
+## The agent list (2026-11-26): the item-triggered skills' PoB data
+
+After S7, `pob-skill-data` was the reason that blocked the most fields in the public set (172 fields in 27 builds). It was the only reason on the fields of six of S3 part 7's item-triggered skills, each equal to PoB's (`local/p6/tools/skill_data_skills.py` names the skills). What failed the vetting rule in each:
+- Molten Burst: the base mod `CannotSplit`.
+- Rain of Arrows: the base mod `OneShotProj`.
+- Unseen Strike: the stat map entry `skill_has_trigger_from_unique_item`.
+- Bone Nova and Icicle Burst: the stat map entry `spell_uncastable_if_triggerable`.
+- Icicle Burst also has the base mod `showAverage`.
+- Spark has a skill function and parts.
+
+Two generic lists in `poe1::hit` now name what the engine reads of that data:
+
+- **`TRIGGER_OWN_STATS`:** `spell_uncastable_if_triggerable` and `skill_has_trigger_from_unique_item` only set `skillData.triggered` and `triggeredByUnique` (`SkillStatMap.lua` 191 to 203). PoB reads these as a triggered skill:
+  - its rate comes from the trigger (`CalcOffence.lua` 2205 to 2227);
+  - it does not set "attacked recently" or "cast a spell recently" (`CalcPerform.lua` 240);
+  - it is never a trigger's source (`CalcTriggers.lua` 41).
+
+  The engine computes such a skill through `poe1::triggers`, and `conditions::main_skill_recently` already reads the trigger kind.
+- **`READ_BASE_FLAGS`:**
+  - `CannotSplit` is read only for the split count (`CalcOffence.lua` 1069), which no slice field holds.
+  - `OneShotProj` is read only with `SequentialProjectiles` (769). Its one mapped source, Barrage's `projectiles_barrage`, already guards the projectile count (`mapping::NO_EFFECT_DEPENDS_ON`).
+
+Icicle Burst stays partial. PoB turns `showAverage` off only when a trigger sets the rate (2227), and the vetting does not know the trigger; the attack path does not read the flag. Spark stays partial for its function and parts. (Both cleared by open items S1, below.)
+
+The test `read_lists_should_vet_only_what_the_engine_reads` checks that each listed entry is in PoB's data, that the four skills are vetted, and that Icicle Burst is not.
+
+**Evidence** (`local/p6/ag1`, `b-ct`, against S7 part 9's run):
+- **Public:** 0 unexpected; `Complete` 48,804 to 48,837: 33 fields of four fixtures (`trigger-ngamahus-flame-molten-burst-templar.xml`, `trigger-lioneyes-paws-rain-of-arrows-ranger.xml`, `trigger-hidden-blade-unseen-strike-ranger.xml`, `trigger-uul-netols-bone-nova-templar.xml`). No value moved, and no other document changed.
+- **Bone Nova:** the fixture's rate is S3 part 7's Q11 difference (0.21499 against PoB's 0.21505; Smite's attack rate in floored ms fed to PoB's rotation gives each side's value to the bit). Its fields are now `Complete`, so they are registered: DIV-0761 to DIV-0765, Q11.
+- **Corpus:** 0 unexpected; documents byte-identical.
+- **Tests:** the workspace tests, the real-bundle tests, clippy, rustfmt, and the wasm32 check pass.
+
+**The Holy Relic's Nova** (the agent list's first item) was looked at and left. No public or corpus build uses Summon Holy Relic, so it would clear only its own fixture. It needs:
+- the minion skill's level picked by level requirement (`CalcActiveSkill.lua` 895 to 902; the engine builds a minion skill at level 1);
+- the gem's Holy Relic's Boon, a buff behind the config check `summonHolyRelicEnableHolyRelicBoon`;
+- PoB's `nova` trigger with the minion as its actor (`CalcTriggers.lua` 1167): the character's fastest attack, times its chance to hit, capped by the Nova's cooldown, gives the minion's rate (the kept fixture: 0.2806, Smite's 1.275 at a 22% chance to hit).
+
+## Open items S1 (2026-11-26): Icicle Burst's `showAverage` and Spark's part 1
+
+The two skills S3 part 7 left partial (above), each the only reason on its fixture's fields:
+- **Icicle Burst's `showAverage`** (an untagged `SkillData` base mod). PoB clears it when a trigger sets the skill's rate (`CalcOffence.lua` 2223 to 2227: `skillData.showAverage = false`). Otherwise PoB reads it in many outputs: the combined DPS, leech, poison and bleed stacks, impale (333, 3926, 4014, 4767, 5535, 5983, 6131).
+  - `hit::pob_vetted_triggered` vets a skill with that base mod read (`SHOW_AVERAGE_KEY`).
+  - The attack path and the spell path use it only when a trigger's rate is set (`triggers::Outcome::Rate`), and never for Cast on Death, which keeps `showAverage`.
+  - A self-cast skill with its own `showAverage` keeps `pob-skill-data`, as before: Essence Drain, Hexblast, Earthquake, and the others in PoB's data.
+  - The attack path now adds the reason after the trigger's outcome; `SpellSkill::vetted_triggered` carries the spell's.
+- **Spark's `preDamageFunc`** (`act_int.lua` 16721 to 16727) multiplies the DPS by the hits per duration in part 2, "Maximum Hits", only. In part 1, "1 Hit", it changes nothing. `hit::NOOP_PART_FUNCTIONS` names (skill, function, part) entries a part does not run; Spark's part 2 keeps the reason.
+
+Tests: `read_lists_should_vet_only_what_the_engine_reads` (Icicle Burst vetted only when triggered), `spark_should_be_vetted_in_its_first_part_only`.
+
+**Evidence** (`local/p6/s1-a`, `b-pb`, against `local/p6/s9a`):
+- **Public:** 0 unexpected; `Complete` 49,371 to 49,386; no value moved.
+  - `trigger-mjolner-spark-templar.xml`: seven fields `Complete`, each equal to PoB's.
+  - `trigger-camerias-icicle-burst-templar.xml`: eight fields `Complete`. Its trigger rate is S3 part 7's Q11 difference (Smite's attack rate in floored ms fed to PoB's rotation, as Bone Nova's), now registered: DIV-0850 to DIV-0854.
+  - Both fixtures retargeted: 86 and 83 targets.
+- **Corpus:** 0 unexpected; no document changed.
+- **Tests:** the workspace tests, the real-bundle tests, clippy, rustfmt, and the wasm32 check.
+
+**Cyclone** (open items S1, 2026-11-26). Its `initialFunc` adds `Multiplier:AdditionalMeleeRange` (`act_dex.lua` 4701 to 4714). Only its own stat `cyclone_area_of_effect_+%_per_additional_melee_range` reads that multiplier (`AreaOfEffect` INC per it), and `AreaOfEffect` feeds only radius outputs, already a no-effect row (P6-11dl).
+- `hit::NO_SLICE_FUNCTIONS` and `NO_SLICE_OWN_STATS` name Cyclone's and Vaal Cyclone's.
+- The claim is checked for these two skills only: `AreaOfEffect` reaches damage for skills whose damage scales with their area, which Cyclone's does not. Another skill's area-only data goes on these lists only after the same check (review of S1).
+- Cyclone of Tumult's stage stats are not among them; it stays partial.
+- Test: `cyclone_should_be_vetted_by_its_area_only_data` (each entry in PoB's data, each stat a no-effect row).
+
+**Evidence** (`local/p6/s1-b`, against `local/p6/s1-a`):
+- **Public:** 0 unexpected; `Complete` 49,386 to 49,388: the `FullDPS` of `trigger-cwc-channelling-cyclone-templar.xml` and `trigger-cwc-ice-nova-templar.xml`, which add Cyclone's hit DPS (Cast while Channelling's source).
+- **Q11:** the two `FullDPS` (1,953.648 against PoB's 1,953.658) are DIV-0855 and DIV-0856.
+  - Ice Nova's part equals PoB's.
+  - Cyclone's attack rate is the weapon's floored attack time: a copy of the fixture with Cyclone as the main skill gives `Speed` 4.4978 against PoB's 4.5, and `TotalDPS` 21.0882 against 21.0987, the whole difference.
+- **Unchanged:** no value moved; the other Cyclone builds (`Dual Wield Cospris CoC.xml`, `cyclone-shockwave-slayer.xml`) keep their other reasons.
+- **Corpus:** no document changed.
+
+**Ground Slam** (open items S1, 2026-11-26). Its own stat `groundslam_damage_to_close_targets_+%_final` is `Damage` MORE with `ModFlag.Hit` and `Condition:AtCloseRange` (`act_str.lua` 2086 to 2088).
+- It is now a state row of the mapping under `conditions::AT_CLOSE_RANGE`, which the config's `conditionAtCloseRange` settles (`ConfigOptions.lua` 1765), and is listed in `hit::READ_OWN_STATS`.
+- Two original fixtures, `ground-slam-close-range-templar.xml` (the check on) and `ground-slam-templar.xml` (off), each equal to PoB's but the Q11 attack rate (DIV-0857 to DIV-0866); 83 targets each.
+
+**Evidence** (`local/p6/s1-c`, against `local/p6/s1-b`):
+- **Public:** 0 unexpected; `Complete` 49,388 to 49,564 (the two fixtures).
+- **Unchanged:** no other value moved. The two builds with Ground Slam (`boneshatter-juggernaut.xml`, `smite-inquisitor-act1.xml`) keep their other reasons.
+- **Corpus:** no document changed.
+
+**Socket colour quality under a socket rebuild** (open items S1, 2026-11-26; `unmodelled-skill` `socket-colour-quality`, 588 public fields in four builds). A gem's quality from a socket of its colour (P3-12i, `docs/phase-3/other-gems.md`) was not known on an item with a line that rebuilds its sockets. `poe1::sockets` now reads those lines as PoB does (`Item.lua` 2591 to 2634):
+- **"Has no Sockets"** removes them all; PoB checks it first.
+- **"Has # Sockets"** keeps the `Sockets` line's first # sockets in order. PoB fills a missing one with the item's default colour, which the engine does not read, so a count above the line's sockets stays not known. "Has 1 Socket" shows no number: its value is the description's one, read from the hidden value.
+- **"Has # Abyssal Sockets"** (without a count line) keeps the line's other sockets in order and appends the abyssal ones, so a line whose abyssal sockets are its last ones, as many as stated, is kept as it is; any other line stays not known.
+- **The builds:** the Unset Rings of `animate-guardian-guardian.xml`, `forged-frostbearer-spectre-necromancer.xml`, and `Mirage Archer Toxic Rain.xml` ("Has 1 Socket" with one socket on the line), and `flicker-strike-berserker.xml`'s weapon ("G-G-G-G-G A" with one abyssal socket).
+- **Test:** `socket_count_lines_should_rebuild_as_pob_does` (and `socket_lines_should_count_only_when_part_of_the_item`, each rebuilding stat's reading).
+
+**Evidence** (`local/p6/s1-d`, against `local/p6/s1-c`):
+- **Public:** 0 unexpected; every `socket-colour-quality` reason is gone; `Complete` unchanged (49,564), as the four builds have other reasons.
+- **Moved:** one value, toward PoB: `animate-guardian-guardian.xml`'s `FullDPS` 2,715,141 to 2,715,214 (PoB 12,186,392). Three other documents changed in their reasons only.
+- **Corpus:** no document changed.

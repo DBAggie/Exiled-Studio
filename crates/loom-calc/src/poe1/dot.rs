@@ -82,8 +82,15 @@ pub const DOT_SKILL_DATA_KEYS: [&str; 5] = [
     "dotIsSpell",
 ];
 
-/// The `FLAG` base mods of PoB's DoT this phase reads: the ground and
-/// stacking DoTs it leaves not computed.
+/// Skill data keys PoB's DoT does not read (the agent list, 2026-11-28):
+/// `debuff` scales only the skill's duration by the enemy's debuff
+/// expiry (`calcSkillDuration`, `CalcOffence.lua` 300 to 313), and
+/// `showAverage` only the hit's DPS (the hit path's `SHOW_AVERAGE`);
+/// Essence Drain's.
+pub const DOT_NO_SLICE_KEYS: [&str; 2] = ["debuff", "showAverage"];
+
+/// The `FLAG` base mods of PoB's DoT this phase reads: the ground DoTs it
+/// leaves not computed, and the stacking DoT, a reason (`stacking-dot`).
 pub const DOT_FLAGS: [&str; 5] = [
     "DotCanStack",
     "dotIsBurningGround",
@@ -104,7 +111,9 @@ pub fn pob_dot_vetted(pob: Option<&PobSkill>) -> bool {
         !m.tagged
             && match (m.name, m.key) {
                 ("SkillData", Some(k)) => {
-                    super::hit::DISPLAY_SKILL_DATA.contains(&k) || DOT_SKILL_DATA_KEYS.contains(&k)
+                    super::hit::DISPLAY_SKILL_DATA.contains(&k)
+                        || DOT_SKILL_DATA_KEYS.contains(&k)
+                        || DOT_NO_SLICE_KEYS.contains(&k)
                 }
                 (name, None) => m.kind == "FLAG" && DOT_FLAGS.contains(&name),
                 _ => false,
@@ -136,8 +145,9 @@ pub const DOT_SKILL_STATS: [&str; 16] = [
     PROJECTILE_DOT_STAT,
     // Righteous Fire's own buff and degeneration (PoB's `GlobalEffect`
     // buff on the character, and life and energy shield lost): when it is
-    // the main skill they change no field this engine computes (its burn is
-    // not a spell, PoB's `dotCfg`; the slice has no degeneration).
+    // the main skill the hit reads neither (its burn is not a spell, PoB's
+    // `dotCfg`); the degeneration acts as the buff's through
+    // `poe1::gems::main_skill_degen` (open items S7, part 8).
     "righteous_fire_spell_damage_+%_final",
     "vaal_righteous_fire_spell_damage_+%_final",
     "base_nonlethal_fire_damage_%_of_maximum_life_taken_per_minute",
@@ -404,11 +414,23 @@ pub fn dot(calc: &mut Calc<'_>) -> Result<(), CalcError> {
     let mut reasons = Reasons::new();
     // Ground DoTs and stacking DoTs go to outputs this phase does not
     // compute (module docs).
+    // A stacking DoT is in PoB's `TotalDot` (Toxic Rain's pods; the agent
+    // list, 2026-11-27): a reason, so the full and combined DPS that add it
+    // carry it.
+    if pob.is_some_and(|p| p.base_flag("DotCanStack")) {
+        calc.set_unsupported(
+            Field::DotDps,
+            UnsupportedReason::UnmodelledSkill {
+                source,
+                what: "stacking-dot",
+            },
+        );
+        return Ok(());
+    }
     let ground = pob.is_some_and(|p| {
         p.base_flag("dotIsBurningGround")
             || p.base_flag("dotIsCausticGround")
             || p.base_flag("dotIsCorruptingBlood")
-            || p.base_flag("DotCanStack")
             // PoB removes the skill's own increases from Herald of Ash's
             // DoT (`CalcOffence.lua` 5702): not modelled.
             || p.base_flag("dotIsHeraldOfAsh")

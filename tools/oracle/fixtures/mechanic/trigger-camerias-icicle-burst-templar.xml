@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, open items S3): Icicle Burst granted and triggered by Cameria's Avarice's line, Smite the source.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Templar" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="5" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill enabled="true" mainActiveSkillCalcs="1" slot="Weapon 1" source="Item:1:Cameria&apos;s Avarice, Gavel" mainActiveSkill="1" includeInFullDPS="true" label="">
+				<Gem nameSpec="Icicle Burst" enableGlobal1="true" count="1" enableGlobal2="false" quality="0" level="20" enabled="true" skillId="IcicleBurst"/>
+			</Skill>
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="false">
+				<Gem nameSpec="Smite" skillId="Smite" variantId="Smite" gemId="Metadata/Items/Gems/SkillGemSmite" level="20" quality="0" enabled="true" enableGlobal1="true" count="1" skillPart="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items activeItemSet="1">
+		<Item id="1">
+Rarity: UNIQUE
+Cameria's Avarice
+Gavel
+Quality: 0
+Implicits: 0
+Trigger Level 20 Icicle Burst when you Hit a Frozen Enemy
+		</Item>
+		<ItemSet id="1">
+			<Slot name="Weapon 1" itemId="1"/>
+		</ItemSet>
+	</Items>
+	<Config></Config>
+</PathOfBuilding>

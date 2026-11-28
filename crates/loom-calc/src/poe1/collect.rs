@@ -52,7 +52,7 @@ use super::mapping::{
 };
 use super::skill::{self, InstanceProblem};
 use super::{ArmourSlot, Defence, Hand, PieceValue, Poe1Quantity, WeaponValue, hit};
-use crate::ingest::{Ingest, StatMapping};
+use crate::ingest::{Ingest, StatMap, StatMapping};
 use crate::input::{ArmourBase, CalcInput, ItemBase, PassiveState, StatAmount, WeaponBase};
 use crate::quantity::{Bound, DamageType, Op, Quantity};
 use crate::source::Source;
@@ -118,6 +118,9 @@ pub fn collect(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
     granted_skill_groups(input.build, ingest);
     // After the gems (Shield Crush's and Close Combat's stats; P6-11ht).
     melee_proximity(input, ingest);
+    // Point Blank and Far Shot (the agent list, 2026-11-27): after the gems
+    // (the Point Blank support's flag).
+    distance_flags(input, ingest);
     accuracy_per_level(input, ingest);
     super::charges::charges(active_config(build), input.data, ingest);
     // Rage, Inspiration, Momentum, Intensity, spells cast recently (P3-8n):
@@ -145,12 +148,18 @@ pub fn collect(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
         .cloned()
         .unwrap_or_else(|| super::states::states(input));
     super::buffs::buffs(active_config(build), &settled, ingest);
+    // Elusive (the agent list): after the charges (its effect per power
+    // charge).
+    super::buffs::elusive(input, ingest);
     // After every source of minion modifiers (P3-8j).
     super::minions::minions(ingest);
     // After every source of exposure chances and extras, and of the shock
     // effect and minimum (P3-8k).
     super::exposure::exposure(active_config(build), &settled, ingest);
     super::damage_taken::damage_taken(input, active_config(build), ingest);
+    // Elemental Hit's ailments on the enemy (the agent list, 2026-11-27):
+    // after the guaranteed chills and shocks.
+    super::stacks::enemy_elemental_ailments(active_config(build), &settled, ingest);
     // After every source of resistance modifiers, buffs included (P6-11ah).
     super::resist_conversion::resist_conversion(ingest);
     // A mirage's copy of the main skill (P6-8b): its less damage and speed.
@@ -303,22 +312,33 @@ fn resistance_penalty(build: &Build, ingest: &mut Ingest<'_>) {
 /// The config input of the bandit choice.
 pub const BANDIT_INPUT: &str = "bandit";
 
-/// The bandit choices and their effects on the slice (PoB v2.67.2,
-/// `Modules/CalcSetup.lua` 663 to 672): Alira `ElementalResist` BASE 15,
-/// Oak `Life` BASE 40; Kraityn (movement speed) and none (one passive
-/// point) reach no slice field.
-pub const BANDITS: [(&str, &[(Quantity, f64)]); 4] = [
+/// One effect of a bandit ([`BANDITS`]): quantity, op, value.
+pub type BanditEffect = (Quantity, Op, f64);
+
+/// The bandit choices PoB applies and their effects on the slice (PoB
+/// v2.67.2, `Modules/CalcSetup.lua` 549 to 557): Alira `ElementalResist`
+/// BASE 15, Kraityn `MovementSpeed` INC 8 (a slice field since P6-10b; the
+/// agent list, S8), Oak `Life` BASE 40. Any other value, "None" or one PoB
+/// does not list ("Eramir", which older PoB versions saved), takes PoB's
+/// `else` branch: one passive point, no slice field.
+pub const BANDITS: [(&str, &[BanditEffect]); 3] = [
     (
         "Alira",
         &[
-            (Quantity::Resistance(DamageType::Fire), 15.0),
-            (Quantity::Resistance(DamageType::Cold), 15.0),
-            (Quantity::Resistance(DamageType::Lightning), 15.0),
+            (Quantity::Resistance(DamageType::Fire), Op::Base, 15.0),
+            (Quantity::Resistance(DamageType::Cold), Op::Base, 15.0),
+            (Quantity::Resistance(DamageType::Lightning), Op::Base, 15.0),
         ],
     ),
-    ("Kraityn", &[]),
-    ("None", &[]),
-    ("Oak", &[(Quantity::Life, 40.0)]),
+    (
+        "Kraityn",
+        &[(
+            Quantity::Poe1(Poe1Quantity::MovementSpeed),
+            Op::Increased,
+            8.0,
+        )],
+    ),
+    ("Oak", &[(Quantity::Life, Op::Base, 40.0)]),
 ];
 
 /// Bandit and pantheon (P3-12f for the bandit, P3-12g for the pantheon).
@@ -329,11 +349,12 @@ pub const BANDITS: [(&str, &[(Quantity, f64)]); 4] = [
 /// build element's `bandit` attribute is read only for a build without a
 /// config element (`Modules/Build.lua` 648 to 651, before the sections
 /// load; `ConfigTab:Load` replaces the sets). So with a config set the
-/// engine applies the set's choice ([`BANDITS`]; another value is a
-/// reason under the input), and ignores the attribute. With no set, the
+/// engine applies the set's choice ([`BANDITS`]; another value applies
+/// nothing, as in PoB), and ignores the attribute. With no set, the
 /// build may have had no config element (the attribute counts) or an
 /// empty one (it does not): the domain does not tell them apart, so an
-/// attribute other than "None" stays a reason. With only untyped sets,
+/// attribute PoB would apply stays a reason (a bandit of [`BANDITS`]; a
+/// god other than "None"). With only untyped sets,
 /// their `<untyped>` reason covers the choice.
 ///
 /// The pantheon reads its two inputs the same way (`Modules/Build.lua`
@@ -355,8 +376,11 @@ fn choices(build: &Build, data: &dyn crate::input::CalcData, ingest: &mut Ingest
                 ("pantheon-major", &c.pantheon_major),
                 ("pantheon-minor", &c.pantheon_minor),
             ] {
+                // A bandit PoB does not list applies nothing either way.
+                let applied = |v: &str| choice != "bandit" || BANDITS.iter().any(|(b, _)| *b == v);
                 if let Some(v) = value
                     && v != "None"
+                    && applied(v)
                 {
                     ingest.reason(UnsupportedReason::UnmodelledChoice {
                         choice,
@@ -389,23 +413,22 @@ pub fn killed_all_bandits(build: &Build) -> bool {
 }
 
 /// The active set's bandit ([`choices`]): its last `bandit` input, "None"
-/// when it has none.
+/// when it has none. PoB compares the value with the three names it
+/// applies (`CalcSetup.lua` 549 to 557), so any other value, of any type,
+/// applies nothing ([`BANDITS`]), as [`killed_all_bandits`] reads it.
 fn bandit(set: &ConfigSet, ingest: &mut Ingest<'_>) {
-    let name = match super::config::last_input(set, BANDIT_INPUT, ConfigInputKind::Input) {
-        None => return,
-        Some(ConfigValue::String(s)) => s.as_str(),
-        Some(_) => "",
-    };
-    let Some((_, effects)) = BANDITS.iter().find(|(b, _)| *b == name) else {
-        ingest.reason(UnsupportedReason::UnmodelledConfig {
-            input: BANDIT_INPUT.to_owned(),
-        });
+    let Some(ConfigValue::String(name)) =
+        super::config::last_input(set, BANDIT_INPUT, ConfigInputKind::Input)
+    else {
         return;
     };
-    for &(quantity, value) in *effects {
+    let Some((_, effects)) = BANDITS.iter().find(|(b, _)| b == name) else {
+        return;
+    };
+    for &(quantity, op, value) in *effects {
         ingest.effect(Effect {
             quantity,
-            op: Op::Base,
+            op,
             value,
             conditions: Conditions::none(),
             source: Source::Config {
@@ -594,6 +617,30 @@ fn passives(input: &CalcInput<'_>, spec: &PassiveSpec, ingest: &mut Ingest<'_>) 
             *node,
             ingest,
         );
+        // A stat-less node of the game data whose effect is a buff (the
+        // 3_29 ascendancy auras; `passive_buffs`). A pack's node has the
+        // tree's text.
+        if stats.is_empty() && resolved.pack.is_none() {
+            let buffs = input.data.passive_buffs(node.0);
+            if input.data.data_version().schema_version < loom_data::bundle::PASSIVE_BUFF_SCHEMA
+                && super::passive_buffs::BUFF_NODES.contains(&node.0)
+            {
+                ingest.reason(UnsupportedReason::UnmodelledPassive {
+                    source: Source::Passive { node: *node },
+                    what: "passive-buff",
+                });
+            } else if !buffs.is_empty() {
+                let source = Source::Passive { node: *node };
+                let (amounts, unread) = super::passive_buffs::stats(buffs);
+                ingest.stats(&source, &lines(&amounts));
+                if unread {
+                    ingest.reason(UnsupportedReason::UnmodelledPassive {
+                        source,
+                        what: "passive-buff",
+                    });
+                }
+            }
+        }
     }
     for m in masteries {
         // A mastery effect counts only on an allocated mastery (PoB keeps
@@ -1492,15 +1539,17 @@ fn warcry_power_armour(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
         });
         return;
     }
-    let power = match super::gems::warcry_power(input, active_config(input.build), 0.0) {
-        Ok(p) => p,
-        Err(_) => {
-            ingest.reason(UnsupportedReason::UnmodelledConfig {
-                input: super::gems::WARCRY_POWER_INPUT.to_owned(),
-            });
-            return;
-        }
-    };
+    let infinite = super::skill_modifiers::Totals::read(ingest).warcry_infinite_power;
+    let power =
+        match super::gems::warcry_power(input, active_config(input.build), 0.0, 0.0, infinite) {
+            Ok(p) => p,
+            Err(_) => {
+                ingest.reason(UnsupportedReason::UnmodelledConfig {
+                    input: super::gems::WARCRY_POWER_INPUT.to_owned(),
+                });
+                return;
+            }
+        };
     let per: f64 = lines.iter().map(|e| e.value).sum();
     let value = (per * crate::math::floor(power / 5.0 + 0.0001)).min(100.0);
     if value == 0.0 {
@@ -1621,6 +1670,76 @@ fn distance_ramps(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
             value,
             conditions,
             source: e.source,
+        });
+    }
+}
+
+/// PoB's `DistanceRamp` (`Classes/ModStore.lua` 555 to 570): the first
+/// point's value at or below its distance, the last's at or above its, else
+/// linear between the two points around `distance`.
+fn piecewise(points: &[(f64, f64)], distance: f64) -> f64 {
+    let (first, last) = (points[0], points[points.len() - 1]);
+    if distance <= first.0 {
+        return first.1;
+    }
+    if distance >= last.0 {
+        return last.1;
+    }
+    for w in points.windows(2) {
+        let (a, b) = (w[0], w[1]);
+        if distance <= b.0 {
+            return a.1 + (b.1 - a.1) * (distance - a.0) / (b.0 - a.0);
+        }
+    }
+    last.1
+}
+
+/// Point Blank and Far Shot (the agent list, 2026-11-27; `CalcOffence.lua`
+/// 1045 to 1053): with the flag, the main skill's projectile attacks get
+/// `Damage` MORE 30 times the ramp `{10, 1}, {35, 0}, {120, -1}` (Point
+/// Blank) and 100 times `{10, -0.2}, {25, 0}, {70, 0.6}` (Far Shot), at
+/// the skill's distance ([`skill_distance`]).
+fn distance_flags(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
+    const POINT_BLANK: [(f64, f64); 3] = [(10.0, 1.0), (35.0, 0.0), (120.0, -1.0)];
+    const FAR_SHOT: [(f64, f64); 3] = [(10.0, -0.2), (25.0, 0.0), (70.0, 0.6)];
+    let flags: Vec<(bool, crate::source::Source, crate::store::Conditions)> = ingest
+        .effects()
+        .iter()
+        .filter_map(|e| match e.quantity {
+            // The flag's own conditions are the skill's flags at most (a
+            // support's); the `Damage` row keeps them.
+            Quantity::Poe1(Poe1Quantity::DistanceFlag(far))
+                if e.op == Op::Flag && e.value != 0.0 =>
+            {
+                Some((far, e.source.clone(), e.conditions.clone()))
+            }
+            _ => None,
+        })
+        .collect();
+    let mut seen = [false; 2];
+    for (far, source, own) in flags {
+        if std::mem::replace(&mut seen[usize::from(far)], true) {
+            continue;
+        }
+        let Some(distance) = skill_distance(input, ingest) else {
+            return;
+        };
+        let (more, ramp) = if far {
+            (100.0, &FAR_SHOT[..])
+        } else {
+            (30.0, &POINT_BLANK[..])
+        };
+        let value = more * piecewise(ramp, distance);
+        if value == 0.0 {
+            continue;
+        }
+        ingest.effect(Effect {
+            quantity: Quantity::Damage,
+            op: Op::More,
+            value,
+            conditions: own
+                .with_all(crate::condition::Flags::ATTACK | crate::condition::Flags::PROJECTILE),
+            source,
         });
     }
 }
@@ -1967,10 +2086,16 @@ fn weapon(item: &Item, base: &WeaponBase, hand: Hand, ingest: &mut Ingest<'_>) {
             None => ingest.reason(UnsupportedReason::UnreadLine { source: at }),
         }
     }
+    // The alternate qualities that grant a stat per quality (the agent
+    // list: accuracy), [`PER_QUALITY`].
+    let item_q = item_quality(item);
     match hand {
         Hand::Main => item_lines_with(
             &InSlot {
-                inner: &WeaponMapping,
+                inner: &PerQuality {
+                    inner: &WeaponMapping,
+                    quality: item_q,
+                },
                 slot: GemSlot::Weapon1,
             },
             item,
@@ -1978,7 +2103,10 @@ fn weapon(item: &Item, base: &WeaponBase, hand: Hand, ingest: &mut Ingest<'_>) {
         ),
         Hand::Off => item_lines_with(
             &InSlot {
-                inner: &OffHandWeaponMapping,
+                inner: &PerQuality {
+                    inner: &OffHandWeaponMapping,
+                    quality: item_q,
+                },
                 slot: GemSlot::Weapon2,
             },
             item,
@@ -2026,6 +2154,33 @@ fn weapon(item: &Item, base: &WeaponBase, hand: Hand, ingest: &mut Ingest<'_>) {
         if inc != 0.0 {
             ingest.effect(Effect {
                 quantity: value(WeaponValue::AttackSpeed),
+                op: Op::Increased,
+                value: inc,
+                conditions: Conditions::none(),
+                source,
+            });
+        }
+    }
+    // The agent list: "#% increased Critical Strike Chance per 4% Quality":
+    // the weapon's local critical strike chance, `floor(quality / 4 x sum)`
+    // (PoB's `Item.lua` 2277, as the attack speed per 8%).
+    let per4: Vec<&Effect> = ingest
+        .effects()
+        .iter()
+        .filter(|e| {
+            e.quantity == value(WeaponValue::CritChancePer4Quality)
+                && e.op == Op::Base
+                && e.conditions == Conditions::none()
+                && matches!(e.source, Source::Item { item: i, .. } if i == item.id)
+        })
+        .collect();
+    if let Some(first) = per4.first() {
+        let source = first.source.clone();
+        let sum: f64 = per4.iter().map(|e| e.value).sum();
+        let inc = (quality / 4.0 * sum).floor();
+        if inc != 0.0 {
+            ingest.effect(Effect {
+                quantity: value(WeaponValue::CritChance),
                 op: Op::Increased,
                 value: inc,
                 conditions: Conditions::none(),
@@ -2162,6 +2317,111 @@ fn dual_wielding(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
             }),
         }
     }
+}
+
+/// The alternate qualities that grant a character's stat per quality (the
+/// agent list; Harvest's, `HarvestAlternate*Quality*` in the game's mods):
+/// `(stat, the plain stat it grants, the quality per step)`, sorted. PoB
+/// reads each as the plain stat's mod with a `Multiplier` of
+/// `QualityOn{SlotName}` divided by the step (`ModParser.lua` 5755, 5762
+/// to 5769), so `value x floor(quality / step + 0.0001)` (`ModStore.lua`
+/// 360), the item's quality whatever "Quality does not increase ..." says.
+pub const PER_QUALITY: [(&str, &str, f64); 9] = [
+    (
+        "local_accuracy_rating_+%_per_2%_quality",
+        "accuracy_rating_+%",
+        2.0,
+    ),
+    (
+        "local_cold_resistance_%_per_2%_quality",
+        "base_cold_damage_resistance_%",
+        2.0,
+    ),
+    (
+        "local_dexterity_per_2%_quality",
+        "additional_dexterity",
+        2.0,
+    ),
+    (
+        "local_fire_resistance_%_per_2%_quality",
+        "base_fire_damage_resistance_%",
+        2.0,
+    ),
+    (
+        "local_intelligence_per_2%_quality",
+        "additional_intelligence",
+        2.0,
+    ),
+    (
+        "local_lightning_resistance_%_per_2%_quality",
+        "base_lightning_damage_resistance_%",
+        2.0,
+    ),
+    (
+        "local_maximum_life_per_2%_quality",
+        "base_maximum_life",
+        2.0,
+    ),
+    (
+        "local_maximum_mana_per_2%_quality",
+        "base_maximum_mana",
+        2.0,
+    ),
+    ("local_strength_per_2%_quality", "additional_strength", 2.0),
+];
+
+/// An item's mapping with [`PER_QUALITY`]'s stats as their plain stats,
+/// scaled by the item's quality steps; every other stat `inner`'s.
+struct PerQuality<'a> {
+    inner: &'a dyn StatMapping,
+    quality: f64,
+}
+
+impl StatMapping for PerQuality<'_> {
+    fn map(&self, stat: &StatId) -> StatMap {
+        let Some((_, plain, step)) = PER_QUALITY.iter().find(|(s, _, _)| *s == stat.as_str())
+        else {
+            return self.inner.map(stat);
+        };
+        let steps = (self.quality / step + 0.0001).floor();
+        match super::mapping::Poe1Mapping.map(&StatId::new(*plain)) {
+            StatMap::Effects(templates) => StatMap::Effects(
+                templates
+                    .into_iter()
+                    .map(|t| crate::ingest::EffectTemplate {
+                        scale: t.scale * steps,
+                        ..t
+                    })
+                    .collect(),
+            ),
+            other => other,
+        }
+    }
+
+    fn typed(
+        &self,
+        resolution: &loom_domain::TypedResolution,
+        source: &Source,
+    ) -> crate::ingest::TypedMap {
+        self.inner.typed(resolution, source)
+    }
+
+    fn elsewhere(&self, quantity: Quantity) -> bool {
+        self.inner.elsewhere(quantity)
+    }
+}
+
+/// The item's quality: its last `Quality` spec's number, 0 without one.
+fn item_quality(item: &Item) -> f64 {
+    item.body
+        .lines
+        .iter()
+        .rev()
+        .find_map(|line| match &line.kind {
+            LineKind::Spec { key, value, .. } if key == "Quality" => spec_number(value),
+            _ => None,
+        })
+        .unwrap_or(0.0)
 }
 
 /// The leading number of a spec value, as PoB's `specToNumber` reads it
@@ -2323,7 +2583,10 @@ fn armour_piece(item: &Item, slot: ArmourSlot, base: &ArmourBase, ingest: &mut I
     }
     item_lines_with(
         &InSlot {
-            inner: &PieceMapping { slot },
+            inner: &PerQuality {
+                inner: &PieceMapping { slot },
+                quality: item_quality(item),
+            },
             slot: GemSlot::of_armour(slot),
         },
         item,
@@ -2455,9 +2718,19 @@ fn gems(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
     let levels = GemLevels::from_effects(ingest.effects());
     // The main skill whose gems act through a computed field: its hit, else
     // its own damage over time (Phase 6, `poe1::dot`).
+    // A trigger source's own context (open items S3): the main skill as
+    // the build picks it.
     let main = hit::hit_skill(input, &levels)
         .map(|h| (h.group(), h.skill().clone()))
-        .or_else(|| super::dot::dot_skill(input.build, input.data, &levels));
+        .or_else(|| super::dot::dot_skill(input.build, input.data, &levels))
+        .or_else(|| {
+            input
+                .options
+                .own_skill_context
+                .then(|| skill::main_skill(input.build, input.data, &levels).ok())
+                .flatten()
+                .and_then(|m| m.group.checked_sub(1).map(|g| (g, m)))
+        });
     let modelled: Vec<_> = main.as_ref().map_or_else(Vec::new, |(_, m)| {
         std::iter::once(&m.active_gem)
             .chain(&m.supports)
@@ -2473,6 +2746,7 @@ fn gems(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
             what: "unread-skill-modifier",
         });
     }
+    let main_modelled = main.is_some();
     super::gems::gems(
         input,
         main.as_ref().map(|(g, m)| (*g, m)),
@@ -2480,13 +2754,37 @@ fn gems(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
         &totals,
         ingest,
     );
-    let Some((group, main)) = main else { return };
+    // A main skill the engine computes no hit or damage over time of
+    // (Penance Brand): its cost is still computed (`poe1::costs`), so the
+    // stats of its gems that change only costs act (the agent list,
+    // 2026-11-27: Inspiration's less mana cost; PoB reads the skill's
+    // `skillModList`, `CalcOffence.lua` 1677 to 1800).
+    let (group, main, mapping): (usize, skill::MainSkill<'_>, &dyn StatMapping) = match main {
+        Some((g, m)) => (g, m, &SkillMapping),
+        None => {
+            let Some((g, m)) = skill::main_skill(input.build, input.data, &levels)
+                .ok()
+                .and_then(|m| m.group.checked_sub(1).map(|g| (g, m)))
+            else {
+                return;
+            };
+            (g, m, &CostOnly)
+        }
+    };
+    let modelled: Vec<_> = if main_modelled {
+        modelled
+    } else {
+        std::iter::once(&main.active_gem)
+            .chain(&main.supports)
+            .copied()
+            .collect()
+    };
     // The main skill's own aura (Smite's) is scaled as any aura (P3-8l).
     let buff_scale = totals.buff_scale(true, &main.types, 0.0);
     for r in modelled {
         let source = Source::Gem { group, gem: r.gem };
         let instance = skill::instance(r.effect, r.level, r.quality, input.data);
-        for p in &instance.problems {
+        for p in instance.problems.iter().filter(|_| main_modelled) {
             match p {
                 InstanceProblem::MissingStatSet { id } => {
                     ingest.indeterminate(IndeterminateReason::MissingData {
@@ -2503,6 +2801,9 @@ fn gems(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
         let stats: Vec<StatLine> = instance
             .stats
             .iter()
+            .filter(|(stat, _)| {
+                !EMPTIED_SKILL_STATS.contains(&(r.effect.id.as_str(), stat.as_str()))
+            })
             .map(|(stat, value)| {
                 let value =
                     super::skill_modifiers::main_skill_stat(&r.effect.id, stat, *value, buff_scale);
@@ -2515,7 +2816,35 @@ fn gems(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
                 }
             })
             .collect();
-        ingest.stats_with(&SkillMapping, &source, &stats);
+        ingest.stats_with(mapping, &source, &stats);
+    }
+}
+
+/// A skill's stats its own `statMap` lists with no mod, overriding a
+/// generic `SkillStatMap.lua` row: PoB reads them into nothing for that
+/// skill (the agent list, 2026-11-28: Winter Orb's
+/// `base_skill_show_average_damage_instead_of_dps`, `act_int.lua`,
+/// which elsewhere sets `showAverage`).
+const EMPTIED_SKILL_STATS: [(&str, &str); 1] =
+    [("WinterOrb", "base_skill_show_average_damage_instead_of_dps")];
+
+/// The gems of a main skill the engine computes no hit or damage over
+/// time of (the agent list, 2026-11-27): a stat whose every effect is a
+/// cost ([`super::costs::is_cost`]) is [`SkillMapping`]'s; any other has
+/// no effect here, as before (the skill's other fields are not computed).
+struct CostOnly;
+
+impl StatMapping for CostOnly {
+    fn map(&self, stat: &loom_domain::StatId) -> StatMap {
+        match SkillMapping.map(stat) {
+            StatMap::Effects(effects)
+                if !effects.is_empty()
+                    && effects.iter().all(|e| super::costs::is_cost(e.quantity)) =>
+            {
+                StatMap::Effects(effects)
+            }
+            _ => StatMap::NoEffect,
+        }
     }
 }
 
@@ -2642,6 +2971,8 @@ pub fn input_use(input: &ConfigInput) -> InputUse {
         || super::damage_taken::handles(&input.name, &input.value)
         || super::conditions::handles(&input.name, &input.value)
         || super::exposure::handles(&input.name)
+        // Mana Burn on you (the agent list, 2026-11-27).
+        || super::degen::handles(&input.name, &input.value)
         || super::buffs::is_buff_input(&input.name)
         || input.name == BANDIT_INPUT
         || super::pantheon::is_input(&input.name)
@@ -2649,6 +2980,18 @@ pub fn input_use(input: &ConfigInput) -> InputUse {
         || super::minion_actor::is_input(&input.name, &input.value)
         || input.name == super::hit::PDR_MODE_INPUT
         || input.name == super::hit::RUTHLESS_MODE_INPUT
+        // Perforate's overlapping spikes (the agent list, 2026-11-27).
+        || input.name == super::hit::PERFORATE_OVERLAP_INPUT
+        // Boneshatter's Trauma stacks (the agent list, 2026-11-28).
+        || (input.name == super::hit::TRAUMA_INPUT
+            && matches!(input.value, ConfigValue::Number(_)))
+        // The times the skill has chained (the agent list, 2026-11-28).
+        || (input.name == super::hit::CHAIN_COUNT_INPUT
+            && matches!(input.value, ConfigValue::Number(_)))
+        // "Don't disable items" (the agent list, 2026-11-28): read by the
+        // flasks; every other item disabler is an unmapped stat.
+        || (input.name == super::flasks::IGNORE_DISABLERS_INPUT
+            && matches!(input.value, ConfigValue::Boolean(_)))
         // The throw counts (P6-11fa).
         || input.name == super::hit::MINES_PER_THROW_INPUT
         || input.name == super::hit::TRAPS_PER_THROW_INPUT
@@ -2786,7 +3129,6 @@ mod tests {
             "enemyDamageType",
             "DisableEHPGainOnBlock",
             "conditionHitRecently",
-            "buffElusive",
         ] {
             for kind in [ConfigInputKind::Input, ConfigInputKind::Placeholder] {
                 let input = ConfigInput {

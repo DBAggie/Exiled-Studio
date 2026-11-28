@@ -688,6 +688,9 @@ dto! {
         /// An older wording read in its current wording through the
         /// reviewed rewording table (ADR-015 Amendment 3; additive).
         Reworded,
+        /// An unsigned non-negative value read as signed where the game's
+        /// description forces a sign (ADR-015 Amendment 4; additive).
+        SignAdded,
     }
 
     /// A resolution result.

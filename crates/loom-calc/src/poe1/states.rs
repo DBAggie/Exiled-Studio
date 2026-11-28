@@ -72,7 +72,8 @@ pub const DUAL_WIELDING: &str = "DualWielding";
 /// "life" (`Classes/Item.lua` 284 to 320, `FindModifierSubstring`, with
 /// its special and excluded lines). The game's rule is the mods' `life`
 /// tag, which the engine reads instead, settling only what the tags
-/// decide ([`no_life_modifiers_on_body_armour`]). The two rules agree on
+/// decide ([`no_life_modifiers_on_body_armour`]; since the agent list,
+/// 2026-11-27, of the mods that can spawn on the item's base). The two rules agree on
 /// the P3-8n fixture and the in-scope builds; they are not proven equal in
 /// general (a line with the text "life" on an untagged mod, or a tagged mod
 /// whose text lacks it, would differ), so a build where they differ shows
@@ -85,6 +86,45 @@ pub const NO_LIFE_MODIFIERS_ON_BODY_ARMOUR: &str = "NoLifeModifiersOnBodyArmour"
 /// spec's connected nodes and their kind; a node whose kind the data does
 /// not give leaves it unsettled unless 6 are already counted.
 pub const SIX_LIFE_MASTERIES: &str = "SixLifeMasteries";
+
+/// The main skill is Toxic Rain or a transfigured one (the agent list;
+/// PoB's `SkillName` "Toxic Rain" with `includeTransfigured` on "Toxic
+/// Rain deals #% increased Damage"): only the main skill's damage is
+/// computed, so the modifier acts when it is the main one.
+pub const MAIN_SKILL_TOXIC_RAIN: &str = "MainSkillToxicRain";
+
+/// An equipped helmet with no socketed gem (the agent list; PoB's
+/// `SocketedGemsInHelmet` at most 0 with `UsingHelmet`,
+/// [`super::sockets::no_socketed_gems`]).
+pub const NO_GEMS_IN_HELMET: &str = "NoSocketedGemsIn:Helmet";
+/// Equipped gloves with no socketed gem.
+pub const NO_GEMS_IN_GLOVES: &str = "NoSocketedGemsIn:Gloves";
+/// Equipped boots with no socketed gem.
+pub const NO_GEMS_IN_BOOTS: &str = "NoSocketedGemsIn:Boots";
+/// An equipped body armour with no socketed gem.
+pub const NO_GEMS_IN_BODY_ARMOUR: &str = "NoSocketedGemsIn:BodyArmour";
+
+/// Each armour slot's name and its no-socketed-gems state.
+const NO_GEMS: [(&str, &str); 4] = [
+    ("Helmet", NO_GEMS_IN_HELMET),
+    ("Gloves", NO_GEMS_IN_GLOVES),
+    ("Boots", NO_GEMS_IN_BOOTS),
+    ("Body Armour", NO_GEMS_IN_BODY_ARMOUR),
+];
+
+/// The skills a skill-named modifier names: each base active skill ID
+/// and its state.
+pub const NAMED_MAIN_SKILLS: [(&str, &str); 1] = [("toxic_rain", MAIN_SKILL_TOXIC_RAIN)];
+
+/// Whether the active skill `active` is `base` or a transfigured one
+/// (`_alt_x`, `_alt_y`; PoB's `includeTransfigured`).
+fn is_skill(active: &str, base: &str) -> bool {
+    active
+        .strip_suffix("_alt_x")
+        .or_else(|| active.strip_suffix("_alt_y"))
+        .unwrap_or(active)
+        == base
+}
 
 /// The stat that reads [`NO_LIFE_MODIFIERS_ON_BODY_ARMOUR`].
 pub const NO_LIFE_MODIFIERS_STAT: &str = "maximum_life_+%_if_no_life_tags_on_body_armour";
@@ -142,6 +182,29 @@ pub fn states(input: &CalcInput<'_>) -> BTreeMap<ConditionKey, bool> {
     if let Some(slot) = main_skill_slot(input) {
         for s in super::gem_levels::GemSlot::ALL {
             out.insert(ConditionKey::new(s.main_skill_state()), Some(s) == slot);
+        }
+    }
+    // The main skill by name (the agent list): each named skill's state,
+    // true when the main skill is it or a transfigured one; unsettled
+    // when the main skill is not known.
+    if let Ok(main) = super::skill::main_skill(
+        input.build,
+        input.data,
+        &super::gem_levels::GemLevels::default(),
+    ) {
+        let active = main.active.map(|a| a.id.as_str());
+        for (id, key) in NAMED_MAIN_SKILLS {
+            out.insert(
+                ConditionKey::new(key),
+                active.is_some_and(|a| is_skill(a, id)),
+            );
+        }
+    }
+    // An armour slot with no socketed gem (the agent list): unsettled when
+    // its sockets or gems are not known.
+    for (slot, key) in NO_GEMS {
+        if let Some(v) = super::sockets::no_socketed_gems(input.build, input.data, slot) {
+            out.insert(ConditionKey::new(key), v);
         }
     }
     // The config's condition checks (P3-8n).
@@ -379,6 +442,9 @@ fn no_life_modifiers_on_body_armour(input: &CalcInput<'_>) -> Option<bool> {
     let item = build.items.item(id)?;
     let mut stats = BTreeSet::new();
     let mut named = BTreeSet::new();
+    // A line not read can only add mods: it leaves `true` unsettled, never
+    // a life mod the read lines show (the agent list, 2026-11-27).
+    let mut unread = false;
     for line in &item.body.lines {
         match &line.kind {
             LineKind::Spec { key, value, .. } if AFFIX_KEYS.contains(&key.as_str()) => {
@@ -393,17 +459,33 @@ fn no_life_modifiers_on_body_armour(input: &CalcInput<'_>) -> Option<bool> {
                 } => stats.extend(lines.iter().map(|l| l.stat.as_str().to_owned())),
                 LineResolution::Excluded(loom_domain::Exclusion::NotSelected)
                 | LineResolution::Continues { .. } => {}
-                _ => return None,
+                _ => unread = true,
             },
-            LineKind::Unrecognized | LineKind::Spec { known: false, .. } => return None,
+            LineKind::Unrecognized | LineKind::Spec { known: false, .. } => unread = true,
             _ => {}
         }
     }
-    tagless(
-        &stats,
-        &named,
-        &input.data.mods_by_tag_among(LIFE_TAG, &stats)?,
-    )
+    // The base narrows the untagged mods to those that can spawn on it
+    // (the agent list, 2026-11-27): the base the import found, else
+    // its fallback, else none.
+    let mods = match input.options.item_bases.get(&id) {
+        Some(b) => {
+            let name = if input.data.item_base(&b.name).is_some() {
+                Some(b.name.as_str())
+            } else {
+                b.fallback.as_deref()
+            };
+            match name {
+                Some(n) => input.data.mods_by_tag_on(LIFE_TAG, &stats, n),
+                None => input.data.mods_by_tag_among(LIFE_TAG, &stats),
+            }
+        }
+        None => input.data.mods_by_tag_among(LIFE_TAG, &stats),
+    };
+    match tagless(&stats, &named, &mods?) {
+        Some(true) if unread => None,
+        settled => settled,
+    }
 }
 
 /// PoB's spec keys that name an item's crafted affixes (`Prefix: {range:r}

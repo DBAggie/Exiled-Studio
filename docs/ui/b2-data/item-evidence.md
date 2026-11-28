@@ -245,3 +245,44 @@ A unique's line that reads as a local or a global stat was left ambiguous: the r
   Reason entries (a line's reason repeats on each field it may touch): 204 `ambiguous` entries gone, 68 added, from 4 lines that now resolve. Two are `unmapped-stat` `local_attack_speed_+%` on two dual-wielding builds' unique weapons (dual wielding is not modelled), two are `scaled-line` (catalyst, modifier magnitude). All four fields are `partial` or `indeterminate`, so `calc-parity` (against the close-out oracle run) is unchanged: 0 unexpected differences before and after, identical summaries.
 - **Corpus:** 6 documents change, 6 values, each toward PoB's (`local/p3/p3-5/evidence-p4/oracle-corpus`): armour in four builds, evasion in two (one ends 2 above PoB's 198, from 25 below). 244 reason entries gone, none added.
 - **Real-bundle tests:** `game_truth_items` 7 and `game_truth_affixes` 3 pass; Replica Dreamfeather's card prints the game's values and resolves every line, and no affix header differs from the game's.
+
+
+## Ambiguous lines by their base, part 2 (the agent list, S9, 2026-11-26)
+
+Two kinds of line stayed ambiguous after the mod filter (`loom_parser::import::mods`). Both are local and global readings of one line that the item's base decides, as the game and PoB read them:
+- **An implicit the base no longer has.** Build 26530219's Moonstone Ring has a cast speed implicit; older rings and uniques on it (Anathema) carry "+(15-25) to maximum Energy Shield" as their implicit. The `base-implicit` step cannot back it, and `local-stat` ran on explicit lines only. It now also runs on an implicit line that `base-implicit` did not decide. A ring carries no local defence, so the line reads as global energy shield (`base_maximum_energy_shield`). PoB reads it as global too.
+- **A unique's two-stat reading.** "Adds (8-13) to (20-30) Physical Damage" (Arakaali's Fang, a dagger) and "Adds 18 to 28 Chaos Damage" (Impresence, an amulet) read as the local or the global minimum and maximum. On a unique, `local-stat` decided only one-stat readings, as a guard against Thread of Hope's jewel stats. It now decides any readings of one size, each all local or all global. Thread of Hope's reading mixes a local and a global stat, so Windscream's resistances stay guarded (`local_stat_should_decide_a_uniques_plain_pair_only`, kept). The dagger keeps the local damage, the amulet the global.
+
+Tests: `local_stat_should_decide_a_uniques_plain_readings_of_one_size`, `local_stat_should_decide_an_implicit_line_the_base_does_not`.
+
+**Lines still ambiguous** (`resolve-corpus` on the nine public builds that had any, `local/p6/s9-amb-out2`: 15 of 24 left). These are real ambiguities in the data or need a reading of their own:
+- spell block against the game's `old_do_not_use_spell_block_%_from_assumed_block_value` (Svalinn, Rathpith Globe);
+- spell suppression against its "150% of value" stat (an eldritch implicit);
+- curse on hit by chance or by level (Temporal Chains);
+- Precision's reservation efficiency as a fixed or a ranged stat;
+- leech in permyriad or per hundred thousand;
+- the Cobalt Jewel's "2% increased Attack Speed" (no row backs either reading);
+- a cluster jewel notable, a socketed support, and a nearby-enemies crit line.
+
+**Evidence** (`local/p6/s9a` on `b-pb`, against `local/p6/vss`):
+- **Public:** 0 unexpected; `Complete` unchanged at 49,371 (every build with these lines has other reasons).
+  - 46 values moved, 45 toward PoB, 4 now equal: `holy-flame-totem-hierophant.xml`'s energy shield 107 to 149 (PoB 149), its recharge and leech.
+  - `shock-nova-archmage-hierophant.xml` and `Dual Wield Cospris CoC.xml` gain their rings' energy shield.
+  - One moved away: the Cospris build's maximum energy shield leech rate, 301.5 to 307.5 (PoB 265.9). It follows the energy shield, which moved toward PoB's (3,015 to 3,075, PoB 5,318). PoB's rate is lower than the engine's for a cause not looked into here; the field was already a difference before this step, in a build that stays indeterminate.
+- **Corpus:** 0 unexpected; no document changed.
+- **Tests:** the workspace tests, the real-bundle tests, clippy, rustfmt, and wasm32.
+
+
+## Signs the game's description forces (ADR-015 Amendment 4, 2026-11-26)
+
+**The lines.** The game prints some values with a forced sign (`{0:+d}`): "+{0}% Chance to Block Attack Damage during Effect", "+{0}% chance to Suppress Spell Damage", "+{0}% Chance to Block Attack Damage while wielding a Staff". Older item text writes them without the `+` (Rumi's Concoction's "(8-12)% Chance to Block Attack Damage during Effect"). The resolver compares signs exactly, so these lines were `no-variant-fits` (`sign-mismatch`). PoB's parser reads the sign as optional.
+
+**The tolerance `sign-added`** (`loom_parser::import::tolerance::sign_added`, `resolve::Index::resolve_sign_added`): tried only when every variant of the line's key was refused for its sign alone. Each unsigned, non-negative value where the format forces a sign is read as `+`; the line resolves to the same stat IDs and values the signed text gives, and carries `adapted: sign-added` (domain, build v1, calc result v1, the app API's text; additive; schemas regenerated). A plain format never accepts a `+`, and a negative value keeps its sign, so no value changes. It applies to item lines and custom modifier lines alike.
+
+**Evidence** (`local/p6/sa` on `b-pb`, against `local/p6/pc`):
+- **Public:** 0 unexpected; `Complete` unchanged (51,189).
+- **The Elemental Hit Deadeye** (`elemental-hit-of-the-spectrum-deadeye.xml`): its suppression line now reads. Spell suppression 47 to 77 (PoB 100); total EHP, the hits to die, and the mitigated hits move toward PoB.
+  - One value moves away: its configured damage chance, 89.9 to 83.4 (PoB 100). PoB moves suppression into damage reduction once it reaches 100% (`CalcDefence.lua` 2774 to 2781), so its value is 100. Below 100%, PoB's own formula applies the suppression effect as the engine does, so 83.4 is PoB's formula at 77%. The gap is the suppression itself (77 against 100), from the build's other unread sources.
+- **Rumi's Concoction** (`cyclone-shockwave-slayer.xml`, `forged-frostbearer-spectre-necromancer.xml`): its two block lines now resolve, so 177 fields go from partial (the line a reason) to indeterminate. The item's saved `<ModRange>` entries disagree with its lines' `{range:}` prefixes (the 0.732 roll is on another line), and when they disagree no roll is settled (`pob_item::values::mod_ranges_agree`), since which one PoB uses is not known. The block's value is honestly unknown rather than dropped.
+- **Corpus:** 0 unexpected; no value moved.
+- **Tests:** `resolve::tests::resolve_sign_added_should_read_an_unsigned_value_where_the_format_forces_a_sign`, the workspace tests, the real-bundle tests, clippy, rustfmt, wasm32, and schema freshness.

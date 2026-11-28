@@ -1085,7 +1085,7 @@ Both match PoB on every computed field.
   - **Bad stack values:** a stack count that is not a number is a reason only when a skill can wither.
 - **The input:** `multiplierWitheredStackCount` leaves `config::NAMED_ONLY`; `damage_taken` handles it.
 - **Withering Step:** now in `gems::SKILLS` as a buff whose two global effects are Elusive's (`Condition:CanBeElusive`, `ElusiveEffect`).
-  - Neither reaches a slice field: Elusive itself is the `buffElusive` named condition.
+  - Neither reaches a slice field: Elusive itself is the `buffElusive` named condition. (Corrected 2026-11-27: the check gives Elusive's buff with a source that lets you gain it; with the check on, Withering Step is a reason, `elusive-skill`; "Elusive" below.)
   - **Data parity:** the two names join `gem_effects`' `NO_SLICE_NAMES`; `uncategorized` stays 353.
 
 **New mechanic fixtures** (run through PoB v2.67.2, 3 of 3 runs identical), each matching PoB on every compared field:
@@ -2913,6 +2913,7 @@ PoB's guard slots (`CalcPerform.lua` 3262 to 3281) let one guard act, which the 
 - `calcs.calcFullDPS` makes one environment and calls `calcs.perform` for each included skill without resetting `env.modDB`, so a later pass sees mods an earlier one added with `NewMod`.
 - Blood and Sand's stance buffs (`effectCond` `BloodStance`) are the likely carriers. Naming the mod needs an instrumented PoB run.
 - It stays open: no compared build has both.
+- **Corrected by open items S4** (`docs/phase-6/full-dps-levels.md`): nothing is carried over; the full DPS pass keeps the base modifiers in a cached parent ModDB, and PoB rounds each level's more multiplier to 2 decimals (`pob-bug` DIV-0712, DIV-0718).
 
 **Tests:** the workspace tests, loom-calc's real-bundle tests (`b-ct`), clippy, and rustfmt pass.
 
@@ -4211,7 +4212,7 @@ The game has 13 "also grant" stats: `local_unique_jewel_passives_in_radius_grant
 - `Poe1Quantity::EnemyResistOverride(t)` (`Base`, the value) and `EnemyResistOverrideOn(t)` (`Flag`), both with `Flags::DOT` and `conditions::STATIONARY`, as one `STATE_ROWS` row.
 - `hit::enemy_resistance`: where the flag is on in the context, the override takes the sum's place (exposure included), before the maximum and the floor.
 
-**A data gap found** (for the maintainer): in build 26530219's `PassiveSkills`, Ramako has no stats, nor do Void Beacon, Augury of Penitence, and Unwavering Crusade (the "nearby enemies" ascendancy auras; the game probably grants them as buffs), while tree packs 3_25 to 3_28 and PoB's 3_29 export carry them. A build on 3_29 with these nodes keeps their lines out of the calculation. The fixtures use tree 3_28.
+**A data gap found** (for the maintainer): in build 26530219's `PassiveSkills`, Ramako has no stats, nor do Void Beacon, Augury of Penitence, and Unwavering Crusade (the "nearby enemies" ascendancy auras; the game probably grants them as buffs), while tree packs 3_25 to 3_28 and PoB's 3_29 export carry them. A build on 3_29 with these nodes keeps their lines out of the calculation. The fixtures use tree 3_28. (Found in the game files and read since data schema 6: "The agent list (2026-11-26): the 3_29 ascendancy auras", below.)
 
 **Evidence** (`b-ct`, against P6-11hb's run):
 - **Two new mechanic fixtures**, both matching PoB on every field:
@@ -5082,7 +5083,7 @@ The first close-out batch (`p6-close-out-plan.md`): the 38 stats of `M1-conditio
 **Moved out of M1** (recorded here, as the plan's rules ask):
 - `gladiator_damage_vs_rare_unique_enemies_+%_final_per_second_in_your_presence_up_to_100%` to `M2-per-and-thresholds`: a per-multiplier line (the enemy's presence seconds, limit 100).
 - `local_unique_flask_nearby_enemies_cursed_with_level_x_vulnerability_during_flask_effect` to `C-item-skill`: a curse aura granted by an item (`ExtraCurse`).
-- `critical_strike_chance_+%_vs_enemies_with_lightning_exposure` stays a reason and joins the game-truth list: PoB never sets `HasLightningExposure`, so it applies nothing in PoB, while in the game it changes critical strike chance.
+- `critical_strike_chance_+%_vs_enemies_with_lightning_exposure` stays a reason and joins the game-truth list: PoB never sets `HasLightningExposure`, so it applies nothing in PoB, while in the game it changes critical strike chance. (Wrong: PoB sets the enemy's `Has<Type>Exposure` when it applies the exposure, `CalcPerform.lua` 3583; mapped 2026-11-26, "The game-truth lines PoB reads".)
 - `regenerate_%_maximum_mana_over_2_seconds_on_consuming_corpse` stays a reason: PoB's value is not the percent of the shown maximum mana. Probes (`local/p6/m1-x`): with "Regenerate 10% of Mana over 2 seconds..." PoB adds 30.0 mana per second at 590 mana (5% of 600), 35.0 at 690 (5% of 700), and about 3.0 at level 1 with 56 mana, while "Regenerate 2% of Mana per second" adds exactly 2% of 590. The `PercentStat` of `Mana` reads a larger value than the output; the cause is not found. An item for the report's open list.
 
 **Evidence** (`b-ct`, against P6-11ik's run):
@@ -5279,3 +5280,746 @@ The close-out left 13 `C-item-skill` stats. Ten are lines PoB reads as `ExtraSki
 So the lines themselves have no effect beyond their group: `mapping::GRANTS_SKILL_STATS` maps each to `Poe1Quantity::GrantsSkill` (a flag with the item as its source), and `collect::granted_skill_groups` checks that the active skill set has the group (`source` starting `Item:<id>:`). A build without it (written by another tool) gets `unmodelled-item` `granted-skill-group` on every field, never a silently missing skill. Still reasons: Barkskin's own two stats (`spell_damage_%_suppressed_per_bark_below_max`, `spell_damage_taken_+_per_barkskin_stack`, skill stats of a skill not modelled) and the flask's Vulnerability aura during its effect (an aura, not a group).
 
 **Evidence** (`local/p6/gs` against `local/p6/s2`): public 39,232 `Complete` (no change: Dual Savior's values all equal PoB but its 3.13 tree keeps them indeterminate), 0 unexpected, no value moved; corpus 0 unexpected; field-reason pairs: public 23,874 to 23,115, corpus 9,644 to 9,434; distinct reasons 328 to 318. Test: `mapping::tests::grant_stats_should_be_the_grant_flag`.
+
+
+## The agent list (2026-11-26): the 3_29 ascendancy auras (data schema 6)
+
+**Found** in the game files (P6-11hc had called it a data gap). Build 26530219's `PassiveSkills` gives Ramako, Sun's Light, Void Beacon, Augury of Penitence, and Unwavering Crusade no stats, but each names a buff (`PassiveSkillBuffs`, a `BuffTemplates` row). The buff's `BuffDefinitions` stats, paired with the template's `Buff_StatValues`, are the node's lines:
+- Void Beacon: `base_chaos_damage_resistance_%` -20, `base_cold_damage_resistance_%` -20, `life_regeneration_rate_+%` -100 (radius 60).
+- Augury of Penitence: `elemental_damage_taken_+%` 16, `inquisitor_aura_elemental_damage_+%_final` -8.
+- Ramako: `nearby_enemies_fire_dot_resistance_is_%_while_you_are_stationary` -20, and a "no fire resistance" flag at 0.
+- Unwavering Crusade: `can_trigger_summon_elemental_relic_on_nearby_ally_kill_or_on_hit_rare_or_unique` 25.
+
+The bundle read no buffs, so on a 3_29 tree (and any tree without a pack, 3_13 among them) these lines were lost with no reason: a silent drop, against ADR-015. PoB reads its own 3_29 text: "Nearby Enemies have -20% to Cold Resistance" and kin (`TreeData/3_29/tree.lua`, `ModCache.lua` 10362 to 10383). The tree packs 3_25 to 3_28 carry them as the game's display stats (`local_display_nearby_enemy_*`).
+
+**Data schema 6** (`loom_data::bundle::PASSIVE_BUFF_SCHEMA`): a passive's `buffs`, each with its template ID, definition ID, aura radius, and stats (`passives::PassiveBuff`), written by the bundle builder (`tools/parity-cli`, `bundle::passives::buff_templates`). 46 passives have buffs. Only eight have no stats of their own: the four above, and Energy Well, Black Thumb, Light of Divinity, and Elemental Valiance.
+
+**The engine** (`loom_calc::poe1::passive_buffs`, read by `collect::passives` on the game data's path):
+- A node with stats keeps them, and its buffs are not read: there the buff implements the node's display stats (Overwhelm's aura, Gathering Winds' Tailwind).
+- A stat-less node reads each buff through `PASSIVE_BUFFS`, each buff stat as the stat the tree's text resolves to:
+  - Void Beacon's resistances as the display stats; its enemy life regeneration reaches no slice field.
+  - Augury's lines as the display stat and its own stat, both unmapped, so reasons.
+  - Ramako's stat as itself, and the flag at 0 as nothing.
+  - Unwavering Crusade's stat as itself (unmapped, a reason, as on the 3_28 pack).
+- A buff not listed, or a stat a listed buff does not name, is `unmodelled-passive` (`passive-buff`).
+- On an older bundle (data schema below 6), the eight nodes (`BUFF_NODES`) are that reason, so a schema 5 bundle no longer drops them silently.
+
+`CalcData::passive_buffs` gives the buffs, empty below schema 6.
+
+**The evidence pack** `local/p6/packs/b-pb` is `b-ct` with schema 6's `passives.json`, rebuilt by the new builder from `local/b2card/f/extract-a` (the extract `b-ct` came from). The old builder reproduced `b-ct`'s file byte for byte, and the new one changes only the buffs (`local/p6/make_b_pb.py`). Evidence runs use `b-pb` from here.
+
+**Fixture** `ice-nova-void-beacon-occultist.xml` (original; tree 3_29, Void Beacon allocated, Ice Nova): every field equals PoB's on `b-pb`. On `b-ct` (schema 5) its average damage was 800 against PoB's 1,120 before this step: the silent drop. It is now partial there with the reason.
+
+**Evidence** (`local/p6/pb` on `b-pb`, `local/p6/pb-ct` on `b-ct`, against `local/p6/ag1`):
+- **Public on `b-pb`:** 0 unexpected; `Complete` 48,837 to 48,924 (the fixture).
+  - Seven values moved toward PoB, none away: OccVortex's (tree 3_13, Void Beacon) average damage, DPS, DoT, and combined DPS (21,469 to 27,485 of PoB's 79,335), and the Essence Drain Occultist's DoT, full DPS, and combined DPS. Both builds are indeterminate on their other reasons.
+  - The Guardian build (`animate-guardian-guardian.xml`) gains Unwavering Crusade's reason.
+- **Public on `b-ct`:** no value moved; the four builds gain `passive-buff`. The new fixture is partial there, so its targets are not met (it needs schema 6).
+- **Corpus:** 0 unexpected on both; documents byte-identical.
+- **Tests:**
+  - `passive_buffs` (its table sorted, Void Beacon's reading, what is a reason);
+  - the real-bundle test `tests/passive_buffs.rs` (`BUFF_NODES` is the bundle's list, on `b-pb`);
+  - the workspace tests, the real-bundle tests, clippy, rustfmt, and wasm32.
+
+**For the maintainer:** shipping schema 6 is the next data run's (the signed bundle's `passives.json` gains the buffs; `dev/active/open-items/maintainer-follow-ups.md`).
+
+
+## The agent list (S8, 2026-11-26): wand accuracy from intelligence; death explosions
+
+Two close-out reasons of class `C-engine-system` and `C-no-slice` (`dev/active/open-items/open-items-inventory.md`):
+
+- **"Intelligence is added to Accuracy Rating with Wands"** (`gain_wand_accuracy_rating_equal_to_intelligence`; PoB's `Accuracy` BASE 1 with `PerStat` `Int` and `ModFlag.Wand`, `ModParser.lua` 5228; `PerStat` floors `int + 0.0001`, a whole number already). It is a `Flag` row on `Poe1Quantity::AccuracyFromIntelligence` under the wand flag. `hit::accuracy` adds the intelligence field in a context whose flags hold it, as P6-11gm's "twice your Strength" adds strength.
+- **Enemies that explode on death** (`enemies_explode_on_death_by_attack_for_10%_life_as_physical_damage`, and a flask's `local_unique_flask_explode_enemies_for_10%_life_as_random_element_on_kill_chance_%_during_flask_effect`) are no-effect rows (`explosion`).
+  - PoB reads them as `ExplodeMod` and `CanExplode` (`ModParser.lua` 2105 to 2140).
+  - For each source it adds a socket group of its own, "On Kill Monster Explosion" (`CalcSetup.lua` 1405 to 1445): a triggered skill appended after the build's groups and not counted in full DPS.
+  - That skill (`EnemyExplode`, `Data/Skills/other.lua` 6060) is the only reader, so no slice field of another skill changes.
+
+**Fixtures** (original, each run three times by PoB, identical; `local/p6/s8-fixtures2.py`):
+- `wand-accuracy-from-intelligence-witch.xml`: Kinetic Blast with a wand, the line and +100 intelligence; every field equals PoB's (chance to hit 33%, against the bow's 22%).
+- `wand-accuracy-from-intelligence-bow-witch.xml`: the same with Burning Arrow and a bow; the line adds nothing. Its differences are the registered Q11 attack rate of the bow (DIV-0950 to DIV-0955).
+- 177 fields are targets.
+
+**Evidence** (`local/p6/s8-2` on `b-pb`, against `local/p6/s8-1`):
+- **Public:** 0 unexpected; `Complete` 49,632 to 49,809 (the fixtures); no value moved. `kinetic-fusillade-ballista-hierophant.xml` loses the wand line's reason (its main skill is no wand attack).
+- **Corpus:** 0 unexpected; two documents lose an explosion stat's reason; no value moved.
+- **Tests:** the workspace tests, the real-bundle tests, clippy, rustfmt, and wasm32.
+
+
+## The maintainer's in-game checks (2026-11-26)
+
+The maintainer worked through the game-truth items one by one, in the game.
+
+**Check 1, Vaal Summon Skeletons' minion level (DIV-0111 to DIV-0113, DIV-0174): inconclusive.** The gem's tooltips at levels 20 and 21 show the counts (21 soldiers, 9 archers, 5 mages, 1 general, 36 at most; 22, 9, 5, 1, 37), equal to the game data's and PoB's rows, but no minion level. PoB's own row has `base_display_minion_actor_level` 68 at level 20 (70 at 21), as the game data does; its calculation uses the level requirement (70) instead. The engine keeps 68; the entries stay.
+
+**Check 2, Energy From Within: confirmed, and PoB applies it.** "Increases and Reductions to Life in Radius are Transformed to apply to Energy Shield" (`local_unique_jewel_life_increases_applies_to_energy_shield`). In the game, with one allocated "6% increased maximum Life" passive in the jewel's radius: life 1,402 to 1,323, energy shield 36 to 39, life regeneration 49.1 to 46.3 per second. The game-truth list had it as a line PoB applies nothing for; PoB does apply it (`ModParser.lua` 6100, `getSimpleConv({ "Life" }, "EnergyShield", "INC", true)`, a first-pass jewel function on every node in the radius but masteries, `CalcSetup.lua` 117 to 165).
+- **The engine:** `loom_pipeline::radius_jewels` transforms an allocated node's `maximum_life_+%` in the radius to `maximum_energy_shield_+%` at the same value, its other stats kept; a node with a conditional life increase in the radius (`LIFE_INCREASES_NOT_READ`), or a tattooed one, is a reason on the socket. The jewel's own stat is a `radius-jewel` no-effect row.
+- **Fixture** `ice-nova-energy-from-within-witch.xml` (original; the P6-11gv radius tree, three "Life and Energy Shield" passives in the Large radius): every field equals PoB's; against the jewel without its line, life 1,232 to 1,130 and energy shield 45 to 48, the engine's alike.
+- **Evidence** (`local/p6/efw` on `b-pb`, against `local/p6/sa`): public 0 unexpected, `Complete` 51,189 to 51,276 (the fixture's 87); no other value moved (`Dual Wield Cospris CoC.xml`'s jewel covers no allocated life increase; its reasons lose the stat); corpus no document changed.
+
+**Check 3, General's Cry's maximum mirage warriors: confirmed, and PoB reads it.** "General's Cry has +1 to maximum number of Mirage Warriors" (`generals_cry_maximum_warriors_+`; Abyssus's enchantment in the maintainer's test): General's Cry level 1 shows "Maximum 5 Summoned Mirage Warriors" without it and 6 with it. PoB parses it (`ModParser.lua` 5724, `GeneralsCryDoubleMaxCount` BASE) and reads it only for a skill General's Cry's warriors use (`CalcMirages.lua` 344 to 425: `QuantityMultiplier` by the count, the spawn time, the cooldown's DPS), which the engine does not compute yet (S5, "General's Cry's mirage warriors"). It stays a reason until then; the count is PoB's.
+
+**Check 4, "Trigger a Socketed Spell when you Use a Skill, with a 8 second Cooldown": read in the game.** (`trigger_socketed_spell_on_skill_use_%`, a crafted wand modifier with "Spells Triggered this way have 150% more Cost"; PoB reads neither.) Frostbolt level 1 socketed in the wand: the skill panel shows a cooldown of 8 seconds, a cost of 15 mana (6 used by hand: 150% more), "This Spell is Triggered by a Crafted Modifier", and an average damage instead of a DPS. The character had no cooldown recovery, so whether it shortens the 8 seconds is not known. Porting it as a trigger (at most once per 8 seconds while any skill is used at least as often, its cost 2.5 times) is agent work (`dev/active/open-items/agent-items.md`); with cooldown recovery on the build it stays a reason.
+
+**Ported the same day, and PoB reads it after all.** PoB's parser turns the line into an `ExtraSupport` of `SupportTriggerSpellOnSkillUse` ("Trigger Craft": an 8 s cooldown, 150% more mana, `ModParser.lua` 3150 to 3152, `Data/Skills/other.lua` 5027), and its "trigger craft" config (`CalcTriggers.lua` 1058 to 1080) times it: the fastest damaging, attack, or spell skill that is not an aura, an item's, or triggered, its hit chance a factor; the craft's spells of the item's slot in the rotation. The game data's support has the same 8,000 ms cooldown and 250% cost multiplier the maintainer read. The engine follows PoB: `item_supports::TRIGGER_ROWS` grants the support, `poe1::triggers::Config::SkillUse` is PoB's config (a totem, golem, banner, or ballista source, which PoB times by its cast time and cooldown, is a reason), `spell_has_trigger_from_crafted_item_mod` is a `trigger` no-effect row, and the support is in `gems::SUPPORTS`. Whether the game's "when you Use a Skill" also needs the source's hit, as PoB assumes, was not checked. Fixture `trigger-on-skill-use-craft-ice-nova-witch.xml` (Ice Nova in the wand, Fireball used): every field equals PoB's (a rate of 0.1213 per second, a mana cost of 57). Evidence (`local/p6/su` on `b-pb`, against `local/p6/efw`): public 0 unexpected, `Complete` 51,276 to 51,363 (the fixture's 87); no other value moved; two public documents and one corpus document lose the unmapped stat in their reasons.
+
+## The game-truth lines PoB reads (2026-11-26)
+
+After check 4 the maintainer chose to stop the in-game checks (most remaining lines show nothing on screen) and have the agent work: of the 65 game-truth lines left, PoB's parser reads 28 whole (`local/p6/gt_lines.py` runs `tools/oracle/data/pob_parse_lines.lua` on each stat's line; `local/p6/gt-parse.json`). The list had them as lines PoB applies nothing for; where PoB does apply one, the engine follows PoB, each with fixtures against PoB, in five groups (the maintainer's "Sounds good", 2026-11-26). A line whose PoB reading looks wrong for the game is flagged, not mapped.
+
+**Group 1: lines named for a skill, or plain** (5 stats):
+- "#% increased Effect of the Buff granted by your Carrion Golems" (`base_bone_golem_granted_buff_effect_+%`; PoB's `BuffEffect` INC with the `SkillName` Summon Carrion Golem): `skill_modifiers::Golem::Carrion` (`summon_carrion_golem`), read with the other named golems. Its buff's two stats are still `minion-buff` reasons, so no computed value moves.
+- "Intimidating Cry has #% increased Cooldown Recovery Rate" (`intimidating_cry_cooldown_speed_+%`; `CooldownRecovery` INC with the skill's name): `SkillTiming::IntimidatingCryCooldownRecovery`, read by the cry's buff uptime and its exerted attacks' uptime. The exert uptime (`gems::intimidating_terms`) also gains the character's untagged and warcry cooldown recovery, which PoB's `calcSkillCooldown` reads from the cry's `skillModList` and the engine read only from the gems before.
+- "Overwhelm #% Physical Damage Reduction" (`enemy_phys_reduction_%_penalty_vs_hit`; PoB's `EnemyPhysicalDamageReduction` BASE, `mult = -1`): `Poe1Quantity::HitEnemyPhysicalDamageReduction`, added to a physical hit's armour reduction before the floor at 0 and the cap (`CalcOffence.lua` 3434). Damage over time (4457) and impale (5491) read the enemy's reduction alone, so the engine's do too.
+- "#% increased Critical Strike Chance against enemies with Lightning Exposure": the close-out (M1) put it on the list as a condition PoB never sets. PoB does set it: the enemy's `Condition:Has<Type>Exposure` when it applies the exposure (`CalcPerform.lua` 3583). `Poe1Quantity::CritIfExposed`, turned into `CritChance` `Increased` by `poe1::exposure` when the lightning exposure is applied.
+- "Toxic Rain deals #% increased Damage" (`toxic_rain_damage_+%`; `Damage` INC with the `SkillName` Toxic Rain): a state row on `states::MAIN_SKILL_TOXIC_RAIN`, settled true when the main skill is Toxic Rain or a transfigured one (only the main skill's damage is computed; the full DPS pass computes each skill as the main one on its own copy of the build).
+
+**Fixtures** (original; each an existing mechanic fixture with lines in its custom block): `smite-intimidating-cry-cooldown-templar.xml` (40% for the cry and 15% untagged: the cooldown 5.181 s, PoB's), `smite-overwhelm-templar.xml` (3,000 armour: the reduction 81.4 to 66.4, under the 75% cap), `ice-nova-crit-vs-lightning-exposure-witch.xml` (crit chance 7.5 to 11.25) and its `-none-` twin without the lightning check (nothing), `toxic-rain-damage-templar.xml`, and `burning-arrow-toxic-rain-damage-templar.xml` (not the named skill: nothing). Every computed field equals PoB's but the three attack fixtures' weapon rate (Q11, DIV-0956 to DIV-0975: the exert uptime reads the rate, so the cry fixture's average damage carries it too).
+
+**Evidence** (`local/p6/g1` on `b-pb`, against `local/p6/su`): public 0 unexpected, `Complete` 51,363 to 51,881 (the fixtures' 518); 8 values of `Partial` fields moved, 7 toward PoB (`lightning-trap-of-sparking-elementalist`'s crit chance and DPS, the exposure line) and one away (`Generals Perforate Zerker.xml`'s average damage: an item's "Overwhelm 2%" now applied as PoB applies it, on a field already above PoB's for other reasons); corpus 0 unexpected, no value moved.
+
+**Group 2: conditions the engine settles** (5 stats; the close-out's batch N had them as lines PoB leaves unparsed, but PoB parses the game's current wording whole):
+- The boots enchantment "#% increased Attack and Cast Speed if you've Killed Recently" (`enchantment_boots_attack_and_cast_speed_+%_for_4_seconds_on_kill`; PoB's `Speed` INC for attacks and casts with `KilledRecently`): a state row on `conditions::KILLED_RECENTLY`.
+- "You have Tailwind if you have dealt a Critical Strike Recently" (`tailwind_if_have_crit_recently`; `Condition:Tailwind` with `CritRecently`): `Poe1Quantity::TailwindOnCrit`, a flag `poe1::buffs` reads as Tailwind's source while crit recently is settled true (as Adrenaline on kill).
+- "#% increased Mana Cost of Skills while on Full Energy Shield" (`mana_cost_+%_while_on_full_energy_shield`; `ManaCost` INC with `FullEnergyShield`): a cost reason since P6-10b, from before the condition was settled (close-out M1); now a state row on `conditions::FULL_ENERGY_SHIELD`.
+- A flask's "#% chance to Freeze, Shock and Ignite during Effect" (`local_flask_chance_to_freeze_shock_ignite_%_while_healing`; the three chances with `UsingFlask`): a `poe1::flasks::ALIASES` row of `chance_to_freeze_shock_ignite_%`.
+- A flask's "Instant Recovery when on Low Life" (`local_flask_recover_instantly_when_on_low_life`; PoB's `instantLowLifePerc`, added to the flask's instant share while `Condition:LowLife`, `CalcPerform.lua` 1603 to 1607): `flasks::LOW_LIFE_INSTANT_STAT`; with low life settled true the flask recovers all at once, so sets neither `UsingFlask` nor `UsingLifeFlask` (P6-11gw's rule); with low life unsettled both stay unsettled. The line itself is `NoEffect` in the flask's mapping, as "Instant Recovery".
+
+**Fixtures** (original; each P6-11gw's Ice Nova fixture with lines added): `ice-nova-boots-enchant-killed-recently-witch.xml` (cast rate 1.429 to 1.643), `ice-nova-tailwind-crit-recently-witch.xml` (1.429 to 1.543) and its `-none-` twin without the check (nothing), `ice-nova-mana-cost-full-energy-shield-witch.xml` (mana cost 23 to 28), `ice-nova-flask-freeze-shock-ignite-witch.xml` (the ignite chance), `ice-nova-low-life-instant-flask-witch.xml` (on low life: no flask in use, so "during any Flask Effect" gives nothing) and its `-not-low-` twin (the flask in use). Every field equals PoB's.
+
+**Found on the way: `math::pow` is 1 ulp off PoB here.** The boots fixture at 10% gave an ignite DPS of 142.49737180782162 against PoB's 142.49737180782157: the ignites' crit chance over stacks, `1 - 0.925^2.215714285714286` (`CalcOffence.lua` 5059). musl's `pow` (the `libm` crate, which `math::pow` uses for its bits on every target) gives `0x1.aec633eb02650p-1`; the correctly rounded power, and PoB's (LuaJIT's `^`, on Windows and Linux alike), is `0x1.aec633eb02651p-1`. `math::pow`'s claim that musl is "in practice correctly rounded" does not hold for every input. The fixture uses 15% instead, which shows the enchant without meeting that input. Since the next step `math::pow` is correctly rounded, and `ice-nova-boots-enchant-ten-killed-recently-witch.xml` keeps the 10% case, equal to PoB ("A correctly rounded `math::pow`" below).
+
+**Evidence** (`local/p6/g2` on `b-pb`, against `local/p6/g1`): public 0 unexpected, `Complete` 51,881 to 52,497 (the fixtures' 616); no other value moved; corpus 0 unexpected, no value moved.
+
+**Group 3: item lines** (5 stats, and the four more of their family):
+- "#% increased Armour from Equipped Helmet and Gloves" (`armour_from_helmet_and_gloves_+%`; PoB's `Armour` INC with the `SlotName` list Helmet and Gloves, `ModParser.lua` 1092): two `SlotIncreased` rows, the helmet's and the gloves' armour, as the ward and energy shield rows of one slot.
+- Harvest's alternate qualities (`HarvestAlternate*Quality*` in the game's mods). "Quality does not increase Defences" (`local_quality_does_not_increase_defences`; `AlternateQualityArmour`, `Item.lua` 2319: the quality scalar 0): `PieceValue::AlternateQuality`, a flag that makes the piece's quality factor 1, for its derived percentile too. "Grants +# to Maximum Life per 2% Quality" and "Grants #% increased Accuracy per 2% Quality" (PoB's plain mods with a `Multiplier` of `QualityOn{SlotName}`, `div` 2, `ModParser.lua` 5755 and 5762): `collect::PER_QUALITY` maps each, on an armour piece or a weapon, as its plain stat scaled by `floor(quality / 2 + 0.0001)` (`ModStore.lua` 360), the item's quality whatever its "does not increase" line says. The same table maps the family PoB reads alike, which no game-truth entry named but which were unmapped reasons wherever they appeared: mana, strength, dexterity, intelligence, and the fire, cold, and lightning resistances per 2% quality (5763 to 5769). "#% increased Critical Strike Chance per 4% Quality" (`AlternateQualityLocalCritChancePer4Quality`): `WeaponValue::CritChancePer4Quality`, the weapon's local crit increase `floor(quality / 4 x sum)` (`Item.lua` 2277), as the attack speed per 8%.
+
+**Fixtures** (original): `armour-alternate-quality-marauder.xml` (P3-7's pieces: life 1,285 to 1,392, strength 44 to 59, fire resistance -10 to -3 at quality 15, armour 3,371 to 2,946 without quality), `armour-from-helmet-and-gloves-marauder.xml` (armour 3,371 to 3,628), `smite-alternate-quality-crit-templar.xml` (crit chance 2.375 to 2.85), `smite-alternate-quality-accuracy-templar.xml` (the character's accuracy, against an enemy with evasion). Every field equals PoB's but the Smite fixtures' weapon rate and the exert uptime that reads it (Q11, DIV-0976 to DIV-0991).
+
+**Evidence** (`local/p6/g3` on `b-pb`, against `local/p6/g2`): public 0 unexpected, `Complete` 52,497 to 52,825 (the fixtures' 328); 36 values of `Partial` fields moved, 30 toward PoB and 3 of them now equal (`kinetic-fusillade-ballista-hierophant.xml`'s crit chance 97.4 to PoB's 100, its weapon's crit per 4% quality; `Generals Perforate Zerker.xml`'s physical damage reduction 69 to PoB's 68 and its physical hit multiplier), 6 away, all of `Generals Perforate Zerker.xml`: its body armour's "Grants +1 to Maximum Life per 2% Quality" at quality 30 adds the 15 life PoB adds (life 4,937 to 4,977 against PoB's 4,961: the engine was 16 above PoB without the line and still is), and its "Quality does not increase Defences" brings armour from 15,207 to 14,457 (PoB 14,529); its effective health fields follow those. Corpus 0 unexpected, no value moved.
+
+**Group 4: the Warden's lines with no socketed gems** (4 stats; `ModParser.lua` 3038 to 3044): "+#% to all Elemental Resistances if you have an Equipped Helmet with no Socketed Gems", "#% increased Maximum Life if you have Equipped Gloves with no Socketed Gems", "#% increased Movement Speed if you have Equipped Boots with no Socketed Gems" (a movement reason since P6-10b), and "Defences from Equipped Body Armour are doubled if it has no Socketed Gems". PoB tags each with `SocketedGemsIn<slot>` at most 0 and `Using<slot>`; `CalcSetup.lua` (1206 to 1244) counts `min(gem sockets, gems)`: the item's red, green, blue, and white sockets, and the enabled known gems of the enabled groups in the slot that no item grants.
+- `sockets::no_socketed_gems` settles that count; `states` gives each armour slot its state (`NO_GEMS_IN_HELMET` and kin), unsettled when the slot has gems and its sockets are not known (an item without a `Sockets` line, which PoB fills with its base's socket limit, is known only with no gem). The three plain lines are state rows.
+- The body armour's defences: `Poe1Quantity::BodyArmourDefencesDoubled`, a flag state row; `phases` doubles the body armour's armour, evasion, and energy shield rows (and its ward) once. PoB limits it by its own key (`OathOfTheMajiLimit`), not P6-11gq's armour doubling's (`ArmourDoubledLimit`), so with both the body armour's armour is 4 times.
+
+**Fixtures** (original; P3-7's armour pieces): `armour-no-socketed-gems-marauder.xml` (no gem: resistances +10, life 1,285 to 1,414, movement speed 1.1, armour 3,371 to 5,389), `armour-no-socketed-gems-armour-doubled-marauder.xml` (with "Armour from Equipped Body Armour is doubled": 9,425), `armour-socketed-gems-marauder.xml` (gems in the helmet and the body armour, a disabled group in the boots: only life and movement speed). Every field equals PoB's.
+
+**Evidence** (`local/p6/g4` on `b-pb`, against `local/p6/g3`): public 0 unexpected, `Complete` 52,825 to 53,057 (the fixtures' 232); no other value moved; corpus 0 unexpected, no value moved.
+
+**Group 5: the rest** (7 stats):
+- "#% increased Attack and Cast Speed with Physical Skills" (`attack_and_cast_speed_+%_with_physical_skills`; PoB's `Speed` INC with `KeywordFlag.Physical`, `ModParser.lua` 1053): a hit row on P3-8h's `SKILL_PHYSICAL` keyword, the skill's `Physical` type (`CalcActiveSkill.lua` 404). The close-out had it as PoB dropping the condition; PoB keeps it.
+- "Curse Enemies with Despair on Hit" (`curse_on_hit_level_despair`; an `ExtraSkill` of Despair, level 1, triggered, no supports): a `GRANTS_SKILL_STATS` row as the other three curses on hit; the group PoB saves acts through `poe1::gems`.
+- "Deal #% increased Damage Over Time per 100 Player Maximum Life" (`damage_over_time_+%_per_100_max_life`; `Damage` INC, `ModFlag.Dot`, `PerStat` `Life` `div` 100): `Poe1Quantity::DotDamagePer100Life`, a `hit::DAMAGE_PER_STAT` term in a context with the damage over time flag, so a skill's damage over time and its ailments (whose source damage `calc_damage` computes in the ailment's context), not the hit.
+- "Each Totem applies #% increased Damage taken to Enemies near it" (`totems_nearby_enemies_damage_taken_+%`; the enemy's `DamageTaken` INC per `TotemsSummoned`, `ModParser.lua` 4367): a `poe1::stacks` row on P6-11ep's totem count.
+- "Skills Supported by Spellslinger have #% increased Mana Reservation" (`spellslinger_mana_reservation_+%`; `ManaReserved` INC with `SupportedBySpellslinger`): `Poe1Quantity::SpellslingerManaReserved`, added to a Spellslinger-supported skill's reservation increase (`skill_modifiers::Totals::reservation_for_skill`).
+- "Socketed Attacks have +# to Total Mana Cost" (`local_display_socketed_attacks_mana_cost_+`; `ManaCost` BASE with `SocketedIn` the item's slot and the `attack` keyword, `ModParser.lua` 1241): a cost reason since P6-10b, now an `InSlot` row: the main skill's cost while it is an attack socketed in that slot.
+- Herald of Purity's `active_skill_minion_physical_damage_+%_final` (PoB's `MinionModifier` of `PhysicalDamage` MORE, `SkillStatMap.lua` 2043; the game-truth list had it by its gem's odd text "Minions deal #% of Physical Damage"): `minions::MinionValue::PhysicalDamage`, the minion's damage with the physical flag.
+
+**Left of the 28:** "+# to Level of all <gem> Gems" (`random_skill_gem_level_+_level` with `random_skill_gem_level_+_index`): the game names the gem by the index into its `IndexableSkillGems` table (the description's `display_indexable_skill` handler), which the bundle does not carry, so the engine cannot tell which gems the line raises. It stays a reason; reading it needs that table in a data run (`dev/active/open-items/maintainer-follow-ups.md`).
+
+**Fixtures** (original): `ethereal-knives-physical-skills-speed-witch.xml` (cast rate 1.67 to 2.0) and `ice-nova-physical-skills-speed-witch.xml` (not a physical skill: nothing), `ice-nova-dot-per-life-witch.xml` (the ignite 139.4 to 171.2 at 1,125 life), `ice-nova-totems-enemy-damage-taken-witch.xml` (three totems: 15%), `trigger-spellslinger-mana-reservation-witch.xml` (reserved 118 to 154), `smite-socketed-attacks-mana-cost-templar.xml` (cost 12 to 24), `ice-nova-despair-on-hit-witch.xml` (the ring's Despair). Every field equals PoB's but the Smite fixture's weapon rate (Q11, DIV-0992 to DIV-0999).
+
+**Evidence** (`local/p6/g5` on `b-pb`, against `local/p6/g4`): public 0 unexpected, `Complete` 53,057 to 53,687 (the fixtures' 610, and 16 fields of public builds from `Partial`); 15 values moved, all toward PoB, 5 now equal: `minion-herald-of-purity-witch.xml`'s minion DPS (256 to PoB's 499) and `cyclone-shockwave-slayer.xml`'s mana cost (its socketed attacks' line); `rf-chieftain-life-stack.xml`'s damage over time (523 thousand to 2.19 million, PoB 9.81 million) and `kinetic-fusillade-ballista-hierophant.xml`'s totems toward. Corpus 0 unexpected, no value moved.
+
+## A correctly rounded `math::pow` (the agent list, 2026-11-27)
+
+**The finding** (group 2 above): musl's `pow` (the `libm` crate) is within 1 ulp of the exact power, not correctly rounded. Against the exact power rounded once (Python's `decimal` at 80 digits), it was wrong on 1,798 of 20,006 inputs drawn like the engine's (bases near 1 to large ratings, exponents such as 0.9, 0.75, a third, and up to 60); the MSVC runtime's `pow`, which PoB's LuaJIT calls on Windows, on 16.
+
+**The engine** (`loom_calc::math::pow`): for a normal positive base and a normal result, `exp(exponent * log(base))` in double-double arithmetic (QD's algorithms with Dekker's split, about 100 bits; `log` is `libm`'s on the mantissa with one Newton step; `exp` reduces by `ln 2` and by `2^10`, ten terms, ten squarings), rounded once. Only IEEE-exact operations and `libm`'s deterministic `log` are used, so Windows, Linux, and wasm32 give the same bits. It is wrong only where the exact power lies within about `2^-95` of a halfway point (`f64::MAX ^ 0.5`, `2^-109` past one, is such a case). A zero, negative, or subnormal base, infinities, NaN, and results that overflow or are subnormal go to `libm::pow` as before. Against the same 20,006 inputs it is wrong on none.
+
+**Tests:** `math::tests::pow_should_be_correctly_rounded` (seven inputs `libm` rounds the wrong way, the boots fixture's first), `pow_should_keep_the_edge_cases`, and `pow_should_give_the_written_bits` unchanged.
+
+**Fixture** `ice-nova-boots-enchant-ten-killed-recently-witch.xml` (group 2's boots at 10%): every computed field equals PoB's.
+
+**Evidence** (`local/p6/pw` on `b-pb`, against `local/p6/g5`): public 0 unexpected, `Complete` 53,687 to 53,775 (the fixture's 88); no compared value moved. 44 public and 7 corpus documents change in a breakdown node's last bit (an evasion power such as `3.2 ^ 0.9`, now the correctly rounded `2.848623026200712`, as the MSVC runtime gives); corpus 0 unexpected.
+
+## Mageblood (the agent list, 2026-11-27)
+
+**The stats** (each in 241 public fields of 3 builds): "Leftmost # Magic Utility Flasks constantly apply their Flask Effects to you" (`num_magic_utility_flasks_always_apply`, and its rightmost form) and "Magic Utility Flasks cannot be Used" (`magic_utility_flasks_cannot_be_used`).
+
+**PoB** (`CalcPerform.lua` 1543 to 1564): `LeftActiveMagicUtilityFlasks` and `RightActiveMagicUtilityFlasks` BASE; the equipped flasks in `orderedSlots` order that are magic and whose base is not a life, mana, or hybrid flask are the magic utility flasks, and the leftmost and rightmost counts of them are added to the active flasks. It parses no mod for "cannot be Used", so a magic utility flask the build marks active still applies.
+
+**The engine** (`loom_calc::poe1::flasks::active_flasks`): the same choice, from the items' lines (with the host's rolled values), in slot order `Flask 1` to `Flask 5`; the active flasks feed both the flask buffs and the `UsingFlask` conditions. The three stats are `NoEffect` rows of the character's mapping, since the flasks module reads them. Two reasons keep it honest: an unsettled count (`magic-utility-flask-count`; the conditions stay unsettled too), and a magic utility flask the build marks active that Mageblood does not apply while "cannot be Used" is on the build (`magic-utility-flask-cannot-be-used`): PoB applies it, the game does not let it be used, so the engine applies it as PoB does and marks the fields partial.
+
+Two flask lines the newly active flasks carry are `NoEffect` (`flasks::NO_EFFECT_LOCAL`): immunity to bleeding during the effect (`BleedImmune`, no slice field, as the helmet's) and to shock (`ShockImmune`, read by PoB only for a shock on you, which only the `conditionShocked` checks give, each a reason, as the shock effect line beside it).
+
+**Fixture** (original) `ice-nova-mageblood-leftmost-witch.xml`: "Leftmost 3" with five flasks, none marked active (Granite, a life flask PoB skips, Quicksilver, Ruby, Jade): armour 1,800, movement 1.6, the Ruby's resistances apply, the Jade's evasion does not. Every field equals PoB's. With the Jade marked active, it applies (evasion 1,924, as PoB) and the fields carry `magic-utility-flask-cannot-be-used` (checked, not committed).
+
+**Evidence** (`local/p6/mbe` on `b-pb`, against `local/p6/rw2e`): public 0 unexpected, `Complete` 53,952 to 54,039 (the fixture's 87); 56 values of 2 builds moved, 52 toward PoB, 8 now equal: `rf-chieftain-life-stack.xml`'s armour 5,016 to PoB's 16,070, chaos resistance 15 to 75, physical reduction 47 to 75, movement speed 1.26 to 2.03, and its hit and damage over time multipliers. 4 moved away, all in `lightning-trap-of-sparking-elementalist.xml`'s EHP (total 9,500 to 9,053, PoB 323,641): every input to it moved toward PoB (resistances 64 to 87 against PoB's 90, physical reduction 16 to 42 against 51, configured damage chance 24 to 23.4 against 23.1), and the totals follow a pool the build already has far from PoB's. (Corrected by the next step: the build's chaos pool was the energy shield the unmapped "Chaos Damage taken does not bypass Energy Shield" adds; with it mapped the EHP moves toward PoB's, 9,053 to 93,339.) Corpus 0 unexpected, no document changed.
+
+## Chaos damage that does not bypass energy shield (the agent list, 2026-11-27)
+
+**The stat** (174 public fields of 2 builds): "Chaos Damage taken does not bypass Energy Shield" (`chaos_damage_does_not_bypass_energy_shield`; Shavronne's Wrappings, and the reworded "Chaos Damage does not bypass Energy Shield").
+
+**PoB** (`ModParser.lua` 4671; `CalcDefence.lua` 2279 to 2299): `ChaosNotBypassEnergyShield` FLAG; without it chaos's `EnergyShieldBypass` is 100, with it 0, as every other type's. Every pool, hit, and damage over time sum reads the type's bypass.
+
+**The engine:** `Poe1Quantity::ChaosNotBypassEs` (`ROWS`, a `Flag`), and `ehp::bypasses(type, all_bypass, chaos_not_bypass)` in place of the hard-coded chaos bypass in `enemy_hit` (the pools, the total pools, the smoothing passes' character), `ehp` (`reduce`), and `degen` (the net regenerations). Mind over matter needs nothing more: the engine computes each type's share with its own bypass, which equals PoB's shared and per-type paths when no type bypasses.
+
+**Fixture** (original) `ice-nova-chaos-not-bypass-es-witch.xml`: Shavronne's Wrappings on a witch: chaos's maximum hit 917 (the shield in it, as fire's 900), total pool 1,467. Every field equals PoB's.
+
+**Evidence** (`local/p6/cbe` on `b-pb`, against `local/p6/mbe`): public 0 unexpected, `Complete` 54,039 to 54,126 (the fixture's 87); 11 values of 2 builds moved, all toward PoB: `lightning-trap-of-sparking-elementalist.xml`'s chaos maximum hit 8 to 24,100 (PoB 24,536) and total EHP 9,053 to 93,339 (PoB 323,641), `Dual Wield Cospris CoC.xml`'s chaos maximum hit 1,060 to 3,520 (PoB 5,321). Corpus 0 unexpected, no document changed.
+
+## The quality of all skill gems (the agent list, 2026-11-27)
+
+**The stat** (143 public fields of 2 builds): "+#% to Quality of all Skill Gems" (`all_skill_gem_quality_+`).
+
+**PoB** (`ModParser.lua` 3184): `GemProperty` LIST `{ keyword = "grants_active_skill", key = "quality" }`; `applyGemMods` (`CalcSetup.lua` 292 to 324) adds the value to the quality of each effect of a gem that grants an active skill, the same pass that adds gem levels.
+
+**The engine:** `gem_levels::QUALITY_STATS` and `Poe1Quantity::GemQuality` (`Base`), summed by `GemLevels` with the level stats and added by `GemLevels::quality_bonus` to the quality of each effect of a gem whose tags match (`skill::group_effects`), as P3-8i's levels are. Supports are not active skill gems, so they keep their own quality.
+
+**Tests:** `gem_levels::tests::gem_quality_should_reach_active_skill_gems_only`.
+
+**Fixture** (original) `ice-nova-all-skill-gem-quality-witch.xml`: Ice Nova at quality 0 with Controlled Destruction and the line at 20%: Ice Nova at quality 20 (its area 30 to 33). Every field equals PoB's.
+
+**Evidence** (`local/p6/gqe` on `b-pb`, against `local/p6/cbe`): public 0 unexpected, `Complete` 54,126 to 54,213 (the fixture's 87); 6 values of `lacerate-bleed-gladiator.xml` moved, all toward PoB. Corpus 0 unexpected, no document changed.
+
+## Modifier magnitude lines (the agent list, 2026-11-27)
+
+**The stats** (public: Heist's "Explicit Defence Modifier magnitudes" in 169 fields of 2 builds, and three more in one build each): the 26 item stats whose line scales the item's other lines ("#% increased Explicit <tag> Modifier magnitudes", "Implicit Modifier magnitudes are doubled", "#% increased Prefix Modifier magnitudes", and kin).
+
+**PoB** reads the line itself as no mod (`ModParser.lua` 5874 to 5876). It scales the item's matching lines by it only on an advanced copy or a crafted item (`Item.lua` 1377 to 1432); otherwise it reads the printed values, which the game prints with the magnitudes applied.
+
+**The engine:** `NoEffect` rows (`modifier-magnitude`). The scaling of the other lines is the import adapter's (`pob_item::values`, the agent list's S9): where PoB applies the magnitudes, every modifier line of the item is a `modifier-magnitude` reason, so no value is guessed; otherwise the printed values are read, as PoB reads them. The real-bundle test `no_effect_stats_should_be_known_and_never_mapped` checks each stat is the game's.
+
+**Evidence** (`local/p6/d27mme` on `b-pb`, against `local/p6/gqe`): public 0 unexpected, `Complete` unchanged at 54,213 (each build with these lines has other reasons); no value moved; the four stats' reasons gone. Corpus 0 unexpected, no value moved (two documents lose the reason).
+
+## Elusive (the agent list, 2026-11-27)
+
+**The finding:** `buffElusive` was classified as setting named conditions only (`config::NAMED_ONLY`), and "#% chance to gain Elusive on Critical Strike" was `NoEffect`. In PoB (`ConfigOptions.lua` 1049 to 1052, `CalcPerform.lua` 779 to 810) the check, with a source that lets you gain Elusive (`Condition:CanBeElusive`), gives Elusive's buff: `AvoidAllDamageFromHitsChance` BASE `floor(15 x effect)` and `MovementSpeed` INC `floor(30 x effect)`. A build with both and nothing else missing would have been `Complete` with values PoB does not give. `Dual Wield Cospris CoC.xml` has both; `essence-drain-contagion-occultist.xml` has the check without a source, so PoB gives nothing there either.
+
+**The engine** (`loom_calc::poe1::buffs::elusive`, after the charges):
+- **The source:** `Poe1Quantity::CanBeElusive` flags: "#% chance to gain Elusive on Critical Strike" and "on Kill" (`ModParser.lua` 2500 to 2507), rows of the mapping; conditional ones are a reason (`elusive-condition`). Withering Step and Nightblade let you gain Elusive through their own data, which the engine does not read: with the check on, either in an enabled group is a reason (`elusive-skill`).
+- **The effect:** `(1 + inc / 100) x 100`, `inc` the `ElusiveEffect` INC sum ("#% increased Elusive Effect", a row; "#% increased Effect of Elusive on you per Power Charge", `charges`' `PerCharge::ElusiveEffect`), averaged over its decay to 0 (`/ 2`). The minimum threshold, the slower loss, the increase at first, `BuffEffectOnSelf`, and Nightblade's are unmapped stats, so reasons. `overrideBuffElusive` caps it at the full effect, as PoB's override.
+- **The buff:** `Poe1Quantity::AvoidAllDamageFromHits` BASE (read by `enemy_hit` into the defence estimate's `avoid_all`, capped at 75, `CalcDefence.lua` 1546) and movement speed INC.
+- `buffElusive` and `overrideBuffElusive` are `buffs`' inputs (`is_buff_input`), no longer named-only.
+
+**Fixture** (original) `ice-nova-elusive-witch.xml`: the check, the crit line, 9% increased Elusive Effect, 10% per power charge with three in use: effect 69.5, 10% chance to avoid all damage from hits, movement 1.2. Every field equals PoB's.
+
+**Evidence** (`local/p6/d27ele` on `b-pb`, against `local/p6/d27mme`): public 0 unexpected, `Complete` 54,213 to 54,300 (the fixture's 87); 5 values of `Dual Wield Cospris CoC.xml` moved, all toward PoB: its chance not to be hit 0 to 11 (PoB 12), movement speed 2.19 to 2.42 (PoB 3.34), total EHP 8,577 to 9,637 (PoB 16,095). The avoid chance's one short is the effect's: 11 and the movement's 23 fit an effect of 79.5, one power charge fewer than PoB's 6 (84.5). Corpus 0 unexpected, no value moved (the documents' graph numbers shift by the new node).
+
+## Leeching at full life or energy shield (the agent list, 2026-11-27)
+
+**The stats:** "Life Leech effects are not removed when Unreserved Life is Filled" (`life_leech_does_not_stop_at_full_life`, public 96 fields of 1 build) and the two energy shield forms (`energy_shield_leech_does_not_stop_on_full_energy_shield`, `energy_shield_leech_from_attacks_does_not_stop_on_full_energy_shield`). They were `config::DEPENDS_ON`: reasons kept because they set the leeching conditions.
+
+**PoB** (`CalcPerform.lua` 873 to 880): `CanLeechLifeOnFullLife`, unless `GhostReaver` ("Leech Energy Shield instead of Life"), sets `Leeching` and `LeechingLife`; `CanLeechEnergyShieldOnFullEnergyShield` sets `Leeching` and `LeechingEnergyShield`.
+
+**The engine:** `conditions::settle` sets the same conditions when the build has a stat of `LEECH_AT_FULL_LIFE_STATS` (and not `GHOST_REAVER_STAT`) or of `LEECH_AT_FULL_ES_STATS` (`states::build_has_stat`: the tree, the items in use, the custom blocks). The three stats leave `config::DEPENDS_ON` and are `NoEffect` rows (`leeching-condition`): the conditions carry their whole effect.
+
+**Fixture** (original) `ice-nova-leech-at-full-life-witch.xml`: the life line with "10% increased Attack and Cast Speed while Leeching" and no leeching check: cast rate 1.43 to 1.57. Every field equals PoB's.
+
+**Evidence** (`local/p6/d27lfe` on `b-pb`, against `local/p6/d27ele`): public 0 unexpected, `Complete` 54,300 to 54,387 (the fixture's 87); 34 values of `cyclone-shockwave-slayer.xml` moved, all toward PoB, 25 now equal (its taken multipliers, maximum hits, damage over time EHPs, regenerations); its DPS 21.6 to 23.9 million (PoB 31.0). Corpus 0 unexpected, no document changed.
+
+**Checked and left** (PoB's parse, 2026-11-27): "You take #% reduced Extra Damage from Critical Strikes per Endurance Charge": PoB parses only the line without "per Endurance Charge", so it applies nothing; the line was already on the maintainer's game-truth list. "#% increased Damage with Hits against Rare monsters" (`damage_+%_vs_rare_monsters`) is unparsed by PoB too and joins that list.
+
+## Global added chaos damage (the agent list, 2026-11-27)
+
+**The stats:** "Adds # to # Chaos Damage" (`global_minimum_added_chaos_damage`, `global_maximum_added_chaos_damage`; public 90 fields of 1 build, Impresence in `arakaalis-raise-spider-occultist.xml`).
+
+**PoB** (`SkillStatMap.lua` 867 to 872): `ChaosMin` and `ChaosMax` BASE with no flag, as its cold and lightning rows (855 to 866), which the engine maps already. (Its fire and physical global forms have no row, so they stay unmapped, as the mapping's test says.)
+
+**The engine:** two `HIT_ROWS` rows, as the cold and lightning ones.
+
+**Fixture** (original) `ice-nova-global-added-chaos-witch.xml`: Ice Nova with "Adds 18 to 28 Chaos Damage": average hit 1,309.6 to 1,351.3. Every field equals PoB's.
+
+**Evidence** (`local/p6/d27che` on `b-pb`, against `local/p6/d27lfe`): public 0 unexpected; no value moved (the build is a minion build, whose fields keep other reasons); `Complete` 54,387 to 54,474 with the fixture. Corpus 0 unexpected, no document changed.
+
+## If the helmet, body armour, gloves, and boots all have a defence (the agent list, 2026-11-27)
+
+**The stats** (public 97 and 96 fields, one build each): "+#% to all maximum Elemental Resistances if Equipped Helmet, Body Armour, Gloves, and Boots all have Armour" (`additional_maximum_all_elemental_resistances_%_if_all_equipment_grants_armour`) and "+#% chance to Suppress Spell Damage if ... all have Evasion Rating" (`spell_suppression_chance_%_if_all_equipment_grants_evasion`).
+
+**PoB** (`ModParser.lua` 1648 to 1657): the mod with a tag list of `StatThreshold` on `<Defence>On<slot>` at least 1 for each of the four slots, each piece's own value.
+
+**The engine:** `Poe1Quantity::MaxElementalResistIfAllPiecesArmour` and `SuppressionIfAllPiecesEvasion` (`Base`); `phases::all_pieces_have` checks each of the four slots is equipped and its piece's own defence ([`piece`], as P6-11by's `hybrid_pieces`) is at least 1, and `sum_with_all_pieces` adds the line to the elemental maximums (also under Melding of the Flesh's highest maximum) and to the suppression sum.
+
+**Fixtures** (original): `ice-nova-all-pieces-armour-witch.xml` (four plain armour pieces, both lines, resistances at 150%: fire 80, suppression 0) and `ice-nova-all-pieces-evasion-witch.xml` (four evasion pieces: fire 75, suppression 12). Every field equals PoB's.
+
+**Evidence** (`local/p6/d27ape` on `b-pb`, against `local/p6/d27che`): public 0 unexpected, `Complete` 54,474 to 54,648 (the fixtures' 174); 26 values moved, 25 toward PoB, 21 now equal: `boneshatter-juggernaut.xml`'s resistances, maximum hits, damage over time EHPs, and total EHP (69,171 to PoB's 71,294); `elemental-hit-of-the-spectrum-deadeye.xml`'s suppression 77 to 92 (PoB 100). One moved away: that build's configured damage chance, 83.4 to 80.2 (PoB 100), as in the sign tolerance's evidence (`docs/ui/b2-data/item-evidence.md`): PoB moves suppression into damage reduction only at 100%, and below it applies the formula the engine does; the gap is the suppression's last 8 points, from the build's other unread sources. Corpus 0 unexpected, no document changed.
+
+## Other damage types that can ignite (the agent list, 2026-11-27)
+
+**The stat:** `all_damage_can_ignite`, "All Damage with Hits can Ignite" (Shaper of Flames, node 53123; on the tree packs since the maintainer accepted its rewording, `docs/tree/tree-packs.md`, so read on the local pack `b-ig` until the next data run ships the packs). It was unmapped: 510 corpus fields in 5 builds, and the public `penance-brand-ignite-elementalist.xml`.
+
+**PoB** (`ModParser.lua` 2794 to 2805: "All Damage can Ignite" and "All Damage with Hits can Ignite" both give `PhysicalCanIgnite`, `ColdCanIgnite`, `LightningCanIgnite`, `ChaosCanIgnite`): the ignite's source damage (`CalcOffence.lua` 4979 to 5012) sums, in its order, physical, lightning, and cold with their flags, fire unless `FireCannotIgnite`, and chaos with its flag; each other type through `calcAilmentSourceDamage(..., dmgTypeFlags.Fire)`, so fire's modifiers apply to it too. The gate is still `canDeal.Fire`.
+
+**The engine:** `Poe1Quantity::CanInflictWith(Ailment, DamageType)` (`Flag`, a hit quantity), the stat's four rows in `mapping::HIT_ROWS`; `ailment::Spec::sources` lists each type with whether it needs its flag, in PoB's order, and `source_damage` reads a flagged type only when its flag is set, with the gate type's damage flag added. `FireCannotIgnite` stays unmapped.
+
+**Two more found on the way** (the corpus builds the ignite line freed had no other reason on their defence and cost fields, and three of those fields differed from PoB):
+- **The enemy's physical damage converted.** Shaper of Flames also has "Enemies Ignited by you have 40% of Physical Damage they deal converted to Fire" (`enemies_ignited_by_you_have_physical_damage_%_converted_to_fire`). P6-11m had made it a `NoEffect` row ("no slice field"), before P6-10b's enemy hit existed. PoB (`ModParser.lua` 3484 to 3487) gives the enemy `PhysicalDamageConvertTo<Type>` BASE under its condition (ignited, shocked, poisoned; none for "Nearby Enemies Convert #% of their Physical Damage to Fire"), and `CalcDefence.lua` 1720 to 1777 takes it from the enemy's physical hit before taken-as: the shares scaled to a total of 100 when above, physical keeps `1 - total / 100`, each type gains its part, both times the damage modifier and the crit effect. The engine: `Poe1Quantity::EnemyPhysicalConvert(DamageType)`, three state rows (`Enemy:Ignited`, `Enemy:Shocked`, `Enemy:Poisoned`, the settled conditions), the "Nearby Enemies Convert" row, and the conversion in `enemy_hit::phase`. The skill conversions and gains of the enemy stay unmapped.
+- **A main skill the engine computes no hit of** (Penance Brand): its cost is computed, but its gems' stats entered only for a computed hit or damage over time, so Inspiration Support's "#% more Mana Cost" (`support_inspiration_mana_cost_+%_final`) was missing and the cost was `Complete` and wrong (Penance Brand with Inspiration: 32 against PoB's 22). `collect::gems` now applies, for such a skill, the stats of its gems whose every effect is a cost (`CostOnly`, `costs::is_cost`); its other stats have no effect there, as before.
+
+**Fixtures** (original): `ice-nova-all-types-ignite-witch.xml` (added physical, lightning, chaos, and fire to spells, a chance to ignite, increased fire and global physical damage: the ignite from all five, 1,519.86 per second), `ice-nova-cold-hit-ignite-witch.xml` (the cold hit alone as the source, with cold's and fire's increases and the fire DoT multiplier: 1,527.59), `ice-nova-enemy-ignited-converts-witch.xml` (Shaper of Flames' 40% with the enemy ignited: physical PDR 47), `ice-nova-enemy-conversions-capped-witch.xml` (80% lightning when shocked, 10% chaos when poisoned, 30% fire from nearby: 120% scaled to 100), `penance-brand-inspiration-cost-witch.xml` (cost 22). Every compared field equals PoB's.
+
+**Evidence** (`local/p6/d27ige` on `b-ig`, against `local/p6/d27igb`, the branch tip on the same pack): public 0 unexpected, `Complete` 54,648 to 55,077 (the fixtures' 429); 7 values moved, all toward PoB, in `penance-brand-ignite-elementalist.xml` (mana cost 75 to PoB's 45, physical damage reduction 89 to PoB's 90). Corpus 0 unexpected, `Complete` 0 to 190: two builds with Shaper of Flames now equal PoB in every compared field (their physical damage reduction 50 to 63 and 51 to 58, mana cost 56 to 34 and 47 to 32, total EHP to PoB's), and a third's reduction 33 to 59 (PoB 72). Two moved away, both partial on other reasons: a Barrage build's ignite, 8,889 to 12,808 (PoB 6,451), whose hit is already 46% above PoB's (Barrage Support's less damage and Frenzy's per-charge lines unmapped), so the ignite read from it rises once its other types count; and the corpus copy of the Penance Brand build's total EHP, 569,189 to 569,029 (PoB 768,540), as the ignited enemy's physical hit moves to fire, which the build mitigates less; its gap is its other reasons.
+
+## Mana Burn stacks from the config (the agent list, 2026-11-27)
+
+**The input:** `multiplierManaBurnStacks` ("Mana Burn Stacks:", `ConfigOptions.lua` 1105), the tinctures' debuff on you. Not modelled, it was an `unmodelled-config` reason on every field: in the corpus, one build's only reason on 82 fields.
+
+**PoB:** `CalcPerform.lua` 902 to 915 sets `Multiplier:ManaBurnStacks` (at most `MaxManaBurnStacks`), adds `EffectiveManaBurnStacks` BASE, and gives `Multiplier:EffectiveManaBurnStacks` (or `WeepingWoundsStacks` with "Tinctures inflict Weeping Wounds instead of Mana Burn"); `CalcSetup.lua` 545's `ManaDegenPercentTincture` BASE 1 per effective stack is mana's own degeneration, `max(mana x p / 100, p)` times `calcLib.mod(ManaDegen)` (`CalcDefence.lua` 1288 to 1292, at least 1 per stack), taken from mana's regeneration in `ManaRegenRecovery` (1295). Of the slice, only `NetManaRegen` reads it (with `TotalNetRegen`), and only when the build has degeneration (3392 to 3468).
+
+**The engine:** `degen::handles` marks the input applied; `net_regen` takes `max(mana x stacks / 100, stacks)` from mana's regeneration first. The cap, the extra effective stacks, Weeping Wounds, and the increases of mana degeneration have no mapped stat (a line with one is a reason of its own); no mapped stat reads `ManaBurnStacks`.
+
+**Fixtures** (original): `degen-mana-burn-witch.xml` (Righteous Fire and 3 stacks, 1,090 mana: net mana regeneration -13.6) and `degen-mana-burn-minimum-witch.xml` (level 1, 56 mana, 8 stacks: 1 per stack, -7). Every field equals PoB's.
+
+**Evidence** (`local/p6/d27mbe` on `b-ig`, against `local/p6/d27ige`): public 0 unexpected, `Complete` 55,077 to 55,261 (the fixtures' 184), no other value moved. Corpus 0 unexpected, `Complete` 190 to 266: the build's 76 fields `partial` to `Complete`, all equal to PoB. Two of its values moved away, both `indeterminate` on other reasons: its net mana regeneration 11.6 to -1.6 (PoB 7.2) and total net regeneration; the 13.2 taken equals PoB's `ManaDegen`, and the gap is the build's mana regeneration itself (11.6 against PoB's 20.4).
+
+## No Life Modifiers on Equipped Body Armour, by the base (the agent list, 2026-11-27)
+
+**The condition:** "if there are no Life Modifiers on Equipped Body Armour" (`NoLifeModifiersOnBodyArmour`, P3-8n), which the engine settles by the game's rule, the mods' `life` implicit tag, not PoB's text rule (`ItemCondition` with `searchCond = "life"`). In the corpus it was the last reason of two builds (27 fields each) and one of a third's: each body armour has "+# to maximum Life", yet the condition stayed unsettled.
+
+**Why:** `base_maximum_life` is also on mods without the `life` tag, so "a stat only on tagged mods" failed. In data schema 6 those are 23 rows of one generation type, the Crucible weapon tree's life rows (`WeaponTreeIncreasedLife1` and kin), whose spawn weights put them on shields alone (`shield` 1000 or 500, `default` 0). They cannot be on a body armour.
+
+**The change** (the maintainer's choice, 2026-11-27: the game's tags, narrowed by the base, rather than PoB's text rule or the card's display-only affix inference):
+- `CalcData::mods_by_tag_on(tag, stats, base)`: an untagged mod that rolls by spawn weights (a positive weight on some tag) is left out when no base row of that name spawns it, the weight being that of the first of its spawn tags the base has (the game's rule, as `loom_parser`'s `ModRow::weight`). Mods with no positive weight (uniques, essences, crafts) stay, as before; a base whose tags the data lacks narrows nothing.
+- `states::no_life_modifiers_on_body_armour` asks it with the base the import found (`CalcOptions::item_bases`, else its fallback). A line the check cannot read (an unresolved modifier, a line of the player's own text) now leaves only `true` unsettled: it can only add mods, so a life mod the read lines show still settles `false`.
+
+**Fixture** (original): `life-mastery-life-modifier-plate-templar.xml`, the P3-8n Life Mastery build with "+70 to maximum Life" on its Astral Plate: no 15%, life 1,436, every field equal to PoB's. A second, with a named `IncreasedLife6` prefix and a line of free text, also equals PoB (1,430) but keeps that line's own reason, so it has no `Complete` field to pin and is not added; the corpus build with such a line shows the case.
+
+**Evidence** (`local/p6/d27nle` on `b-ig`, against `local/p6/d27mbe`): public 0 unexpected, `Complete` 55,261 to 55,337 (the fixture's 76), no value moved. Corpus 0 unexpected, `Complete` 266 to 319: 53 fields `partial` to `Complete`, all equal to PoB, no value moved (the engine's value already left out the 15%; the condition had only been unsettled). The third build's condition settles too and its fields keep their other reasons.
+
+## Sigil of Power's stages (the agent list, 2026-11-27)
+
+**The reason:** `sigil-of-power-stages` (public 78 fields, corpus 186), P6-11fx's reason for Sigil of Power's added lightning per stage and the enemy's less damage at the maximum.
+
+**PoB** (`act_int.lua`, `SigilOfPower`; `ConfigOptions.lua` 620): `LightningMin` and `LightningMax` BASE per `Multiplier:SigilOfPowerStage`, at most `SigilOfPowerMaxStages` (the gem's constant `circle_of_power_max_stages`, 4), as a `GlobalEffect` buff; the stages are the config's `sigilOfPowerStages`, and without an input `BuildModList` applies the saved placeholder, else the option's `defaultPlaceholderState`, 1 (`ConfigTab.lua` 1083 to 1092). The enemy's `Damage` MORE carries a `MultiplierThreshold` tag with `actor = "enemy"`: read on the enemy, its enemy is the character, so it applies once the character's stages reach the maximum (the fixture's total EHP 745 to 919 in PoB at 6 stages).
+
+**The engine:** `BuffStat::PerCount` has an optional `default` (the placeholder, then the default, when the input is absent); the new `BuffStat::AtCount` applies its rows, unscaled, once the count reaches a value. `sigilOfPowerStages` moved from `config::NAMED_ONLY` to the inputs `poe1::gems` reads. The `gem_effects` check (`data-parity`) reads `AtCount`'s tag, and leaves out PoB's minions' copy of a buff row (a `Multiplier` with `actor = "parent"`), which the engine gives minions through the minion actor.
+
+**Fixtures** (original): `ice-nova-sigil-of-power-default-witch.xml` (no input: 1 stage, average damage 823.78), `...-three-stages-witch.xml` (1,015.71), `...-six-stages-witch.xml` (4 stages, 1,111.42, total EHP 919.23 with the enemy's less damage). Every field equals PoB's.
+
+**Evidence** (`local/p6/d27spe` on `b-ig`, against `local/p6/d27nle`): public 0 unexpected, `Complete` 55,337 to 55,598 (the fixtures' 261); 4 values moved, all toward PoB (`shock-nova-archmage-hierophant.xml`'s damage, partial on its other reasons). Corpus 0 unexpected, 4 values toward PoB, none away. `data-parity` on `b-ig`: Sigil of Power's rows match; 10 `uncategorized` rows remain from earlier steps of this PR, which changed the gem table without a `data-parity` run (the last clean one was S3 part 8's, `local/p6/dp-s3f`): Blood Rage's and Righteous Fire's degeneration (the check has no form for `Degen` and its `PerStat` tag), Frost Shield's energy shield loss (a net regeneration marker), Vaal Grace's reason stat, and the craft trigger (Check 4). They are check forms, not values; on the agent list.
+
+## The `gem_effects` check's forms since S3 part 8 (the agent list, 2026-11-27)
+
+Sigil of Power's `data-parity` run found 10 `uncategorized` rows from earlier steps of this PR, each a form the check (`tools/parity-cli/src/data_parity/gem_effects.rs`) lacked, none a value:
+- **Blood Rage's and Righteous Fire's degeneration** (S7 part 8): the check had no PoB name for `Poe1Quantity::Degen`; it is `<Type>Degen`, and a degeneration per point of life, energy shield, or mana carries PoB's `PerStat` tag (`div` 1) before the variant's own tags. Righteous Fire of Arcane Devotion's per-mana row also carries `Mana` at least 1, which a value per point of mana implies (0 without mana).
+- **Frost Shield's energy shield loss:** a net regeneration marker (`NetRegenReason`), skipped as the other field-reason markers are.
+- **Vaal Grace's** "Suppressed Spell Damage dealt to you is Unlucky": PoB's stat map has no row, the engine keeps it a reason (open items S2); `ENGINE_ONLY_GLOBAL` lets the table list it.
+- **The crafted socketed-spell trigger** (Check 4): ported as PoB's trigger craft, so its `Triggered` type and `triggeredByCraft` data are allowed, as the other ported trigger supports'.
+
+**Evidence:** `data-parity` on `b-ig` against PoB's export (`local/p6/dp-d27dp`): 753 differences, `uncategorized` 0, 0 failed rules. No calculation changed. `loom-parity-cli` tests, clippy, and rustfmt pass.
+
+## A skill's own chill effect (the agent list, 2026-11-27)
+
+**The reason:** `skill-chill-effect` (public 177 fields in 2 builds), a chilling-area skill whose own gems give it chill effect (Frost Shield's quality, Bonechill, Unbound Ailments), its guaranteed chill kept at the character's effect.
+
+**PoB** (`CalcPerform.lua` 1393 to 1396): the chill override is `10 x calcLib.mod(activeSkill.skillModList, skillCfg, "EnemyChillEffect")`, so the skill's own `chill_effect_+%`, `cold_ailment_effect_+%`, and `non_damaging_ailment_effect_+%` (INC) and `active_skill_chill_effect_+%_final` (MORE) join the character's increases (`SkillStatMap.lua` 1085 to 1122).
+
+**The engine:** `gems::guaranteed_chill` adds the skill's gems' chill effect stats (its instance with quality, its supports') as `Poe1Quantity::SkillChillEffect` beside its `SkillChill`, with the same source; `damage_taken::chill` scales each skill's chill by `(1 + (character's inc + skill's inc) / 100) x round(more, 2)`.
+
+**Fixtures** (original): `ice-nova-frost-shield-quality-chill-witch.xml` (Frost Shield at quality 20, with "Damage taken increased by Chill Effect": average damage 814.85) and `ice-nova-frost-shield-unbound-chill-witch.xml` (with Unbound Ailments and 20% increased Effect of Chill: 865.78). Every field equals PoB's.
+
+**Evidence** (`local/p6/d27ch2e` on `b-ig`, against `local/p6/d27spe`): public 0 unexpected, `Complete` 55,598 to 55,772 (the fixtures' 174); 4 values moved, in `winter-orb-elementalist.xml`: its average damage toward PoB (24,727 to 25,559, PoB 37,942), its DPS away (242,329 to 250,475, PoB 219,115), because the engine multiplies by the cast rate (9.8) where PoB uses Winter Orb's own hit rate (5.775; Winter Orb's mechanics are not modelled, a reason on the build). Corpus 0 unexpected, no value moved.
+
+## Toxic Rain's hit vetted (the agent list, 2026-11-27)
+
+**The reason:** `pob-skill-data` on Toxic Rain (`toxic-rain-damage-templar.xml`, 8 fields, their only reason). PoB's `preDamageFunc` (`act_dex.lua`, `ToxicRain` and its two transfigured gems) sets `dpsMultiplier = min(podOverlapMultiplier or 1, ProjectileCount)`, which is 1 unless the config's `toxicRainPodOverlap` sets the overlap (`ConfigOptions.lua` 700 to 702); its base mods add `OneShotProj` (read only with sequential projectiles) and `DotCanStack` (read only for the DoT, the mirages, and full DPS).
+
+**The engine:**
+- `hit::CONFIG_NOOP_FUNCTIONS`: the three functions count as read; the attack keeps `pob-skill-data` when the build sets `toxicRainPodOverlap` (`config_noop_set`). `config::SKILL_DATA_ONLY`'s test allows a skill listed there.
+- `hit::READ_BASE_FLAGS` gains `DotCanStack`.
+- A stacking DoT (`DotCanStack`), which PoB adds to `TotalDot`, was left `NotComputed` by `poe1::dot`, so full DPS read it as 0 with no reason; it is now the DoT field's reason `stacking-dot`, which `full_dps` carries. Toxic Rain's full DPS (hits 3.19, PoB 551.56 with its pods) is now partial.
+
+**Fixture:** `toxic-rain-damage-templar.xml` (mechanic) retargeted: its hit, crit, and average damage now `Complete` and equal to PoB's; the attack rate is the Q11 floored-millisecond rate (1.6492 against PoB's 1.65), with its DPS and mana per second: `game-truth` DIV-1008 to DIV-1010.
+
+**Evidence** (`local/p6/d27tre` on `b-ig`, against `local/p6/d27ch2e`): public 0 unexpected, `Complete` 55,772 to 55,779 (Toxic Rain's 7 fields), no value moved; corpus 0 unexpected, no value moved.
+
+## A skill part's DPS multiplier (the agent list, 2026-11-27)
+
+**The gap:** PoB's `skillData.dpsMultiplier` from a part's base mod (`skill("dpsMultiplier", 2, { type = "SkillPart", skillPart = n })`) was not read: Shield Crush's part 2 kept `pob-skill-data`, and Shock Nova's part 1 ("Ring + Nova") and Lacerate's part 2 (both slashes) were unvetted. PoB multiplies it into `TotalDPS`, every damaging ailment's stacks, the leech hit rate, and the impale DPS (`CalcOffence.lua` 3712, 4322, 4603, 4908, 4024, 6035).
+
+**The engine:** `hit::READ_PART_BASE_MODS` lists the eight tagged ones (Shield Crush and its transfigured gem in part 2, Shock Nova and its transfigured gem in part 1, Lacerate, its two transfigured gems, and Eviscerate in part 2) as read; `hit::part_dps_multiplier` gives the part's value; the spell and the single-hand attack multiply the hit DPS by it, and pass `rate x dpsMultiplier` to the ailments (their stacks and impale) and the leech (`rate_with`). A dual wielder's pass with a multiplier above 1 keeps a reason (`dual-wield-dps-multiplier`). Shock Nova's ring's chance to shock joins `NO_SLICE_OWN_STATS` (a chance to shock reaches no slice field); its `shock_maximum_magnitude_+` stays a reason (PoB reads it per active skill for the shock's maximum, `damage_taken::SHOCK_DEPENDS_ON`). Untagged multipliers (Double Strike's, spectres') keep their skills unvetted.
+
+**Fixture** (original): `shield-crush-overlapping-waves-templar.xml` (the Shield Crush defences build in part 2: DPS 130.10, twice part 1's); every field equals PoB's. Lacerate in part 1 and part 2 on the Smite bleeding build gives PoB's doubling exactly (TotalDPS both over one = 2.0); its fields are partial on Lacerate's Blood Stance stats, so not added.
+
+**Evidence** (`local/p6/d27dme` on `b-ig`, against `local/p6/d27tre`): public 0 unexpected, `Complete` 55,779 to 55,867; 6 values moved, all toward PoB, in `shock-nova-archmage-hierophant.xml` (its DPS doubled, its ignite and leech, the life leech now equal to PoB's). Corpus 0 unexpected; 9 values toward PoB, none away (three builds' DPS, impale, and bleeding).
+
+## Lacerate's stances (the agent list, 2026-11-27)
+
+**The stats:** Lacerate's own "#% more Damage with Bleeding while in Blood Stance" (`active_skill_bleeding_damage_+%_final_in_blood_stance`), "#% chance to cause Bleeding while in Blood Stance" (`chance_to_bleed_on_hit_%_chance_in_blood_stance`), and its quality's "#% increased Attack Speed if you've changed Stance recently" (`attack_speed_+%_if_changed_stance_recently`): unmapped, and own stats that kept Lacerate unvetted.
+
+**PoB:** `Damage` MORE `KeywordFlag.Bleed` and `BleedChance` BASE `ModFlag.Attack` under `Condition:BloodStance` (`SkillStatMap.lua` 1160, 1005), set unless Sand Stance (`CalcSetup.lua` 538; the config's `bloodSandStance`, `ConfigOptions.lua` 643); `Speed` INC `ModFlag.Attack` under `ChangedStanceRecently`, the config's `changedStance` check (648).
+
+**The engine:** `conditions::BLOOD_STANCE` and `SAND_STANCE` settled from `bloodSandStance` (Blood unless `SAND`); `CHANGED_STANCE_RECENTLY` from the `changedStance` check (moved from `config::NAMED_ONLY`); the three stats as state rows; Lacerate's three own stats in `hit::READ_OWN_STATS`.
+
+**Fixtures** (original, from the Smite bleeding build): `lacerate-both-slashes-bleed-templar.xml` (part 2, Blood Stance: bleeding 61.51), `lacerate-one-slash-bleed-templar.xml` (part 1: 44.55), `lacerate-sand-stance-bleed-templar.xml` (Sand Stance: 14.54), `lacerate-changed-stance-quality-templar.xml` (quality 20, stance changed: attack rate 1.0795). Every field equals PoB's but the Q11 floored-millisecond attack rate and what follows from it: `game-truth` DIV-1011 to DIV-1034.
+
+**Evidence** (`local/p6/d27lae` on `b-ig`, against `local/p6/d27dme`): public 0 unexpected, `Complete` 55,867 to 56,223 (the fixtures'), no value moved (the public Lacerate build is Lacerate of Haemorrhage, which keeps its other reasons); corpus 0 unexpected, no value moved.
+
+## Kinetic Blast of Clustering (the agent list, 2026-11-27)
+
+**The stats:** its own "Adds #% of your maximum Mana as Physical Damage to Attacks" (`added_physical_damage_to_attacks_equal_to_%_maximum_mana`, an own stat that kept it unvetted), "Modifiers to number of Projectiles instead apply to the number of Explosions" and "Projectiles cannot Split" (unmapped).
+
+**PoB** (`act_int.lua`, `KineticBlastAltX`): `PhysicalMin` and `PhysicalMax` BASE `ModFlag.Attack` with `PercentStat` `Mana` percent 1, each mod `ceil(value x mana x percent / 100)` (`ModStore.lua` 487 to 530); `NoAdditionalProjectiles` sets the projectile count to 1 (`CalcOffence.lua` 1054), and `CannotSplit` only labels the split count (1069): neither reaches a slice field here.
+
+**The engine:** `Poe1Quantity::AddedDamagePercentOfMana(type)` (a hit row, `Flags::ATTACK`), read by `hit::mana_added` with the maximum mana into both ends of the added damage beside the shield's; the stat in `hit::READ_OWN_STATS`; the two others `NoEffect` rows (`projectile-count`, `no-slice`).
+
+**Fixtures** (original): `kinetic-blast-clustering-mana-witch.xml` (a Carved Wand, +700 maximum mana: TotalDPS 21.08) and `kinetic-blast-clustering-explosions-witch.xml` (part 2). Every field equals PoB's.
+
+**Evidence** (`local/p6/d27kbe` on `b-ig`, against `local/p6/d27lae`): public 0 unexpected, `Complete` 56,223 to 56,399; 6 values moved, all toward PoB, in `kinetic-blast-of-clustering-necromancer.xml` (average damage 3,385 to 43,598, PoB 56,682; life and mana leech within 0.1% of PoB's; partial on its other reasons). Corpus 0 unexpected, no value moved.
+
+## Elemental Hit of the Spectrum (the agent list, 2026-11-27)
+
+**The stats:** Elemental Hit's added fire, cold, and lightning damage (`attack_<min|max>_added_<type>_damage_for_elemental_hit`), "Deals no Physical or Chaos Damage" (`elemental_hit_no_physical_chaos_damage`), and "#% more Damage for each different Elemental Ailment on the enemy" (`elemental_hit_damage_+%_final_per_enemy_elemental_ailment`), unmapped; its base mods `Multiplier:ElementalHitAilmentOnEnemy` kept Elemental Hit of the Spectrum unvetted.
+
+**PoB** (`act_dex.lua`): `<Type>Min` and `Max` BASE `KeywordFlag.Attack`; `DealNoPhysical` and `DealNoChaos`; `Damage` MORE per `Multiplier:ElementalHitAilmentOnEnemy`, which its base mods set to 1 for each of the enemy's `Ignited`, `Chilled`, `Frozen`, `Shocked`, `Scorched`, `Brittle`, `Sapped`.
+
+**The engine:** the seven stats as hit rows; `stacks::StackKind::EnemyElementalAilments` with the more damage per stack, counted by `stacks::enemy_elemental_ailments` after the damage taken: the settled ignited, frozen, and shocked checks, the chilled check or a guaranteed chill, a guaranteed shock, and the scorched, brittle, and sapped checks (PoB's conditions hold at a configured effect of 0 too). `hit::READ_BASE_MODS` lists the multiplier mods as read; the more damage stat in `READ_OWN_STATS`, the explosion radius in `NO_SLICE_OWN_STATS`. The base Elemental Hit keeps its part-tagged `DealNo` mods unread.
+
+**Fixtures** (original, a Carved Wand): `elemental-hit-spectrum-no-ailment-templar.xml` (average damage 84.67), `elemental-hit-spectrum-ignited-shocked-templar.xml` (101.59), `elemental-hit-spectrum-chilled-frozen-scorched-templar.xml` (110.14). Every field equals PoB's.
+
+**Evidence** (`local/p6/d27ehe` on `b-ig`, against `local/p6/d27kbe`): public 0 unexpected, `Complete` 56,399 to 56,666; 4 values moved, all toward PoB, in `elemental-hit-of-the-spectrum-deadeye.xml` (average damage 301,793 to 1,090,427, PoB 5,548,297; partial on its brittle input and other reasons). Corpus 0 unexpected, no value moved.
+
+## Brittle from the config (the agent list, 2026-11-27)
+
+**The inputs:** `conditionEnemyBrittle` and `conditionBrittleEffect` ("Is the enemy Brittle?", "Effect of Brittle:", `ConfigOptions.lua` 1905 to 1911), each an `unmodelled-config` reason on every field (public: the Elemental Hit build's 96 fields).
+
+**PoB:** the check sets the enemy's `Condition:Brittle` and `BrittleConfig`, the effect its `BrittleVal`; the ailment table (`CalcPerform.lua` 3485 to 3489) gives the enemy `SelfCritChance` BASE `num`, `num = floor(min(max(override, BrittleVal), 6) x 100) / 100` (`ailmentData.Brittle`: max 6, precision 2), which the hit's crit chance adds. The option's `ifFlag` only decides its visibility; `BuildModList` applies it.
+
+**The engine:** `damage_taken` reads both inputs beside scorch and sap (`BRITTLE_INPUT`, `BRITTLE_EFFECT_INPUT`), the crit chance BASE as the curses' `SelfCritChance` is summed (P6-9e); `damage_taken::handles` marks them applied; Elemental Hit's count reads the check. The tests that used brittle as an unmodelled input use `ignoreJewelLimits` and `overrideEmptyRedSockets`, which the engine does not name.
+
+**Fixtures** (original): `ice-nova-enemy-brittle-witch.xml` (effect 4.5: crit chance 12) and `ice-nova-enemy-brittle-capped-witch.xml` (effect 9, capped at 6: 13.5). Every field equals PoB's.
+
+**Evidence** (`local/p6/d27bre` on `b-ig`, against `local/p6/d27ehe`): public 0 unexpected, `Complete` 56,666 to 56,840; 5 values moved, all toward PoB, in `elemental-hit-of-the-spectrum-deadeye.xml` (crit chance 65.0 to 81.0, PoB 100; partial on its other reasons). Corpus 0 unexpected, no value moved.
+
+## Point Blank, Far Shot, and the stance stats of Perforate (the agent list, 2026-11-27)
+
+**The stats:** `keystone_point_blank` (Point Blank, the keystone and its support) and `player_far_shot` (Far Shot), kept as reasons in `config::DEPENDS_ON` because they read the skill's distance; `blood_spears_damage_+%_final_in_blood_stance` (Perforate and Blood Spears) and `skill_area_of_effect_+%_final_in_sand_stance`, unmapped.
+
+**PoB** (`CalcOffence.lua` 1045 to 1053): with `PointBlank`, `Damage` MORE 30 for projectile attacks with `DistanceRamp` `{10, 1}, {35, 0}, {120, -1}`; with `FarShot`, MORE 100 with `{10, -0.2}, {25, 0}, {70, 0.6}`; the ramp is linear between points, the end values outside (`ModStore.lua` 555 to 570), at the skill's distance (`projectileDistance`, 40 by default). The stance stats are `Damage` MORE under `BloodStance` and `AreaOfEffect` MORE under `SandStance`.
+
+**The engine:** `Poe1Quantity::DistanceFlag` (a hit quantity, so the support's flag reaches the skill), turned by `collect::distance_flags`, after the gems, into the main skill's `Damage` MORE with `ATTACK | PROJECTILE` at the ramp (`piecewise`); the two stats leave `config::DEPENDS_ON`. Blood Spears' damage is a state row under `BLOOD_STANCE`; the Sand Stance area a `NoEffect` "area" row.
+
+**Fixtures** (original, the Burning Arrow bow build): Far Shot at the default distance and at 10, the Point Blank support at both. Every field equals PoB's but the Q11 floored-millisecond bow rate and what follows from it: `game-truth` DIV-1035 to DIV-1058.
+
+**Evidence** (`local/p6/d27fse` on `b-ig`, against `local/p6/d27bre`): public 0 unexpected, `Complete` 56,840 to 57,196; 9 values moved, 5 toward PoB (Elemental Hit of the Spectrum's DPS with its Far Shot, a Perforate build's bleeding to within 2% of PoB's), 4 away: the same Perforate build's hit, average damage 863,707 to 206,879 (PoB 604,979), which now takes Perforate's 75% less damage in Blood Stance while the `dpsMultiplier` PoB pairs with it, the configured spike overlap up to its spears (`perforateSpikeOverlap`, a `Multiplier` base mod with `limitVar`), is not read: the build keeps `pob-skill-data`; on the agent list. Corpus 0 unexpected, no value moved.
+
+## Perforate's spike overlap (the agent list, 2026-11-27)
+
+**The gap:** PoB's Perforate (`act_str.lua`) sets `dpsMultiplier` by a base mod, `skill("dpsMultiplier", 1, { Multiplier PerforateSpikeOverlap, limitVar <spears> }, { Condition BloodStance })` (Perforate of Bloodshed's without the condition), then `preDamageFunc` keeps it at least 1; the overlap is the config's `perforateSpikeOverlap` (`ConfigOptions.lua` 555), the limit the skill's `blood_spears_base_number_of_spears` (Perforate of Duality's plus its spears after a stance change). Step 53 left the 75% less damage in Blood Stance applied without it.
+
+**The engine:** `hit::perforate_dps_multiplier`: `max(min(overlap, spears), 1)` while its condition holds (the config's stance not `SAND`), the overlap the input, else its placeholder, else 0; multiplied into the single-hand attack's `dpsMultiplier` (the hit DPS, ailments, leech, impale); a dual wielder's keeps a reason. The function and base mods count as read (`READ_PART_FUNCTIONS`, `READ_PART_BASE_MODS`), a tagged radius is display data, the spear stats are `NoEffect` rows read here, `perforateSpikeOverlap` leaves `config::NAMED_ONLY`; Perforate's own stats are listed. `active_skill_bleeding_damage_+%_final` (Perforate of Bloodshed's, `Damage` MORE `KeywordFlag.Bleed`, `SkillStatMap.lua` 1157) is a hit row.
+
+**Fixtures** (original, the Smite hatchet build): Perforate in Blood Stance with 3 overlapping spikes, without the input, in Sand Stance with 3, and Perforate of Bloodshed with 3. Every field equals PoB's but the Q11 floored-millisecond rate and what follows from it: `game-truth` DIV-1059 to DIV-1082.
+
+**Evidence** (`local/p6/d27pfe` on `b-ig`, against `local/p6/d27fse`): public 0 unexpected, `Complete` 57,196 to 57,552; 6 values moved, 5 toward PoB (the Perforate build's DPS 340,006 to 2,720,046, PoB 22,360,013; the Lacerate of Haemorrhage build's bleeding with Bloodshed's row), 1 away: the Perforate build's bleeding, 13,624 to 16,880 (PoB 13,863), its stacks now with the overlap as PoB's, on a hit still about 3 times below PoB's (the 3.13 test build, partial on its other reasons). Corpus 0 unexpected, no value moved.
+
+## A weapon's double damage (the agent list, 2026-11-27)
+
+**The stat:** "Attacks with this Weapon deal Double Damage" (`local_double_damage_with_attacks`, Paradoxica's), unmapped.
+
+**PoB** (`ModParser.lua` 3117): `DoubleDamageChance` BASE 100 with `ModFlag.Hit`, the hand's `{Hand}Attack` condition, and `SkillType.Attack`: that hand's attack hits deal double damage.
+
+**The engine:** `WeaponValue::DoubleDamage` (a weapon row, so the main hand's `Weapon` or the off hand's `OffHandWeapon`); `hit::double_damage` adds 100 per line of the pass's hand to the chance, for an attack's pass only. The same text is also `local_double_damage_with_attacks_chance_%` at 100, so a rare's line stays `ambiguous` (the S9 rule settles a unique's by its own mod).
+
+**Fixtures** (original): `perforate-paradoxica-double-damage-templar.xml` (Perforate with Paradoxica: average damage 9.84, twice the hit) and `ice-nova-paradoxica-double-damage-templar.xml` (a spell: no double damage). Every field equals PoB's but the Q11 floored-millisecond rate and what follows from it: `game-truth` DIV-1083 to DIV-1088.
+
+**Evidence** (`local/p6/d27dde` on `b-ig`, against `local/p6/d27pfe`): public 0 unexpected, `Complete` 57,552 to 57,728; 4 values moved, all toward PoB, in the Perforate build with Paradoxica (average damage 206,879 to 423,529, PoB 604,979). Corpus 0 unexpected, no value moved.
+
+## Enemies Taunted by your Warcries are Intimidated (the agent list, 2026-11-27)
+
+**The stat:** "Enemies Taunted by your Warcries are Intimidated" (`enemies_taunted_by_your_warcies_are_intimidated`), unmapped in one public build.
+
+**PoB** (`ModParser.lua` 5023): an `EnemyModifier` of `Condition:Intimidated` under the enemy's `Taunted`, itself under `UsedWarcryRecently`; Intimidate then gives the enemy 10% increased attack damage taken, as the config's check.
+
+**The engine:** a state row on `conditions::ENEMY_TAUNTED_BY_WARCRY` (the enemy taunted and a warcry used recently, settled by the close-out's M5) setting `Poe1Quantity::EnemyIntimidated`; `damage_taken`'s Intimidate reads that flag also under settled conditions that all hold, as Onslaught's reader does.
+
+**Found on the way, for the maintainer** (`dev/active/open-items/maintainer-follow-ups.md`): PoB's parser (`tools/oracle/data/pob_parse_lines.lua`) reads none of "You take #% increased (or reduced) Extra Damage from Critical Strikes per Endurance Charge" (a public build with 10 endurance charges has PoB's `CritExtraDamageReduction` 0), and leaves "against Rare monsters" and "on Non-Impaled Enemies" over in two other single-build lines, so it applies nothing for them. Each needs a check in the game before a `game-truth` mapping; they stay reasons.
+
+**Fixtures** (original, the Smite hatchet build): the line with a warcry used recently and the enemy Taunted (attack damage taken 10% higher), and with the enemy Taunted alone (nothing). Every field equals PoB's but the Q11 floored-millisecond rate and what follows from it: `game-truth` DIV-1089 to DIV-1099.
+
+**Evidence** (`local/p6/d27tie` on `b-ig`, against `local/p6/d27dde`): public 0 unexpected, `Complete` 57,728 to 57,904 (the fixtures'); no value moved (the public build with the line sets no taunt). Corpus 0 unexpected, no value moved.
+
+## Exerted attacks from every warcry (the agent list, S5, 2026-11-27)
+
+**The gap:** only Intimidating Cry's exerted attacks were modelled (its uptime, for the double damage, close-out). Overexertion's more damage, "Exerted Attacks deal #% increased Damage" (`empowered_attack_damage_+%` on passives, `warcry_grant_damage_+%_to_exerted_attacks`), and the extra exerts ("Warcries Exert # additional Attack", "Warcries Exert twice as many Attacks") were unmapped.
+
+**PoB:** each warcry buff gives `Num<Cry>Exerts`, `floor((base + ExtraExertedAttacks BASE) x ExtraExertedAttacks MORE)`, the base the gem's `skill_empowers_next_x_melee_attacks` (`CalcPerform.lua` 2311 to 2320). In the damage passes (`CalcOffence.lua` 2539 to 2802), for a skill warcries can exert (not `NeverExertable`, triggered, channelled, used by another thing, a retaliation, or a totem's), each of Ancestral (a `MeleeSingleTarget` skill), Infernal, Intimidating, Rallying (`Melee`), Seismic (`Slam`), and Battlemage's Cry (`Melee`) gives its uptime `min(100, min((exerts / speed) / (cooldown + cast time), 1) x 100 x stored uses)`; `ExertedAttackUptimeRatio` is the largest, `GlobalWarcryUptimeRatio` the sum. With the first above 0 the skill's list gains `Damage` INC `ExertIncrease` INC x uptime / 100, `Damage` MORE `ExertIncrease` MORE x uptime / 100, and `Damage` MORE `OverexertionExertAverageIncrease` MORE x the sum / 100, each summed (`Sum`, not `More`).
+
+**The engine:** `gems::ExertCry` names the six cries with their skill types; the first gem of each gives its terms (`Poe1Quantity::ExertingCry`, the former `IntimidatingCry` generalised, the base exerts no longer floored before the extras). `hit::exerted_attacks` runs once before the hands' passes, with the global speed: the uptimes, Intimidating Cry's for the double damage as before, and the three `Damage` effects added to the store as PoB's `NewMod` (the skill's list, so the more product's skill group). New quantities `ExtraExertedAttacks` (`Base`, `More`), `ExertDamage` (`Increased`, `More`), `ExertAverageDamage` (`More`); five mapping rows. `ExertAttackIncrease` ("if a warcry sacrificed Rage recently"), Echoes of Creation, the warcry max-hit mode, and Spiritual Cry's "count as Exerted" stay reasons.
+
+**Fixtures** (original, the Smite Siege Axe build): Overexertion with Intimidating Cry; Overexertion with Ancestral, Infernal, Rallying, and Seismic Cry (Smite is no slam); Intimidating Cry with the three exert lines (exerts `floor((base + 1) x 2)`); the increased damage line without a cry (nothing); Overexertion with Battlemage's Cry. Every field equals PoB's but the Q11 floored-millisecond rate and what follows from it (the uptime reads the rate): `game-truth` DIV-1100 to DIV-1134.
+
+**Evidence** (`local/p6/d27exe` on `b-ig`, against `local/p6/d27tie`): public 0 unexpected, `Complete` 57,904 to 58,345 (the fixtures'); no other value moved (the public builds with these stats are partial on other reasons: General's Cry, Spiritual Cry, unmodelled main skills). Corpus 0 unexpected, no value moved.
+
+## Infinite and minimum warcry power (the agent list, S5, 2026-11-27)
+
+**The stats:** "Warcries have infinite Power" (`warcries_have_infinite_power`, one public build) and the Warcry mastery's "Warcries have a minimum of 10 Power" (`warcries_have_minimum_10_power`, value 1, one public build), unmapped.
+
+**PoB:** the first is `WarcryInfinitePower`, a `WarcryPower` OVERRIDE of 999999 added in `CalcPerform.lua` 1308, after the config's own OVERRIDE (`ConfigOptions.lua` 732), so a configured power is still the one `modDB:Override` returns; it is also `Multiplier:WarcryPower` (1311). The second is `MinimumWarcryPower` BASE 10, read only by the cries' buff power, `max(base x (1 + inc / 100), minimum)` (2327), not by `Multiplier:WarcryPower`.
+
+**The engine:** `Poe1Quantity::WarcryInfinitePower` (`Flag`) and `MinimumWarcryPower` (`Base`, the row's scale 10), read by `skill_modifiers::Totals`; `gems::warcry_power` takes both: the config's input, else its placeholder, else `INFINITE_WARCRY_POWER` with the flag, else the base with the minimum. The armour per power (`collect::warcry_power_armour`, PoB's multiplier) reads the flag and no minimum.
+
+**Fixtures** (original): Ice Nova with Intimidating and Enduring Cry and infinite power (each buff to its limit), the same with the config's power 12 (the config's), the two cries with the minimum against no boss (power 10), and the armour per 5 power against no boss with infinite power (the 100% limit) and with the minimum (nothing). Every field equals PoB's.
+
+**Evidence** (`local/p6/d27wpe` on `b-ig`, against `local/p6/d27exe`): public 0 unexpected, `Complete` 58,345 to 58,780 (the fixtures'); no other value moved. Corpus 0 unexpected, no value moved.
+
+## General's Cry's mirage warriors (the agent list, S5, 2026-11-27)
+
+**The gap:** a melee attack General's Cry supports (`triggered_by_spiritual_cry`, its support's `support_spiritual_cry_damage_+%_final`, `number_of_warcries_exerting_this_action`) and "General's Cry has +# to maximum number of Mirage Warriors" (`generals_cry_maximum_warriors_+`, confirmed in the game 2026-11-26: 5 to 6) were unmapped.
+
+**PoB** (`CalcMirages.lua` 344 to 419): for a skill with `triggeredByGeneralsCry` (`SkillStatMap.lua` 256, a melee attack), the first General's Cry in the skill list whose socket group's slot is the main skill's gives its cooldown (`calcSkillCooldown`) and `GeneralsCryDoubleMaxCount` (the gem's `maximum_number_of_spiritual_cry_warriors` and the character's lines). The skill becomes `Triggered` and `OtherThingUsesSkill` (no warcry exerts it), gets `QuantityMultiplier` of the warriors, `DPS` MORE `(1 / max(cooldown, its own HitTime or attack time) - 1) x 100`, a hit time override of 1 unless it is channelled, `HasNoCost` (no cost output at all), and `Damage` copies of its `ExertIncrease` INC and MORE, `ExertAttackIncrease` MORE, and `OverexertionExertAverageIncrease` MORE ("Supported Attacks Count as Exerted"). `TotalDPS = AverageDamage x HitSpeed x dpsMultiplier x quantityMultiplier` (`CalcOffence.lua` 3712), `More` rounding the `DPS` factor to two decimals.
+
+**Found on the way: PoB's skill mod lists.** A calc module's `skillModList:NewMod` goes to the skill's own list, whose parent (`baseSkillModList`, `CalcPerform.lua` 1262) holds the gems' mods and whose grandparent is the character's; `ModList:MoreInternal` rounds each list's product per name on its own. The copies of Overexertion's 14% and 10% beside General's Cry Support's -51%: `0.49 x round(1.14 x 1.10, 2) = 0.6125`, not `round(0.49 x 1.14 x 1.10, 2) = 0.61`. The engine's `hit::more` now has that first tier: `Poe1Quantity::NewModDamage`, the `Damage` MORE a phase adds mid-calculation (General's Cry's copies, and the exerted attacks' MORE from the previous step).
+
+**The engine:** `gems` gives the first General's Cry in the main skill's slot as `Poe1Quantity::GeneralsCry` terms (cooldown, warriors; `gems::GeneralsCryValue`); `hit::generals_cry_supported` and `hit::generals_cry` do the rest for a single-hand attack (the quantity multiplier its own factor, after the DPS multiplier, as PoB's product); `costs` sets no cost field for such a skill. Reasons: no General's Cry in the slot (`generals-cry-not-found`; PoB fails), a dual wielder (`generals-cry-dual-wield`: PoB forces the main hand), a channelled skill (`generals-cry-channel`: its own time and the spawn time). Mapped: the support's less damage (a hit row), the two support stats (`NoEffect`, read here), the character's warriors line.
+
+**Fixtures** (original, the Smite Siege Axe build with General's Cry in its group): the cry alone; with the warriors line and 20% quality; with Overexertion and "Exerted Attacks deal 30% increased Damage" (the copies, the own list's rounding); with 60% increased cooldown recovery. Every field equals PoB's but the Q11 floored-millisecond rate (`game-truth` DIV-1135 to DIV-1138; the DPS reads the cry's cooldown, the longer time); the cost fields are not computed, as PoB has none.
+
+**Evidence** (`local/p6/d27gce` on `b-ig`, against `local/p6/d27wpe`): public 0 unexpected, `Complete` 58,780 to 59,116 (the fixtures'); 6 values moved, 4 toward PoB (`Generals Perforate Zerker.xml`'s TotalDPS 5.57 to 6.94 million, PoB 22.4 million, its ImpaleDPS and CombinedDPS; `cyclone-shockwave-slayer.xml`'s FullDPS 55.9 to 62.4 million, PoB 68.4 million), 2 away: the Perforate build's AverageDamage 423,529 to 247,876 (PoB 604,979) and its BleedDPS, now with the support's 51% less, which PoB applies too, on a hit already below PoB's for the build's other reasons. Corpus 0 unexpected, no value moved.
+
+## Volley and Greater Volley (the agent list, 2026-11-27)
+
+**The stats:** Volley's "#% less Projectile Damage" (`support_parallel_projectiles_damage_+%_final`) and Greater Volley's (`support_greater_volley_projectile_damage_+%_final`), with their constant `support_parallel_projectile_number_of_points_per_side`, unmapped in two public builds (and Volley's damage silently absent from others).
+
+**PoB** (`sup_dex.lua`): each is `Damage` MORE with `ModFlag.Projectile`; the parallel points and distances have no stat map (placement only).
+
+**The engine:** two hit rows (`Damage` MORE, `Flags::PROJECTILE`) and two `NoEffect` rows (`no-slice`) for the parallel points and Volley's distance, as Greater Volley's already was.
+
+**Found on the way, for the maintainer** (`dev/active/open-items/maintainer-follow-ups.md`): PoB's parser applies neither "#% chance to Aggravate Bleeding on targets you Hit with Attacks" nor its exerted-attack form, and PoB's bleeding has no aggravation; they stay reasons until a check in the game.
+
+**Fixtures** (original, the Burning Arrow Short Bow build): Burning Arrow with Volley and with Greater Volley (level 20, 20% quality). Every field equals PoB's but the Q11 floored-millisecond rate and what follows from it: `game-truth` DIV-1139 to DIV-1150.
+
+**Evidence** (`local/p6/d27voe` on `b-ig`, against `local/p6/d27gce`): public 0 unexpected, `Complete` 59,116 to 59,294 (the fixtures'); 5 values moved, all away from PoB in two builds partial and below PoB for other reasons, now with Volley's less damage that PoB applies too: `kinetic-fusillade-ballista-hierophant.xml`'s AverageDamage 97,765 to 78,208 (PoB 204,674; its skill data still unvetted), its TotalDPS, CombinedDPS, and FullDPS, and `forged-frostbearer-spectre-necromancer.xml`'s FullDPS 8.84 to 7.02 million (PoB 9.13 million). Corpus 0 unexpected, no value moved.
+
+## Fork's less damage and chaos and elemental penetration (the agent list, 2026-11-27)
+
+**The stats:** Fork's "#% less Projectile Damage" (`support_fork_projectile_damage_+%_final`), "Damage Penetrates #% Chaos Resistance" (`reduce_enemy_chaos_resistance_%`), and "Damage Penetrates #% Elemental Resistances" (`reduce_enemy_elemental_resistance_%`, PoB's own skill data's; no public build had it unmapped), unmapped.
+
+**PoB:** Fork's is `Damage` MORE with `ModFlag.Projectile` (`sup_dex.lua`); the others `ChaosPenetration` and `ElementalPenetration` BASE (`SkillStatMap.lua` 812 and 815).
+
+**The engine:** three hit rows: `Damage` MORE with `Flags::PROJECTILE`; `Penetration(Chaos)`; `Penetration` of fire, cold, and lightning (as `base_penetrate_elemental_resistances_%`).
+
+**Fixtures** (original): Burning Arrow with Fork (level 20, 20% quality); Smite with added chaos damage and 10% chaos penetration; Smite with 10% elemental penetration. Every field equals PoB's but the Q11 floored-millisecond rate and what follows from it: `game-truth` DIV-1151 to DIV-1167.
+
+**Evidence** (`local/p6/d27fke` on `b-ig`, against `local/p6/d27voe`): public 0 unexpected, `Complete` 59,294 to 59,559 (the fixtures'); 9 values moved, all toward PoB (`kinetic-blast-of-clustering-necromancer.xml`'s AverageDamage 43,598 to 52,270, PoB 56,682, its DPS fields and leech; `Dual Wield Cospris CoC.xml`'s AverageDamage and DPS). Corpus 0 unexpected, no value moved.
+
+## Spell damage per 100 maximum life (the agent list, 2026-11-27)
+
+**The stat:** "#% increased Spell Damage per 100 Player Maximum Life" (`spell_damage_+%_per_100_max_life`), unmapped in one public build.
+
+**PoB** (its parser, checked with `tools/oracle/data/pob_parse_lines.lua`): `Damage` INC with `ModFlag.Spell` and `PerStat` `Life` `div` 100 of the player.
+
+**The engine:** a `hit::DAMAGE_PER_STAT` term, as the damage over time per 100 life before it: `Poe1Quantity::SpellDamagePer100Life`, the spell context, the life field, `floor(life / 100)`. A triage of the remaining unmapped stats with PoB's parser (`local/p6/triage_unmapped.py`) lists the lines PoB applies, for the next steps.
+
+**Fixtures** (original): Ice Nova with 3% per 100 life at 1,125 life (11 steps) and at 1,200 (12). Every field equals PoB's.
+
+**Evidence** (`local/p6/d27sle` on `b-ig`, against `local/p6/d27fke`): public 0 unexpected, `Complete` 59,559 to 59,733 (the fixtures'); 1 value moved, toward PoB (`rf-chieftain-life-stack.xml`'s FullDPS). Corpus 0 unexpected, no value moved.
+
+## A weapon's impale chance (the agent list, 2026-11-27)
+
+**The stat:** a weapon's "#% chance to Impale Enemies on Hit with Attacks" (`local_attacks_impale_on_hit_%_chance`), unmapped in one public build.
+
+**PoB:** its parser reads the line as the global `ImpaleChance` BASE with `KeywordFlag.Attack`, every attack's; the stat is local in the game, its weapon's hits. With one weapon the two agree.
+
+**The engine:** `WeaponValue::ImpaleChance` (a weapon row, the main hand's `Weapon` or the off hand's `OffHandWeapon`), added by `ailment::impale_parts` to the impale chance of that hand's attack passes, as the weapon's double damage. A dual wielder with the line on one weapon would differ from PoB (no fixture; no public build has one).
+
+**Fixtures** (original): Smite with a Rusted Hatchet carrying the line at 30% and 20% increased impale effect. Every field equals PoB's but the Q11 floored-millisecond rate and what follows from it: `game-truth` DIV-1168 to DIV-1173.
+
+**Evidence** (`local/p6/d27lie` on `b-ig`, against `local/p6/d27sle`): public 0 unexpected, `Complete` 59,733 to 59,822 (the fixture's); 1 value moved, toward PoB (`lacerate-bleed-gladiator.xml`'s CombinedDPS). Corpus 0 unexpected, no value moved.
+
+## Mana gained as extra energy shield (the agent list, 2026-11-27)
+
+**The stat:** "Gain #% of Maximum Mana as Extra Maximum Energy Shield" (`mana_%_to_add_as_energy_shield`), unmapped in one public build.
+
+**PoB** (`CalcDefence.lua` 1001 to 1007): `ManaGainAsEnergyShield` BASE; energy shield gains `Mana BASE x percent / 100 x calcLib.mod(modDB, nil, "Mana", "EnergyShield", "Defences")`, before life's row (1023).
+
+**The engine:** `Poe1Quantity::ManaAsEnergyShield`; `phases::mana_as_energy_shield` builds the row as `life_as_energy_shield` does (mana's base its BASE effects and the intelligence bonus; the increases of mana and energy shield and the intelligence bonus's; mana's and energy shield's rounded more), and `primary_defence` takes the conversion rows, mana's then life's, last as in PoB.
+
+**Fixtures** (original): Ice Nova with 20% (energy shield 122), and with +50 and 20% increased mana, 10% increased energy shield, and 8% increased global defences (180). Every field equals PoB's.
+
+**Evidence** (`local/p6/d27mee` on `b-ig`, against `local/p6/d27lie`): public 0 unexpected, `Complete` 59,822 to 59,996 (the fixtures'); 21 values moved, all toward PoB, 13 now equal (`shock-nova-archmage-hierophant.xml`'s EnergyShield 1,334 to PoB's 4,747, its recharge, leech, pools, and damage over time EHP). Corpus 0 unexpected, no value moved.
+
+## Energy shield as a percent of life (the agent list, 2026-11-27)
+
+**The stat:** "Your Maximum Energy Shield is Equal to #% of Your Maximum Life" (`maximum_energy_shield_is_x%_of_maximum_life`), unmapped in one public build.
+
+**PoB:** its parser reads `EnergyShield` OVERRIDE with `PercentStat` `Life`; `CalcDefence.lua` 1046 takes the override in place of the rows (`modDB:Override(nil, "EnergyShield") or m_max(round(energyShield), 0)`), and its output is whole (168.75 shows as 169 in the fixture), while its breakdown still lists the replaced rows.
+
+**The engine:** `Poe1Quantity::EnergyShieldFromLife`; the energy shield phase replaces its rows by `round(Life x percent / 100)` (`phases::energy_shield_from_life`) in a `graph::Node::Override` that keeps the rows, its dependency the life field; two lines are a reason (PoB takes the first override). Found on the way: `calc-parity`'s breakdown reader stopped at any nested `result` node, so it never reached an override's replaced rows; it now reads an override's children (`tools/parity-cli/src/calc_parity.rs`, `below`).
+
+**Fixtures** (original): Ice Nova with 15% and +100 to maximum energy shield, which the override replaces (169). Every field and the breakdown equal PoB's.
+
+**Evidence** (`local/p6/d27eoe` on `b-ig`, against `local/p6/d27mee`): public 0 unexpected, `Complete` 59,996 to 60,083 (the fixture's); 23 values moved, 22 toward PoB (`flicker-strike-berserker.xml`'s EnergyShield 500 to 2,939, PoB 3,199, its pools, maximum hits, and EHP), 1 away: its EnergyShieldRecharge 167 to 980 (PoB 0, from Soul Tether, a keystone still unmapped here, on an indeterminate field). Corpus 0 unexpected, no value moved.
+
+## Additional poisons (the agent list, 2026-11-27)
+
+**The stat:** "#% chance to inflict an additional Poison on the same Target when you inflict Poison" (`additional_poison_chance_%_when_inflicting_poison`), unmapped in one public build.
+
+**PoB** (`CalcOffence.lua` 4596 to 4603): `AdditionalPoisonChance` BASE; the poisons per poisoning hit are `1 + min(AdditionalPoisonChance / 100, 1) + AdditionalPoisonStacks` (unless `CannotMultiplePoison`), a factor of `PoisonStacks`.
+
+**The engine:** `Poe1Quantity::AdditionalPoisonChance` (a hit row), and `ailment`'s stacks gain the factor `1 + min(chance / 100, 1)` for a poison, in PoB's order (after the applications, before duration and rate). `AdditionalPoisonStacks`, `CannotMultiplePoison`, the poison stack limit, and PoB's `NonPoisonedOnly` condition have no mapped stat here.
+
+**Fixtures** (original, the Smite poison build): 40% (1.4 poisons per poisoning hit) and 150% (held at 2). Every field equals PoB's but the Q11 floored-millisecond rate and what follows from it (the stacks read the rate): `game-truth` DIV-1174 to DIV-1185.
+
+**Evidence** (`local/p6/d27poe` on `b-ig`, against `local/p6/d27eoe`): public 0 unexpected, `Complete` 60,083 to 60,261 (the fixtures'); no other value moved (the public build is partial on other reasons). Corpus 0 unexpected, no value moved.
+
+## Poison at maximum frenzy charges (the agent list, 2026-11-27)
+
+**The stat:** "Attacks have #% chance to Poison while at maximum Frenzy Charges" (`attacks_chance_to_poison_%_on_max_frenzy_charges`), unmapped in one public build.
+
+**PoB** (its parser): `PoisonChance` BASE with `ModFlag.Attack` and `StatThreshold` `FrenzyCharges` at `FrenzyChargesMax`.
+
+**The engine:** `charges::ChargeValue::AtMaximum`, an effect while the count is the maximum, applied once by the charge phase after the count (`PerCharge::AttackPoisonChance` its target). A count of 0 at a maximum of 0 is not read as "at maximum" (PoB's threshold would hold; no build has it).
+
+**Fixtures** (original, the Smite poison build): the line with the frenzy charges used (3, the maximum: poison) and with 2 (no poison). Every field equals PoB's but the Q11 floored-millisecond rate and what follows from it: `game-truth` DIV-1186 to DIV-1197.
+
+**Evidence** (`local/p6/d27afe` on `b-ig`, against `local/p6/d27poe`): public 0 unexpected, `Complete` 60,261 to 60,438 (the fixtures'); no other value moved. Corpus 0 unexpected, no value moved.
+
+## Culling Strike against bleeding enemies (the agent list, 2026-11-28)
+
+**The stat:** a weapon's "Hits with this Weapon have Culling Strike against Bleeding Enemies" (`local_culling_strike_vs_bleeding_enemies`), unmapped in one public build.
+
+**PoB** (its parser): `CullPercent` MAX 10 with the enemy's `Bleeding` (an `ActorCondition`), every hit's; the line is the weapon's in the game, the same with one weapon.
+
+**The engine:** a state row on `conditions::ENEMY_BLEEDING` (the config's check) setting `Poe1Quantity::CullingStrike`, which the combined DPS's cull multiplier reads.
+
+**Fixtures** (original): Smite with a Rusted Hatchet carrying the line, the enemy bleeding (the cull: combined DPS times 100 / 90) and not (nothing). Every field equals PoB's but the Q11 floored-millisecond rate and what follows from it: `game-truth` DIV-1198 to DIV-1209.
+
+**Evidence** (`local/p6/d28cbe` on `b-ig`, against `local/p6/d27afe`): public 0 unexpected, `Complete` 60,438 to 60,616 (the fixtures'); 1 value moved, toward PoB (`lacerate-bleed-gladiator.xml`'s CombinedDPS). Corpus 0 unexpected, no value moved.
+
+## Critical culling (the agent list, 2026-11-28)
+
+**The stat:** "Critical Strikes have Culling Strike" (`crits_have_culling_strike`), unmapped in one public build; the combined DPS listed critical culling as not modelled.
+
+**PoB** (`CalcOffence.lua` 3211 to 3221): `CriticalCullPercent` MAX 10; per pass `criticalCull = min(c, c x (1 - (1 - CritChance / 100) ^ hitRate))`, `hitRate = HitChance / 100 x (HitSpeed or Speed) x dpsMultiplier`; `CullPercent` is the larger of it and the regular cull, `CullMultiplier = 100 / (100 - CullPercent)`.
+
+**The engine:** `Poe1Quantity::CriticalCulling` (a flag row); `hit::critical_cull` computes the percent for a spell and a single-hand attack (a dual wielder's is a reason: PoB keeps its last pass's) as `Poe1Quantity::CriticalCullPercent`; `combined` takes the larger of it and the regular cull.
+
+**Fixtures** (original): Smite with a Siege Axe and the line, with 400% increased global crit chance, and with Culling Strike too (the regular 10%, the larger); Ice Nova with the line and 300% increased global crit chance. Every field equals PoB's but the Q11 floored-millisecond rate and what follows from it (the attack's hit rate reaches its critical cull): `game-truth` DIV-1210 to DIV-1227.
+
+**Evidence** (`local/p6/d28cde` on `b-ig`, against `local/p6/d28cbe`): public 0 unexpected, `Complete` 60,616 to 60,967 (the fixtures'); 2 values moved, toward PoB (`ethereal-knives-mines-assassin.xml`'s CombinedDPS and FullDPS). Corpus 0 unexpected, no value moved.
+
+## A flask's partial instant recovery (the agent list, 2026-11-28)
+
+**The stat:** a flask's "#% of Recovery applied Instantly" (`local_flask_recovery_amount_%_to_recover_instantly`), unmapped in one public build.
+
+**PoB** (`CalcPerform.lua` 1603 to 1614, 1733): `FlaskInstantRecovery` BASE, the flask's `instantPerc`; a flask whose instant share (with the low life share while on low life) is below 100 sets the `Using` conditions.
+
+**The engine:** `flasks::PARTIAL_INSTANT_STAT`, a `NoEffect` row of the flask's mapping (its recovery is not modelled), and `all_instant` sums the share: 100 for "Instant Recovery", the line's value, and 100 for the low life line on settled low life; at least 100 is all at once, a range across 100 or an unsettled low life below it is unsettled.
+
+**Fixture** (original): Ice Nova with an active Divine Life Flask with 50% (in use: "during any Flask Effect" applies). Every field equals PoB's. A line at 100% fits no variant of the game's mods, so no fixture has one.
+
+**Evidence** (`local/p6/d28fie` on `b-ig`, against `local/p6/d28cde`): public 0 unexpected, `Complete` 60,967 to 61,055 (the fixture's); no other value moved. Corpus 0 unexpected, no value moved.
+
+## The shock's maximum (the agent list, 2026-11-28)
+
+**The stats:** "+#% to Maximum Effect of Shock" (`shock_maximum_magnitude_+`) and "Maximum Effect of Shock is #% increased Damage taken" (`raider_shock_maximum_effect_override_%`), reasons on every shock until now (`damage_taken::SHOCK_DEPENDS_ON`).
+
+**PoB** (`CalcPerform.lua` 3532 to 3538): the shock's maximum is the `ShockMax` override, else 50 plus each active skill's `ShockMax` BASE (its `baseSkillModList`, which holds the character's), the largest.
+
+**The engine:** `Poe1Quantity::ShockMaximum` (`Base` and `Override`, two rows of `damage_taken::SHOCK_STATS`); `damage_taken::shock_maximum` gives the override, else 50 plus the character's BASE, for the configured, the guaranteed, and a skill's own shock. A skill's own `ShockMax` (Shock Nova's `shock_maximum_magnitude_+` in its gem data) stays its mapping's reason. The two stats leave `SHOCK_DEPENDS_ON`; its test now names the stacking shocks, and the maintainer-run shock coverage test lists their texts.
+
+**Fixtures** (original): Ice Nova against an enemy shocked for 70% with +10% to the maximum (the shock 60) and with the 30% override too (30). Every field equals PoB's.
+
+**Evidence** (`local/p6/d28sme` on `b-ig`, against `local/p6/d28fie`): public 0 unexpected, `Complete` 61,055 to 61,229 (the fixtures'); no other value moved. Corpus 0 unexpected, no value moved.
+
+## Extra mirage archers (the agent list, 2026-11-28)
+
+**The stat:** "+# to maximum number of Summoned Mirage Archers" (`additional_max_mirage_archers`), unmapped in one public build.
+
+**PoB** (`CalcMirages.lua` 72): the mirage count is `MirageArcherMaxCount` BASE summed over the skill's list, the support's 1 and the character's lines (`ModParser.lua` 2646).
+
+**The engine:** `Poe1Quantity::MirageArcherCount` (a row); `combined`'s mirage adds the character's unconditional ones to the support's count, the mirage's hit and impale times that count as before.
+
+**Fixture** (original): Burning Arrow with Mirage Archer and +1 (two mirages). Every field equals PoB's but the Q11 floored-millisecond rate and what follows from it: `game-truth` DIV-1228 to DIV-1233.
+
+**Evidence** (`local/p6/d28mae` on `b-ig`, against `local/p6/d28sme`): public 0 unexpected, `Complete` 61,229 to 61,318 (the fixture's); no other value moved (the public build's mirage is partial on its other reasons). Corpus 0 unexpected, no value moved.
+
+## Can't use a flask in the fifth slot (the agent list, 2026-11-28)
+
+**The stat:** the Micro-Distillery Belt's "Can't use Flask in Fifth Slot" (`cannot_use_flask_in_fifth_slot`), unmapped in one public build.
+
+**PoB** (`CalcSetup.lua` 845 to 877): `CanNotUseItem` with a `DisablesItem` tag of `Flask 5` (a Tincture there excepted): the item in that slot is not used, unless the config's "Don't disable items" (`ignoreItemDisablers`, `ConfigOptions.lua` 248) is on.
+
+**The engine:** `flasks::FIFTH_SLOT_STAT`, a `NoEffect` row read by `active_flasks`: with it on an equipped item and the config check off, the fifth slot's flask is left out of the active flasks. `ignoreItemDisablers` is a read input. The engine models no tincture, and PoB's other item disablers ("Can't use Helmets" and kin) stay unmapped stats.
+
+**Fixtures** (original): Ice Nova with an active Divine Life Flask in the fifth slot and the belt (not used: "during any Flask Effect" does not apply), and with "Don't disable items" (used). Every field equals PoB's.
+
+**Evidence** (`local/p6/d28f5e` on `b-ig`, against `local/p6/d28mae`): public 0 unexpected, `Complete` 61,318 to 61,494 (the fixtures'); no other value moved. Corpus 0 unexpected, no value moved.
+
+## Chains, and triggered damage in the skill's own list (the agent list, 2026-11-28)
+
+**The gap:** Arc's "#% more Damage for each remaining Chain" (`arc_damage_+%_final_for_each_remaining_chain`, Arc's and its two variants' own stat) kept the skill's `pob-skill-data` reason, and the chain count (`number_of_chains`) was a `NoEffect` row guarded by the per-chain lines.
+
+**PoB** (`CalcOffence.lua` 1032 to 1046): for a skill flagged `chaining`, `ChainMax = ChainCountMax BASE x MORE` (`number_of_chains`, `support_chain_count_+%_final`), `Chain = min(ChainMax, ChainCount)` (the config's "# of times Skill has Chained", `skillChainCount`), `ChainRemaining = max(0, ChainMax - Chain)`; the per-chain lines are `PerStat` of `Chain` or `ChainRemaining`.
+
+**The engine:** `Poe1Quantity::ChainCountMax` and `PerChainDamage`; `hit::chain_damage` computes the counts for a chaining skill and turns each per-chain line into `Damage` of its op and conditions times `floor(count)`, with its own source (the gem list for Arc's own), before the passes of a spell or an attack. Mapped: `number_of_chains`, `support_chain_count_+%_final`, Arc's stat (read, `READ_OWN_STATS`), `damage_+%_per_chain`, `projectile_damage_+%_per_chain`, `projectile_damage_+%_per_remaining_chain`; `skillChainCount` is a read input. Still reasons: `CannotChain`, `NoAdditionalChains`, projectiles counted as chains, and chaos damage gained per chain.
+
+**Found on the way: triggered damage's list.** With Arc's more damage computed, Arc triggered by Arcanist Brand was 0.125% above PoB's: PoB turns `TriggeredDamage` into `Damage` with `NewMod` on the skill's own list (`CalcTriggers.lua` 23 to 30), so the brand's 63% less and 59% more round apart from Arc's per-chain more (`0.59 x 2.05`, not `round(0.37 x 1.59 x 2.05, 2)`). The three triggered damage rows (Arcanist Brand's two, Cast while Channelling's) now give `Poe1Quantity::NewModDamage`, the own-list tier of step 59.
+
+**Fixtures** (original): Arc with "Skills Chain +1 times" (every chain remaining) and chained three times by the config. Every field equals PoB's.
+
+**Evidence** (`local/p6/d28are` on `b-ig`, against `local/p6/d28f5e`): public 0 unexpected, `Complete` 61,494 to 61,670 (the fixtures' and two trigger fixtures' full DPS, now complete); 2 values moved, toward PoB, 1 now equal: `trigger-arcanist-two-spells-witch.xml`'s FullDPS 469.9 to PoB's 626.6, and `trigger-coc-two-spells-templar.xml`'s 116.8 to 119.04 (PoB 119.10: its attack's Q11 floored-millisecond rate, `game-truth` DIV-1234 with the fixture's other Q11 entries). Corpus 0 unexpected, no value moved.
+
+## Ice Spear's forms and the projectile count (the agent list, 2026-11-28)
+
+**The gap:** Ice Spear and Ice Spear of Splitting kept the `pob-skill-data` reason: their second form's crit stats, their projectile speed, the first form's pierce, and the `preDamageFunc` of the parts with all projectiles.
+
+**PoB** (`act_int.lua`): parts 2 and 4 (the second form) gain `ice_spear_second_form_critical_strike_chance_+%` as `CritChance` INC and `..._multiplier_+` as `CritMultiplier` BASE (`SkillPart` 2 and 4); parts 3 and 4 (all projectiles) multiply `dpsMultiplier` by `output.ProjectileCount` (`CalcOffence.lua` 1054 to 1063: `floor((1 + base_number_of_projectiles - 1 + ProjectileCount BASE) x MORE)`); part 1's `PierceChance` and the second form's projectile speed reach no slice field.
+
+**The engine:** `SpellSkill::part_index`; `hit::ice_spear` adds the second form's crit before the spell's crit and returns the projectile count for parts 3 and 4, a factor of the spell's DPS multiplier (the hit DPS, the critical cull, the ailments). `number_of_additional_projectiles` is now `Poe1Quantity::ProjectileCount` (`Base`), read only there; its two guards (Barrage's sequential projectiles, projectiles as chains) leave `NO_EFFECT_DEPENDS_ON`, the guard stats themselves staying reasons. The vetting lists name the read function, own stats, and base mod. `SingleProjectile`, `NoAdditionalProjectiles`, and the count's minimum and maximum have no mapped stat (reasons).
+
+**Fixtures** (original): Ice Spear in each of its four parts (the second form at 20% quality; part 4 with "Skills fire an additional Projectile", three projectiles). Every field equals PoB's.
+
+**Evidence** (`local/p6/d28ise` on `b-ig`, against `local/p6/d28are`): public 0 unexpected, `Complete` 61,670 to 62,018 (the fixtures'); 5 values moved, all toward PoB, 1 now equal (`Dual Wield Cospris CoC.xml`'s CritChance 82.6 to PoB's 100, its multiplier, average damage, and DPS; partial on its other reasons). Corpus 0 unexpected, no value moved.
+
+## Winter Orb's hit rate, and Lesser Multiple Projectiles (the agent list, 2026-11-28)
+
+**The gap:** Winter Orb kept the `pob-skill-data` reason, its stats unmapped, its DPS read at the cast rate; Lesser Multiple Projectiles' less damage (`support_lesser_multiple_projectile_damage_+%_final`) was unmapped.
+
+**PoB** (`act_int.lua`, `CalcActiveSkill.lua` 635 to 644, `CalcOffence.lua` 2474): Winter Orb's `preDamageFunc` sets `hitTimeOverride = repeatFrequency / (1 + (HitRate + Speed) INC / 100) / HitRate MORE`, `repeatFrequency` its fire interval (1.2 s), `HitRate` INC its 20% per stage after the first (`min(maximum - 1, stages - 1)`, the stages the gem's `skillStageCount`, else the maximum, `frost_fury_max_number_of_stages`), `HitRate` MORE its fire speed while channelling in part 1; `HitSpeed = 1 / HitTime` is the DPS's rate, `Speed` stays the cast rate. Its `statMap` empties `base_skill_show_average_damage_instead_of_dps` (elsewhere `showAverage`). LMP's is `Damage` MORE with `ModFlag.Projectile` (`sup_dex.lua`).
+
+**The engine:** `hit::winter_orb` gives that rate (the cast speed's increases in the spell's context) as the spell's `HitSpeed` and the DPS's and ailments' rate; the vetting lists name its function and stats, and a part's `stages` key is read for Winter Orb; its stats are `NoEffect` rows read there; `collect::EMPTIED_SKILL_STATS` drops a stat a skill's own `statMap` empties (Winter Orb's show-average). LMP's row is a hit row. The character's own `HitRate` and the stages' minimum have no mapped stat (reasons).
+
+**Fixtures** (original): Winter Orb channelling at its maximum stages with 20% increased cast speed (hit rate 3.9), at 3 stages, and idle (2.0); Ice Spear with Lesser Multiple Projectiles. Every field equals PoB's.
+
+**Evidence** (`local/p6/d28woe` on `b-ig`, against `local/p6/d28ise`): public 0 unexpected, `Complete` 62,018 to 62,369 (the fixtures'); 4 values moved, all away in `winter-orb-elementalist.xml`, as expected: its DPS is now at Winter Orb's hit rate, the same as PoB's (DPS over average damage 5.775 in both, the cast rate before), and its average damage gains LMP's less damage as PoB's, on a hit still below PoB's for its other reasons (Focussed Channelling's stat among them): TotalDPS 250,475 to 137,227 (PoB 219,115), AverageDamage 25,559 to 23,762 (PoB 37,942), CombinedDPS, FullDPS. Corpus 0 unexpected, no value moved.
+
+## Focussed Channelling (the agent list, 2026-11-28)
+
+**The stat:** Focussed Channelling's "#% more Damage for each second you've been Channelling, up to 60%" (`support_focus_channel_damage_+%_final_per_second_channelling_up_to_60%`), unmapped in one public build.
+
+**PoB** (`sup_int.lua` 2553; `ConfigOptions.lua` 1263): `Damage` MORE per `Multiplier:ChannellingTime` (the config's "Channeling for # seconds", `multiplierChannelling`), `limit` 60 with `limitTotal`.
+
+**The engine:** `Poe1Quantity::ChannellingDamage` (a hit row); `hit::channelling_damage` turns it into `Damage` MORE of `min(value x seconds, 60)` before the passes of a spell or an attack. The support's cost per second channelled stays a cost reason.
+
+**Fixtures** (original): Winter Orb channelling with Focussed Channelling at 3 and 10 seconds (both at the 60% limit at level 20) and without the input (nothing). Every damage field equals PoB's; the cost fields keep their reason.
+
+**Evidence** (`local/p6/d28fce` on `b-ig`, against `local/p6/d28woe`): public 0 unexpected, `Complete` 62,369 to 62,621 (the fixtures'); 4 values moved, all toward PoB, 3 now equal: `winter-orb-elementalist.xml`'s AverageDamage 23,762 to PoB's 37,942, TotalDPS and CombinedDPS to PoB's 219,115, FullDPS 411,681 to 657,345 (PoB 655,665: partial on its other skills). Corpus 0 unexpected, no value moved.
+
+## Tornado's hit rate (the agent list, 2026-11-28)
+
+**The gap:** Tornado kept the `pob-skill-data` reason (its `preDamageFunc`), its damage interval and count unmapped, its DPS read at the cast rate.
+
+**PoB** (`act_dex.lua`): `preDamageFunc` sets `hitTimeOverride = damageInterval`, `tornado_base_damage_interval_ms` over 1000 (0.25 s); `HitSpeed = 1 / HitTime` (`CalcOffence.lua` 2474) is the DPS's rate, the cast rate staying `Speed`.
+
+**The engine:** `hit::tornado` gives that rate as the spell's `HitSpeed`, as Winter Orb's; the function counts as read, the interval is a `NoEffect` row read there, the tornado count a `no-slice` one.
+
+**Fixtures** (original): Tornado (hit rate 4) and with 50% increased cast speed (the cast rate rises, the hit rate does not). Every field equals PoB's.
+
+**Evidence** (`local/p6/d28toe` on `b-ig`, against `local/p6/d28fce`): public 0 unexpected, `Complete` 62,621 to 62,797 (the fixtures'); 1 value moved, toward PoB (`elemental-hit-of-the-spectrum-deadeye.xml`'s FullDPS, its Tornado). Corpus 0 unexpected, no value moved.
+
+## Boneshatter's Trauma (the agent list, 2026-11-28)
+
+**The gap:** Boneshatter and Boneshatter of Complex Trauma kept the `pob-skill-data` reason (PoB's `HasTrauma`, their more damage per Trauma), with their Trauma stats unmapped; deferred earlier because PoB settles Trauma in its speed calculation from the chance to hit, which the engine computes after the rate.
+
+**PoB** (`CalcOffence.lua` 2248 to 2322, `act_str.lua`): for a skill with `HasTrauma`, the sustainable stacks `traumaPerAttack x HitChance / 100 x rate / Repeats x duration` (when no attack speed per Trauma: the closed form's denominator is then `1 / duration`), the rate `1 / baseTime x ActionSpeedMod x more x (1 + inc / 100)`, the duration `TraumaDuration` (the gem's `boneshatter_trauma_base_duration_ms` over 1000) times `calcLib.mod(Duration)`; `Multiplier:TraumaStacks` is the config's (`traumaStacks`) or else those stacks; `Damage` MORE per `TraumaStacks` (`floor`, the `Multiplier` tag), capped at `TraumaStacksMax` (Complex Trauma's `lose_all_trauma_at_X_trauma`, `limitVar`). The order matters only through attack speed per Trauma, which then reads the stacks: with none, Trauma can follow the chance to hit.
+
+**The engine:** `hit::trauma`, in the single-hand pass after the chance to hit and before the damage: the stacks from the hand's rate (the game's floored-millisecond rate, Q11, where PoB's is unrounded), the character's and the gems' duration increases and the gems' more duration; `Damage` MORE of the per-Trauma stat times the floored, capped stacks, in the gem list. PoB's `HasTrauma` counts as a read flag, the two damage stats as read own stats, the Trauma stats as `NoEffect` rows read there (the self damage per Trauma reaches no slice field), `traumaStacks` as a read input. Reasons: a dual wielder (`dual-wield-trauma`: PoB halves it and keeps the first pass's), repeats (`trauma-repeats`), attack speed per Trauma and extra Trauma (no mapped stat).
+
+**Fixtures** (original, the Siege Axe Smite build's weapon): Boneshatter at its sustainable Trauma, with 20% increased skill effect duration, at the config's 5 stacks, and Boneshatter of Complex Trauma at 30 configured (capped at 10). Average damage equals PoB's in each; the DPS fields differ only by the Q11 floored-millisecond rate: `game-truth` DIV-1235 to DIV-1258.
+
+**Evidence** (`local/p6/d28tre` on `b-ig`, against `local/p6/d28toe`): public 0 unexpected, `Complete` 62,797 to 63,149 (the fixtures'); 4 values moved, all toward PoB, in `boneshatter-juggernaut.xml` (Complex Trauma): AverageDamage 160,328 to 603,129 (PoB 582,277; partial on its other reasons), TotalDPS 291,167 to 1,095,326 (PoB 1,057,055), BleedDPS, CombinedDPS. Corpus 0 unexpected, no value moved.
+
+## Essence Drain, and the combined DPS with `showAverage` (the agent list, 2026-11-28)
+
+**The gap:** Essence Drain kept the `pob-skill-data` reason on its hit and its damage over time: its skill data `debuff` and `showAverage` were read by neither vetting.
+
+**PoB:** `debuff` scales only the skill's duration by the enemy's debuff expiry (`calcSkillDuration`, `CalcOffence.lua` 300 to 313), which no slice field reads; `showAverage` makes the combined DPS's base the average damage and leaves out the damage over time (5983, 6126 to 6128: `if not skillData.showAverage then CombinedDPS = CombinedDPS + TotalDotDPS`).
+
+**The engine:** the hit's vetting reads `debuff`, and a spell's `showAverage` (the spell path settles `hit::SHOW_AVERAGE` for the combined DPS; an attack's stays unread); the DoT's vetting reads both (`dot::DOT_NO_SLICE_KEYS`). Found on the way: the combined DPS added the damage over time under `showAverage`; it now leaves it out, as PoB.
+
+**Fixture** (original): Essence Drain (level 20), its hit and its damage over time; the combined DPS its average damage. Every field equals PoB's.
+
+**Evidence** (`local/p6/d28ede` on `b-ig`, against `local/p6/d28tre`): public 0 unexpected, `Complete` 63,149 to 63,237 (the fixture's); no other value moved (the public Essence Drain build keeps its other reasons). Corpus 0 unexpected, no value moved.

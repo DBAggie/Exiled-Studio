@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, open items S3): Rain of Arrows granted and triggered by Lioneye's Paws' line when attacking with a bow (on use, PoB's cooldown of 1 s), Burning Arrow the source.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Ranger" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="2" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill enabled="true" mainActiveSkillCalcs="1" slot="Boots" source="Item:2:Lioneye&apos;s Paws, Bronzescale Boots" mainActiveSkill="1" includeInFullDPS="true" label="">
+				<Gem nameSpec="Rain of Arrows" enableGlobal1="true" count="1" enableGlobal2="false" quality="0" level="5" enabled="true" skillId="RainOfArrows"/>
+			</Skill>
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="false">
+				<Gem nameSpec="Burning Arrow" skillId="BurningArrow" variantId="BurningArrow" gemId="Metadata/Items/Gems/SkillGemBurningArrow" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items activeItemSet="1">
+		<Item id="1">
+Rarity: NORMAL
+Recurve Bow
+Quality: 0
+Implicits: 0
+		</Item>
+		<Item id="2">
+Rarity: UNIQUE
+Lioneye's Paws
+Bronzescale Boots
+Quality: 0
+Implicits: 0
+Trigger Level 5 Rain of Arrows when you Attack with a Bow
+		</Item>
+		<ItemSet id="1">
+			<Slot name="Weapon 1" itemId="1"/>
+			<Slot name="Boots" itemId="2"/>
+		</ItemSet>
+	</Items>
+	<Config></Config>
+</PathOfBuilding>

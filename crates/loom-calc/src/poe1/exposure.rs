@@ -137,7 +137,13 @@ type ExposureRow = (&'static str, &'static [Poe1Quantity]);
 /// `AppliedExposureRecently`, which PoB sets when an exposure is on the
 /// enemy, `CalcPerform.lua` 3585): its value per minute, turned into the
 /// regeneration per second by [`exposure`] then.
-pub const STATS: [ExposureRow; 12] = [
+///
+/// And (the agent list) "#% increased Critical Strike Chance against
+/// enemies with Lightning Exposure" (`CritChance` INC with the enemy's
+/// `HasLightningExposure`, which PoB sets when that exposure is applied,
+/// 3583): `CritChance` `Increased` when [`exposure`] applies a lightning
+/// exposure.
+pub const STATS: [ExposureRow; 13] = [
     (
         "chance_to_inflict_cold_exposure_on_hit_with_cold_damage_%",
         &[chance(DamageType::Cold)],
@@ -153,6 +159,10 @@ pub const STATS: [ExposureRow; 12] = [
     (
         "cold_skill_chance_to_inflict_cold_exposure_%",
         &[chance(DamageType::Cold)],
+    ),
+    (
+        "critical_strike_chance_+%_vs_enemies_with_lightning_exposure",
+        &[Poe1Quantity::CritIfExposed(DamageType::Lightning)],
     ),
     (
         "exposure_you_inflict_applies_extra_%_to_affected_resistance",
@@ -323,6 +333,8 @@ pub fn exposure(
     // PoB's `AppliedExposureRecently` (P6-11au): set when any exposure is
     // on the enemy.
     let mut applied = false;
+    // The types whose exposure is on the enemy (PoB's `Has<Type>Exposure`).
+    let mut exposed: Vec<DamageType> = Vec::new();
     for (t, input) in CHECKS {
         let on_hit: Vec<Effect> = bases(ingest, Poe1Quantity::ExposureOnHit(t))
             .cloned()
@@ -403,6 +415,7 @@ pub fn exposure(
             continue;
         };
         applied = true;
+        exposed.push(t);
         let mut added = vec![strongest];
         added.extend(
             bases(ingest, extra(None))
@@ -448,6 +461,34 @@ pub fn exposure(
             ingest.effect(Effect {
                 quantity: Quantity::Poe1(Poe1Quantity::RegenPercent(pool)),
                 value: e.value / 60.0,
+                ..e
+            });
+        }
+    }
+    // The critical strike chance against an exposed enemy (the agent
+    // list): each line becomes `CritChance` `Increased` when its type's
+    // exposure is on. A conditional one is a reason.
+    let lines: Vec<Effect> = ingest
+        .effects()
+        .iter()
+        .filter(|e| matches!(e.quantity, Quantity::Poe1(Poe1Quantity::CritIfExposed(_))))
+        .cloned()
+        .collect();
+    for e in lines {
+        let Quantity::Poe1(Poe1Quantity::CritIfExposed(t)) = e.quantity else {
+            continue;
+        };
+        if e.op != Op::Base || e.conditions != Conditions::none() {
+            ingest.reason(UnsupportedReason::UnmodelledSkill {
+                source: e.source.clone(),
+                what: "crit-if-exposed",
+            });
+            continue;
+        }
+        if exposed.contains(&t) {
+            ingest.effect(Effect {
+                quantity: Quantity::CritChance,
+                op: Op::Increased,
                 ..e
             });
         }

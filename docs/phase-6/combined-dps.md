@@ -58,6 +58,7 @@ The new field is `combined-dps` (slice revision 10, applies present, group `offe
 - **The cull multiplier** is read from each skill's combined DPS over its parts.
 - **Reasons:** each field read carries its own. A hitting skill whose hit is not computed is `full-dps-skill`. A count above 1 with damage over time is `full-dps-dot-stack` (`DotCanStack` is not known). A Vaal skill is `full-dps-vaal`: PoB counts a Vaal gem's two effects by its `enableGlobal` flags, which the engine does not read yet.
 - **Not modelled:** mirages' own share (PoB adds the mirage's output separately), ground damage over time, corrupting blood, decay, and the skills PoB counts once by a config condition.
+- **PoB's own levels** (open items S4, `docs/phase-6/full-dps-levels.md`): PoB's full DPS pass holds the base modifiers in a cached parent ModDB and rounds each level's more multiplier to 2 decimals, so its `FullDPS` can differ from a skill's own `TotalDPS`. The engine adds each skill's main calculation; the difference is `pob-bug` (DIV-0712, DIV-0718).
 - **Performance:** each included skill is a full calculation. `calc-run`'s total for the 205 public builds went from 0.35 s to 1.26 s, about 6 ms a build (the Phase 5 budgets are re-checked in the report).
 
 ### Evidence

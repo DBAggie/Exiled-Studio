@@ -612,7 +612,12 @@ pub fn filter(ctx: &Context<'_>, line: &LineContext, candidates: &[Candidate]) -
         });
     }
 
-    if d.kept.len() > 1 && line.section == ModSection::Explicit {
+    // An implicit line too, when the base's implicit did not decide it
+    // (the agent list, S9): an older item's implicit the base no longer
+    // has, as a Moonstone Ring's "+# to maximum Energy Shield" (the
+    // current base's is cast speed), is read by the base as an explicit
+    // line is: a ring carries no local defence.
+    if d.kept.len() > 1 && matches!(line.section, ModSection::Explicit | ModSection::Implicit) {
         local_stat(ctx, line, candidates, &fit, &mut d);
     }
 
@@ -666,13 +671,14 @@ pub fn filter(ctx: &Context<'_>, line: &LineContext, candidates: &[Candidate]) -
     d
 }
 
-/// `local-stat`: on an explicit line whose kept candidates are local and
+/// `local-stat`: on an explicit line, or an implicit line the base's
+/// implicit did not decide, whose kept candidates are local and
 /// global readings of one line, the base decides (a unique's lines too,
 /// as the game reads them: Replica Dreamfeather's "increased Attack Speed"
 /// is the sword's own, 1.65 attacks per second in the game, and as PoB
 /// reads a weapon's or armour's local lines whatever the rarity; on a
-/// unique only when each kept reading is one stat, note
-/// `local-stat-unique-not-a-pair` otherwise):
+/// unique only when the kept readings have one size and each is all local
+/// or all global, note `local-stat-unique-not-a-pair` otherwise):
 /// a base with the locality's carrier tag keeps the local readings, any
 /// other base the global ones. Skipped, with a note, when the base's tags
 /// are unknown or disagree, when a candidate mixes localities, or when a
@@ -686,13 +692,31 @@ fn local_stat(
     d: &mut Decision,
 ) {
     // On a unique, the readings are backed by unique rows of any item, a
-    // jewel's among them: only a plain pair (one stat each) is decided, so
-    // Windscream's "+15% to all Elemental Resistances" on boots is never
-    // read as Thread of Hope's two jewel stats.
-    if ctx.unique
-        && d.kept
+    // jewel's among them: only plain readings are decided, of one size and
+    // each all local or all global (a local and a global stat, or the
+    // local and the global minimum and maximum of "Adds # to # Physical
+    // Damage", Arakaali's Fang's; the agent list, S9), so Windscream's
+    // "+15% to all Elemental Resistances" on boots is never read as
+    // Thread of Hope's two jewel stats, one local and one global.
+    let plain = |c: &Candidate| {
+        let local = c
+            .stats
             .iter()
-            .any(|&i| candidates.get(i).is_none_or(|c| c.stats.len() != 1))
+            .filter(|s| ctx.mods.locality.contains_key(&s.stat))
+            .count();
+        local == 0 || local == c.stats.len()
+    };
+    let size = d
+        .kept
+        .first()
+        .and_then(|&i| candidates.get(i))
+        .map(|c| c.stats.len());
+    if ctx.unique
+        && d.kept.iter().any(|&i| {
+            candidates
+                .get(i)
+                .is_none_or(|c| Some(c.stats.len()) != size || !plain(c))
+        })
     {
         d.notes.insert("local-stat-unique-not-a-pair");
         return;

@@ -115,11 +115,12 @@ use loom_domain::{ConfigInputKind, ConfigSet, ConfigValue};
 ///   (`ModParser.lua` 3045, 3047).
 /// - `aspectOfLunarisLunarProtection`, `aspectOfLunarisLunarResistance`,
 ///   `aspectOfSolarisSunscaldStacks`, `configSpectralTigerCount`,
-///   `multiplierHallowingFlameStacksRemovedByAlly`, `sigilOfPowerStages`:
+///   `multiplierHallowingFlameStacksRemovedByAlly`:
 ///   `Multiplier:LunarProtection`, `LunarResistance`, `SunscaldStack`,
 ///   `SpectralTigerConfig` and `SpectralTigerCount`,
-///   `HallowingFlameStacksRemovedByAlly`, `SigilOfPowerStage` (lines 262,
-///   265, 269, 644, 1994, 631); the calc modules never read them; the
+///   `HallowingFlameStacksRemovedByAlly` (lines 262, 265, 269, 644, 1994;
+///   `sigilOfPowerStages` is [`super::gems`]' since the agent list,
+///   2026-11-27); the calc modules never read them; the
 ///   skills' stat maps and modifiers do (`HallowingFlameStacksRemovedByAlly`:
 ///   extra lightning damage per flame removed, `ModParser.lua` 2898, its
 ///   stat in [`DEPENDS_ON`]).
@@ -255,6 +256,38 @@ use loom_domain::{ConfigInputKind, ConfigSet, ConfigValue};
 ///   ground alone gives an effect of 0, and its conditions are read only by
 ///   modifiers. The checks themselves have effects
 ///   (`super::damage_taken`: scorch and sap; brittle stays a reason).
+/// - `multiplierNearbyAlly` (the agent list, S8): `Multiplier:NearbyAlly` in
+///   combat (line 1122). The calc modules read it only for Rallying Cry's
+///   exerted attacks (`CalcOffence.lua` 2661), which `super::gems` gives
+///   its own reason (`rallying-cry-allies`) when allies are configured;
+///   Rallying Cry's buff row (`act_str.lua` 9238) is a `Dummy`. Only
+///   modifiers read it otherwise (`ModParser.lua` 1584, 1701, 2871, 2872:
+///   "while you have at least # nearby allies", "while there is at least
+///   one nearby ally"), whose stats, found by "nearby Ally" in the
+///   bundle's stat descriptions, are in [`DEPENDS_ON`].
+/// - Elemental Equilibrium's inputs (the agent list, S8):
+///   `enemyConditionHitByColdDamage`, `enemyConditionHitByFireDamage`, and
+///   `enemyConditionHitByLightningDamage` set the enemy's
+///   `Condition:HitBy<element>Damage` (lines 2022 to 2030), and
+///   `EEIgnoreHitDamage` (2034) has no `apply`. Only Elemental
+///   Equilibrium's lines read the conditions (`ModParser.lua` 2287 to
+///   2300: its resistances and exposure), and the calc modules read them
+///   and the check only under its `ElementalEquilibrium` flag
+///   (`CalcOffence.lua` 3605, `CalcPerform.lua` 3565 to 3570), which only
+///   those lines set. Their stats are unmapped and in
+///   [`super::exposure::DEPENDS_ON`] (`keystone_elemental_equilibrium`,
+///   `elemental_equilibrium_effect_+%`, the socketed gems' line).
+/// - `TotalSpectreLife` (the agent list, S8): the spectres' life pool as an
+///   `OVERRIDE` (line 797), not a name, but read only where a name would
+///   be: the calc modules read the pool only with its redirect,
+///   `takenFromSpectresBeforeYou` (`CalcDefence.lua` 2458 to 2470, the
+///   pool's life read when the redirect is not 0; `CalcPerform.lua` 3600 to
+///   3690, the pool built only with it, and shared with Companionship's
+///   only when both redirects are set), which only "#% of Damage from Hits
+///   is taken from your Raised Spectres' Life before you"
+///   (`ModParser.lua` 4992) sets: its stat,
+///   `damage_removed_from_spectres_before_life_or_es_%`, is unmapped and in
+///   [`DEPENDS_ON`].
 ///
 /// `conditionChampionIntimidate` and `conditionSacrificeMinion` are
 /// `defaultState = true` options: PoB saves such an input only when it
@@ -270,9 +303,15 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
         "DetonatedMinesRecently",
         &["Condition:DetonatedMinesRecently"],
     ),
+    // No `apply`: `env.configInput`, read only under the
+    // `ElementalEquilibrium` flag.
+    ("EEIgnoreHitDamage", &["configInput.EEIgnoreHitDamage"]),
     ("OverloadedIntensity", &["Multiplier:OverloadedIntensity"]),
     ("ScorchStacks", &["enemy Multiplier:ScorchStacks"]),
     ("ShockStacks", &["enemy Multiplier:ShockStacks"]),
+    // Not a condition: the spectre life pool's `OVERRIDE`, read only with the
+    // spectres' redirect (module docs of this table).
+    ("TotalSpectreLife", &["TotalSpectreLife OVERRIDE"]),
     (
         "arcaneCloakUsedRecentlyCheck",
         &["Condition:ArcaneCloakUsedRecently"],
@@ -293,7 +332,6 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
         "buffAlchemistsGenius",
         &["Condition:AlchemistsGenius if Condition:CanHaveAlchemistGenius"],
     ),
-    ("buffElusive", &["Condition:Elusive", "Elusive"]),
     (
         "buffFortification",
         &["Condition:Fortified", "Fortified", "FortificationStacks"],
@@ -302,7 +340,6 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
         "carrionGolemNearbyMinion",
         &["Multiplier:NearbyNonGolemMinion"],
     ),
-    ("changedStance", &["Condition:ChangedStanceRecently"]),
     (
         "conditionCausedBleedingRecently",
         &["Condition:CausedBleedingRecently"],
@@ -351,6 +388,18 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
         ],
     ),
     (
+        "enemyConditionHitByColdDamage",
+        &["enemy Condition:HitByColdDamage"],
+    ),
+    (
+        "enemyConditionHitByFireDamage",
+        &["enemy Condition:HitByFireDamage"],
+    ),
+    (
+        "enemyConditionHitByLightningDamage",
+        &["enemy Condition:HitByLightningDamage"],
+    ),
+    (
         "heraldOfTheHivePressure",
         &["Multiplier:OtherworldlyPressure"],
     ),
@@ -391,6 +440,7 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
         "multiplierMineDetonatedRecently",
         &["Multiplier:MineDetonatedRecently"],
     ),
+    ("multiplierNearbyAlly", &["Multiplier:NearbyAlly"]),
     (
         "multiplierNearbyRareOrUniqueEnemies",
         // Its share of `Multiplier:NearbyEnemies` is `poe1::stacks`'s
@@ -418,10 +468,6 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
     ),
     ("overrideFortification", &["FortificationStacks"]),
     (
-        "perforateSpikeOverlap",
-        &["Multiplier:PerforateSpikeOverlap"],
-    ),
-    (
         "plagueBearerState",
         &[
             "Condition:PlagueBearerIncubating",
@@ -434,7 +480,6 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
         "raiseSpidersSpiderCount",
         &["Multiplier:RaisedSpiderConfig", "Multiplier:RaisedSpider"],
     ),
-    ("sigilOfPowerStages", &["Multiplier:SigilOfPowerStage"]),
 ];
 
 /// The enemy's damage (PoB v2.67.2, `Modules/ConfigOptions.lua` 2352 to
@@ -500,7 +545,7 @@ pub const ENEMY_DAMAGE: &[&str] = &[
 ///   `projectile_damage_+%_max_as_distance_travelled_increases`,
 ///   `projectile_damage_+%_max_before_distance_increase`,
 ///   `slayer_damage_+%_final_from_distance` (`ModParser.lua` 2511, 2662,
-///   3013, 3917, 4638 to 4640); `keystone_point_blank`, `player_far_shot`,
+///   3013, 3917, 4638 to 4640);
 ///   `gain_player_far_shot_while_do_not_have_iron_reflexes`,
 ///   `local_display_socketed_gems_supported_by_level_x_point_blank` (the
 ///   `PointBlank` and `FarShot` flags, 2317, 2661, 5489; the last through
@@ -539,15 +584,27 @@ pub const ENEMY_DAMAGE: &[&str] = &[
 /// `critical_strike_chance_+%_per_brand`,
 /// `sigil_recall_cooldown_speed_+%_per_brand_up_to_40%`; and
 /// `gain_alchemists_genius_on_flask_use_%`, the only source of
-/// `CanHaveAlchemistGenius`.
+/// `CanHaveAlchemistGenius`. In the agent list (S8), the stats whose text
+/// reads nearby allies (`multiplierNearbyAlly`, found by "nearby Ally" in
+/// the bundle's stat descriptions): `accuracy_rating_+%_with_ally_nearby`,
+/// `attack_area_of_effect_+%_with_ally_nearby`,
+/// `damage_+%_final_with_at_least_1_nearby_ally`, the three Guardian
+/// lines (`guardian_damage_+%_final_to_you_and_nearby_allies_per_nearby_ally_up_to_15%`,
+/// `guardian_with_5_nearby_allies_you_and_allies_have_onslaught`,
+/// `guardian_with_nearby_ally_damage_+%_final_for_you_and_allies`), and
+/// Rallying Cry's `rallying_cry_damage_+%_final_from_osm_per_nearby_ally`;
+/// `damage_removed_from_spectres_before_life_or_es_%`, the only source of
+/// the spectres' redirect (`TotalSpectreLife`).
 ///
 /// Each is a stat of the real bundle (a maintainer-run test,
 /// `tests/enemy.rs`), so a misspelt ID cannot pass as `Unmapped`.
 pub const DEPENDS_ON: &[&str] = &[
+    "accuracy_rating_+%_with_ally_nearby",
     "additional_spell_block_%_if_havent_blocked_recently",
     "ancestral_buff_base_rage_regeneration_per_minute",
     "arrow_critical_strike_chance_+%_max_as_distance_travelled_increases",
     "arrow_damage_+%_max_as_distance_travelled_increases",
+    "attack_area_of_effect_+%_with_ally_nearby",
     "berserker_gain_rage_on_attack_hit_cooldown_ms",
     "berserker_warcry_grant_X_rage_per_5_power_while_less_than_25_rage",
     "can_apply_additional_scorch",
@@ -556,10 +613,10 @@ pub const DEPENDS_ON: &[&str] = &[
     "chance_to_block_attack_damage_if_not_blocked_recently_%",
     "cooldown_speed_+%_per_brand_up_to_40%",
     "critical_strike_chance_+%_per_brand",
+    "damage_+%_final_with_at_least_1_nearby_ally",
+    "damage_removed_from_spectres_before_life_or_es_%",
     "enemy_grant_X_rage_on_stun",
     "enemy_rage_regeneration_on_stun",
-    "energy_shield_leech_does_not_stop_on_full_energy_shield",
-    "energy_shield_leech_from_attacks_does_not_stop_on_full_energy_shield",
     "gain_1_rage_on_use_%_chance",
     "gain_alchemists_genius_on_flask_use_%",
     "gain_player_far_shot_while_do_not_have_iron_reflexes",
@@ -574,21 +631,22 @@ pub const DEPENDS_ON: &[&str] = &[
     "gain_x_rage_on_hit_with_axes_swords_1s_cooldown",
     "gain_x_rage_on_melee_crit",
     "glove_implicit_gain_rage_on_attack_hit_cooldown_ms",
+    "guardian_damage_+%_final_to_you_and_nearby_allies_per_nearby_ally_up_to_15%",
+    "guardian_with_5_nearby_allies_you_and_allies_have_onslaught",
+    "guardian_with_nearby_ally_damage_+%_final_for_you_and_allies",
     "impale_effect_+%_max_as_distance_travelled_increases",
     "kaoms_primacy_gain_rage_on_attack_crit_cooldown_ms",
-    "keystone_point_blank",
     "lancing_steel_damage_+%_at_close_range",
-    "life_leech_does_not_stop_at_full_life",
     "local_display_socketed_gems_supported_by_level_x_point_blank",
     "local_display_tattoo_trigger_level_x_akoya",
     "local_gain_X_rage_on_attack_hit_with_melee_abyss_jewel_socketed",
     "max_chance_to_block_attacks_if_not_blocked_recently",
     "physical_damage_%_to_add_as_lightning_damage_per_hallowing_flame_consumed_by_ally_up_to_80%",
-    "player_far_shot",
     "projectile_damage_+%_max_before_distance_increase",
     "rage_warcry_gain_X_rage_per_minute_per_5_monster_power_max_25_power",
     "rage_warcry_maximum_rage_+",
     "raider_shocks_you_apply_can_stack_up_to_50_times",
+    "rallying_cry_damage_+%_final_from_osm_per_nearby_ally",
     "regenerate_1_rage_per_x_life_regeneration",
     "regenerate_1_rage_per_x_mana_regeneration",
     "retaliation_skills_gain_X_rage_per_enemy_hit",
@@ -664,7 +722,34 @@ pub fn inert(input: &str) -> bool {
 ///   661; `act_dex.lua` 11747);
 /// - `toxicRainPodOverlap`: `podOverlapMultiplier` for Toxic Rain and its
 ///   variants (700 to 702; `act_dex.lua` 14933, 15025, 15114).
+/// - `detonateDeadCorpseLife` (the agent list, S8): `corpseLife` for every
+///   skill (line 155, an untagged `SkillData`), which `CalcOffence.lua`
+///   reads only for a skill whose data sets `explodeCorpse` (1856 to 1860:
+///   the corpse's life times its explosion multiplier, as the hit's fire
+///   `BonusMin` and `BonusMax`) and for the monster explosion's
+///   `monsterExplode` (1861 to 1867). Those skills are listed (each with
+///   `explodeCorpse` in its base mods, so unvetted in every part, or the
+///   monster explosion's function); no DoT reads the value.
 pub const SKILL_DATA_ONLY: &[(&str, &[&str])] = &[
+    (
+        "detonateDeadCorpseLife",
+        &[
+            "Bodyswap",
+            "BodyswapAltX",
+            "Cremation",
+            "CremationAltX",
+            "DeathWalk",
+            "DeathWish",
+            "DetonateDead",
+            "DetonateDeadAltX",
+            "DetonateDeadAltY",
+            "EnemyExplode",
+            "VaalDetonateDead",
+            "VolatileDead",
+            "VolatileDeadAltX",
+            "VolatileDeadAltY",
+        ],
+    ),
     ("stormRainActiveArrows", &["StormRainAltX"]),
     ("stormRainBeamOverlap", &["StormRain"]),
     (
@@ -705,7 +790,9 @@ mod tests {
 
     /// [`SKILL_DATA_ONLY`] (open items, S8): sorted, apart from the other
     /// lists, and each skill is in PoB's data with a function the hit does
-    /// not read, so neither its hit (every part) nor its DoT is vetted.
+    /// not read, or (corpse life, the agent list) `explodeCorpse` in its
+    /// base mods, so its hit is vetted in no part (and Toxic Rain's DoT is
+    /// not vetted).
     #[test]
     fn skill_data_only_skills_should_stay_unvetted() {
         assert!(SKILL_DATA_ONLY.windows(2).all(|w| w[0].0 < w[1].0));
@@ -713,10 +800,16 @@ mod tests {
             assert!(skill_data_only(input) && !named_only(input) && !inert(input));
             for id in *skills {
                 let pob = super::super::pob_skill::skill(id).unwrap_or_else(|| panic!("{id}"));
-                assert!(!pob.functions.is_empty(), "{id}");
+                let explodes = pob.base_mods.iter().any(|m| m.key == Some("explodeCorpse"));
+                assert!(!pob.functions.is_empty() || explodes, "{id}");
+                // Vetted only as a no-op without the input (the agent list,
+                // 2026-11-27: Toxic Rain), the attack's reason with it.
+                let config_noop = super::super::hit::CONFIG_NOOP_FUNCTIONS
+                    .iter()
+                    .any(|(s, _, name)| s == id && name == input);
                 for part in 0..=pob.parts.len() {
                     assert!(
-                        !super::super::hit::pob_vetted_with(id, part, true),
+                        config_noop || !super::super::hit::pob_vetted_with(id, part, true),
                         "{id} {part}"
                     );
                 }

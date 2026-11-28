@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, open items agent list): Smite with the rare Siege Axe (quality 20) of
+     smite-intimidating-cry-warcry-speed-templar.xml, its quality Harvest's "Grants 2% increased Accuracy per 2% Quality"
+     with "Quality does not increase Physical Damage": the character's accuracy, 2 x 10 = 20% (PoB's Accuracy INC with
+     the Multiplier QualityOn{SlotName}, ModParser.lua 5755), against an enemy with evasion.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Templar" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="5" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Smite" skillId="Smite" variantId="Smite" gemId="Metadata/Items/Gems/SkillGemSmite" level="20" quality="0" enabled="true" enableGlobal1="true" count="1" skillPart="1"/>
+			</Skill>
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="false">
+				<Gem nameSpec="Intimidating Cry" skillId="IntimidatingCry" variantId="IntimidatingCry" gemId="Metadata/Items/Gems/SkillGemIntimidatingCry" level="20" quality="0" enabled="true" enableGlobal1="true" enableGlobal2="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items activeItemSet="1">
+		<Item id="1">
+Rarity: RARE
+Loom Test Cleaver
+Siege Axe
+Quality: 20
+Implicits: 0
+Adds 10 to 20 Physical Damage
+80% increased Physical Damage
+15% increased Attack Speed
+25% increased Critical Strike Chance
+Adds 5 to 50 Lightning Damage
++200 to Accuracy Rating
+Quality does not increase Physical Damage
+Grants 2% increased Accuracy per 2% Quality
+		</Item>
+		<ItemSet id="1">
+			<Slot name="Weapon 1" itemId="1"/>
+		</ItemSet>
+	</Items>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<Input name="enemyEvasion" number="3000"/>
+			<CustomModifierBlock enabled="true" title="Default">
+				30% increased Warcry Speed
+			</CustomModifierBlock>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>

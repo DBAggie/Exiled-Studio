@@ -21,6 +21,18 @@
 //!   to the jewel, here the socket node's; a tattooed one gives its
 //!   tattoo's (PoB applies the override first).
 //!
+//! - **"Increases and Reductions to Life in Radius are Transformed to apply
+//!   to Energy Shield"** (Energy From Within,
+//!   `local_unique_jewel_life_increases_applies_to_energy_shield`; PoB's
+//!   `getSimpleConv({ "Life" }, "EnergyShield", "INC", true)`,
+//!   `ModParser.lua` 6100, a first-pass function on every node in the
+//!   radius but masteries): an allocated node's `maximum_life_+%` becomes
+//!   `maximum_energy_shield_+%` at the same value, its other stats kept.
+//!   Checked in the game (the maintainer, 2026-11-26: 6% increased maximum
+//!   Life in the radius took 1,402 life to 1,323 and 36 energy shield to
+//!   39). A node in the radius with a conditional life increase
+//!   ([`LIFE_INCREASES_NOT_READ`]) is a reason on the socket.
+//!
 //! The jewel's own stats are `NoEffect` in the engine's mapping
 //! (`loom_calc::poe1::mapping`). A jewel whose value does not settle, or
 //! that both copies unallocated nodes and adds to the nodes of another
@@ -45,12 +57,28 @@ pub const GRANT_NOTHING: &str =
 pub const COPY_UNALLOCATED: &str =
     "local_jewel_copy_stats_from_unallocated_non_notable_passives_in_radius";
 
+/// "Increases and Reductions to Life in Radius are Transformed to apply to
+/// Energy Shield" (module docs).
+pub const LIFE_TO_ENERGY_SHIELD: &str =
+    "local_unique_jewel_life_increases_applies_to_energy_shield";
+/// The plain life increase it transforms, and what it becomes.
+const LIFE_INCREASE: (&str, &str) = ("maximum_life_+%", "maximum_energy_shield_+%");
+/// Passive stats that are `Life` INC with a condition or a multiplier: in
+/// the radius of [`LIFE_TO_ENERGY_SHIELD`] they are a reason (their energy
+/// shield form is not read here).
+pub const LIFE_INCREASES_NOT_READ: [&str; 3] = [
+    "maximum_life_+%_per_abyssal_jewel_affecting_you",
+    "maximum_life_+%_per_equipped_corrupted_item",
+    "maximum_life_+%_while_no_gems_in_gloves",
+];
+
 /// What one socketed jewel does.
 #[derive(Debug, Default)]
 struct Functions {
     also_grant: Vec<StatAmount>,
     grant_nothing: bool,
     copy_unallocated: bool,
+    life_to_energy_shield: bool,
     unsettled: bool,
 }
 
@@ -81,6 +109,8 @@ pub fn changes(
     let mut adds: BTreeMap<u32, Vec<StatAmount>> = BTreeMap::new();
     let mut wiped: BTreeSet<u32> = BTreeSet::new();
     let mut socket_reasons: BTreeSet<u32> = BTreeSet::new();
+    // A node's own stats with its life increases transformed (replacing them).
+    let mut transformed: BTreeMap<u32, Vec<StatAmount>> = BTreeMap::new();
     for socket in spec.jewel_sockets.typed() {
         let at = socket.node.0;
         if !allocated.contains(&at) {
@@ -128,13 +158,20 @@ pub fn changes(
                             f.grant_nothing = true;
                         } else if id == COPY_UNALLOCATED {
                             f.copy_unallocated = true;
+                        } else if id == LIFE_TO_ENERGY_SHIELD {
+                            f.life_to_energy_shield = true;
                         }
                     }
                 }
                 _ => {}
             }
         }
-        if f.also_grant.is_empty() && !f.grant_nothing && !f.copy_unallocated && !f.unsettled {
+        if f.also_grant.is_empty()
+            && !f.grant_nothing
+            && !f.copy_unallocated
+            && !f.life_to_energy_shield
+            && !f.unsettled
+        {
             continue;
         }
         let Some(ring) = label.and_then(|l| tree.radius_named(l)) else {
@@ -162,6 +199,30 @@ pub fn changes(
                 if f.grant_nothing && n.kind == Kind::Normal {
                     wiped.insert(node);
                 }
+                if f.life_to_energy_shield && n.kind != Kind::Mastery {
+                    if n.stats
+                        .iter()
+                        .any(|s| LIFE_INCREASES_NOT_READ.contains(&s.stat.as_str()))
+                        || tattooed.contains_key(&node)
+                    {
+                        socket_reasons.insert(at);
+                    } else if n.stats.iter().any(|s| s.stat == LIFE_INCREASE.0) {
+                        transformed.insert(
+                            node,
+                            n.stats
+                                .iter()
+                                .map(|s| StatAmount {
+                                    stat: if s.stat == LIFE_INCREASE.0 {
+                                        LIFE_INCREASE.1.to_owned()
+                                    } else {
+                                        s.stat.clone()
+                                    },
+                                    value: s.value,
+                                })
+                                .collect(),
+                        );
+                    }
+                }
             }
             if !taken && f.copy_unallocated && n.kind == Kind::Normal {
                 if conquered.contains_key(&node) {
@@ -188,6 +249,19 @@ pub fn changes(
         }
     }
     let mut out: BTreeMap<u32, Conquest> = BTreeMap::new();
+    // A transformed node replaces its own stats; another jewel's additions
+    // to it are kept.
+    for (node, mut stats) in transformed {
+        stats.extend(adds.remove(&node).unwrap_or_default());
+        out.insert(
+            node,
+            Conquest {
+                replaced: true,
+                stats,
+                reason: None,
+            },
+        );
+    }
     for (node, stats) in adds {
         out.insert(
             node,

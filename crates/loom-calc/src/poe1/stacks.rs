@@ -150,6 +150,14 @@ pub enum StackKind {
     /// enemy's `Multiplier:EnemyPresenceSeconds`, the config's
     /// `enemyMultiplierEnemyPresenceSeconds`).
     EnemyPresenceSeconds,
+    /// Defiance (open items S7; PoB's `Multiplier:Defiance`, the config's
+    /// `multiplierDefiance`, at most 10).
+    Defiance,
+    /// The enemy's elemental ailments (the agent list, 2026-11-27; Elemental
+    /// Hit's `Multiplier:ElementalHitAilmentOnEnemy`, 1 for each of ignited,
+    /// chilled, frozen, shocked, scorched, brittle, sapped,
+    /// [`enemy_elemental_ailments`]).
+    EnemyElementalAilments,
 }
 
 impl StackKind {
@@ -182,6 +190,8 @@ impl StackKind {
             Self::WarcriesUsedRecently => "warcries-used-recently",
             Self::CorpsesConsumedRecently => "corpses-consumed-recently",
             Self::EnemyPresenceSeconds => "enemy-presence-seconds",
+            Self::Defiance => "defiance",
+            Self::EnemyElementalAilments => "enemy-elemental-ailments",
         }
     }
 }
@@ -277,6 +287,9 @@ pub enum PerStack {
     /// BASE per second, the stat per minute), its total at most 2% per
     /// second (`limit` 2, `limitTotal`; P6-11ev).
     EnergyShieldRegenPercentPerMinuteUpTo2,
+    /// Missing unreserved life gained before each enemy hit, percent
+    /// (`MissingLifeBeforeEnemyHit` BASE; open items S7).
+    MissingLifeBeforeHit,
     /// The enemy's increased damage taken (`DamageTaken` INC on the enemy;
     /// P6-11ew).
     EnemyDamageTaken,
@@ -348,6 +361,7 @@ impl PerStack {
             Self::EnergyShieldRegenPercentPerMinuteUpTo2 => {
                 "per.energy-shield-regen-percent-per-minute-up-to-2"
             }
+            Self::MissingLifeBeforeHit => "per.missing-life-before-hit",
         }
     }
 
@@ -466,6 +480,12 @@ impl PerStack {
                 Quantity::Poe1(Poe1Quantity::RegenPercentPerMinute(
                     super::Pool::EnergyShield,
                 )),
+                Op::Base,
+                Flags::NONE,
+                Flags::NONE,
+            ),
+            Self::MissingLifeBeforeHit => (
+                Quantity::Poe1(Poe1Quantity::MissingLifeBeforeHit),
                 Op::Base,
                 Flags::NONE,
                 Flags::NONE,
@@ -670,6 +690,14 @@ pub const MODIFIERS: &[(&str, StackKind, StackValue)] = &[
         StackKind::Inspiration,
         StackValue::Per(PerStack::ElementalDamageMore),
     ),
+    // The agent list (2026-11-27): Elemental Hit's "#% more Damage for each
+    // different Elemental Ailment on the enemy" (`Damage` MORE per
+    // `Multiplier:ElementalHitAilmentOnEnemy`, its base mods).
+    (
+        "elemental_hit_damage_+%_final_per_enemy_elemental_ailment",
+        StackKind::EnemyElementalAilments,
+        StackValue::Per(PerStack::DamageMore),
+    ),
     (
         "gain_max_rage_on_losing_temporal_chains_debuff",
         StackKind::Rage,
@@ -748,6 +776,14 @@ pub const MODIFIERS: &[(&str, StackKind, StackValue)] = &[
         StackValue::Maximum,
     ),
     ("maximum_rage", StackKind::Rage, StackValue::Maximum),
+    // Open items S7: "Gain #% of Missing Unreserved Life before being Hit by
+    // an Enemy Per Defiance" (`MissingLifeBeforeEnemyHit` BASE per
+    // `Multiplier:Defiance`; its `ModCache` parse).
+    (
+        "missing_unreserved_life_%_gained_as_life_before_hit_per_defiance",
+        StackKind::Defiance,
+        StackValue::Per(PerStack::MissingLifeBeforeHit),
+    ),
     (
         "movement_speed_+%_per_nearby_enemy",
         StackKind::NearbyEnemies,
@@ -871,6 +907,14 @@ pub const MODIFIERS: &[(&str, StackKind, StackValue)] = &[
         StackKind::GaleForce,
         StackValue::Per(PerStack::TailwindEffect),
     ),
+    // The agent list (a game-truth line PoB reads): "Each Totem applies #%
+    // increased Damage taken to Enemies near it" (`ModParser.lua` 4367: the
+    // enemy's `DamageTaken` INC per `TotemsSummoned`).
+    (
+        "totems_nearby_enemies_damage_taken_+%",
+        StackKind::Totems,
+        StackValue::Per(PerStack::EnemyDamageTaken),
+    ),
     (
         "you_and_totem_life_regeneration_rate_per_minute_%_per_active_totem",
         StackKind::Totems,
@@ -917,8 +961,16 @@ pub const NEARBY_LIMIT_TOTAL: f64 = 8.0;
 /// `limit = 5`, `limitTotal`, from the text "up to a maximum of 5%").
 pub const HITS_TAKEN_LIMIT_TOTAL: f64 = 5.0;
 
+/// The config's Defiance (`ConfigOptions.lua` 1059:
+/// `Multiplier:Defiance` BASE `min(count, 10)` in combat; open items S7).
+pub const DEFIANCE_INPUT: &str = "multiplierDefiance";
+
+/// The most Defiance the config counts (`ConfigOptions.lua` 1060).
+const DEFIANCE_MAX: f64 = 10.0;
+
 /// The inputs this module reads.
-pub const INPUTS: [&str; 15] = [
+pub const INPUTS: [&str; 16] = [
+    DEFIANCE_INPUT,
     RAGE_INPUT,
     INSPIRATION_INPUT,
     MOMENTUM_INPUT,
@@ -961,7 +1013,7 @@ pub const MANA_SPENT_INPUT: &str = "multiplierManaSpentRecently";
 pub const BRANDS_INPUT: &str = "BrandsAttachedToEnemy";
 
 /// The active brand limit's base (`CalcSetup.lua` 529).
-const ACTIVE_BRAND_LIMIT: f64 = 3.0;
+pub(super) const ACTIVE_BRAND_LIMIT: f64 = 3.0;
 
 /// The config's count of nearby corpses (`ConfigOptions.lua` 1125:
 /// `Multiplier:NearbyCorpse` BASE in combat).
@@ -985,7 +1037,11 @@ pub fn is_input(input: &str) -> bool {
 /// count applies when not 0, a `countAllowZero` also when 0): `Ok(None)`
 /// when it does not apply, `Err(())` for a value that is not a finite
 /// number.
-fn count(set: Option<&ConfigSet>, name: &str, allow_zero: bool) -> Result<Option<f64>, ()> {
+pub(super) fn count(
+    set: Option<&ConfigSet>,
+    name: &str,
+    allow_zero: bool,
+) -> Result<Option<f64>, ()> {
     let Some(set) = set else { return Ok(None) };
     let read = |kind| match last(set, name, kind) {
         None => Ok(None),
@@ -1304,6 +1360,9 @@ pub fn stacks(set: Option<&ConfigSet>, data: &dyn CalcData, ingest: &mut Ingest<
             Some(50.0),
         ),
         (StackKind::EnemyPresenceSeconds, PRESENCE_INPUT, Some(100.0)),
+        // Defiance (open items S7): the config's count, at most 10
+        // (`ConfigOptions.lua` 1059 to 1060).
+        (StackKind::Defiance, DEFIANCE_INPUT, Some(DEFIANCE_MAX)),
     ] {
         let effects = per(ingest, kind);
         if effects.is_empty() {
@@ -1750,6 +1809,119 @@ pub fn brands(
         None => limit,
     };
     apply(ingest, &effects, multiplier(n), None);
+}
+
+/// The enemy's elemental ailments (the agent list, 2026-11-27): Elemental
+/// Hit's base mods give `Multiplier:ElementalHitAilmentOnEnemy` 1 for each
+/// of the enemy's `Ignited`, `Chilled`, `Frozen`, `Shocked`, `Scorched`,
+/// `Brittle`, `Sapped` (`act_dex.lua`): the settled checks, the config's
+/// scorch, brittle, and sap, and the chill and shock with their guaranteed
+/// sources ([`super::damage_taken::chill`], [`super::damage_taken::shock`]).
+/// After the gems and the damage taken. A value it cannot read is a reason.
+pub fn enemy_elemental_ailments(
+    set: Option<&ConfigSet>,
+    settled: &std::collections::BTreeMap<crate::condition::ConditionKey, bool>,
+    ingest: &mut Ingest<'_>,
+) {
+    let reason = |input: &str| UnsupportedReason::UnmodelledConfig {
+        input: input.to_owned(),
+    };
+    let effects: Vec<Effect> = ingest
+        .effects()
+        .iter()
+        .filter(|e| {
+            matches!(
+                e.quantity,
+                Quantity::Poe1(Poe1Quantity::Stack(
+                    StackKind::EnemyElementalAilments,
+                    StackValue::Per(_)
+                ))
+            ) && e.op == Op::Base
+                && e.conditions == Conditions::none()
+        })
+        .cloned()
+        .collect();
+    if effects.is_empty() {
+        return;
+    }
+    let mut n = 0.0;
+    // The shocked check is settled (the config's, Skitterbots'); a guaranteed
+    // shock counts below.
+    let shocked = settled.get(&crate::condition::ConditionKey::new(
+        super::conditions::ENEMY_SHOCKED,
+    )) == Some(&true);
+    if shocked {
+        n += 1.0;
+    }
+    for key in [
+        super::conditions::ENEMY_IGNITED,
+        super::conditions::ENEMY_FROZEN,
+    ] {
+        match settled.get(&crate::condition::ConditionKey::new(key)) {
+            Some(true) => n += 1.0,
+            Some(false) => {}
+            None => {
+                ingest.reason(UnsupportedReason::UnmodelledCondition {
+                    condition: crate::condition::ConditionKey::new(key),
+                    quantity: Quantity::Poe1(Poe1Quantity::Stack(
+                        StackKind::EnemyElementalAilments,
+                        StackValue::Per(PerStack::DamageMore),
+                    )),
+                    source: effects[0].source.clone(),
+                });
+                return;
+            }
+        }
+    }
+    // Chilled: the config's check (even at no configured effect, PoB's
+    // condition), else a guaranteed chill.
+    let chill_checked = set.is_some_and(|s| {
+        matches!(
+            last(
+                s,
+                super::damage_taken::CHILLED_INPUT,
+                ConfigInputKind::Input
+            ),
+            Some(ConfigValue::Boolean(true))
+        )
+    });
+    match super::damage_taken::chill(set, ingest) {
+        Ok(Some(_)) => n += 1.0,
+        Ok(None) if chill_checked => n += 1.0,
+        Ok(None) => {}
+        Err(input) => {
+            ingest.reason(reason(input));
+            return;
+        }
+    }
+    let Some(set) = set else {
+        apply(ingest, &effects, n, None);
+        return;
+    };
+    match super::damage_taken::shock(set, ingest) {
+        Ok(Some(_)) if !shocked => n += 1.0,
+        Ok(Some(_)) => {}
+        Ok(None) => {}
+        Err(input) => {
+            ingest.reason(reason(input));
+            return;
+        }
+    }
+    for input in [
+        super::damage_taken::SCORCHED_INPUT,
+        super::damage_taken::BRITTLE_INPUT,
+        super::damage_taken::SAPPED_INPUT,
+    ] {
+        match last(set, input, ConfigInputKind::Input) {
+            None | Some(ConfigValue::Boolean(false)) => {}
+            Some(ConfigValue::Boolean(true)) => n += 1.0,
+            Some(_) => {
+                ingest.reason(reason(input));
+                return;
+            }
+        }
+    }
+    apply(ingest, &effects, n, None);
 }
 
 /// Each effect per stack as its target times `count`, with its source (or

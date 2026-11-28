@@ -159,3 +159,263 @@ Run on the main workstation, 2026-11-26, with the pinned oracle (PoB v2.67.2, `b
 - **Tests:** the workspace's 1,859 tests, clippy, fmt, and the wasm32 check pass.
 
 **Left for S3:** Mark on Hit, Hextouch, Arcanist Brand, Cast on Death, Mirage Archer, Manaforged Arrows, the item triggers (`trigger_socketed_spell_on_skill_use_%`, the game-truth list), and `spellslinger_cooldown_duration_+%` (no build has it).
+
+## Part 4: Arcanist Brand and Cast on Death (open items S3)
+
+Built on branch `feat/s3-triggers`, PR #188 (2026-11-26), after PR #187.
+
+**Arcanist Brand** (`CalcTriggers.lua` 1321 to 1341), `triggers::Config::ArcanistBrand`, `triggers::arcanist_rate`:
+- **The source** is the first Arcanist Brand among the active skills, in any group (PoB's `activeSkillList` loop). The triggered skills are the group's spells its support part supports.
+- **The brand's own context.** PoB sums the brand's modifiers in the brand's skill list. The engine collects the build with the brand as the main skill (`engine::collected`) and the new option `CalcOptions::own_skill_context`, so the brand's gems and supports act on it although the engine computes no hit for it. Its flags are `ModFlag.Cast` and `Spell`, the spell keyword, and `SkillType.Brand`.
+- **The activation rate** is `repeatFrequency x (1 + inc / 100) x more x attached`:
+  - `repeatFrequency` is the brand's `base_sigil_repeat_frequency_ms` over 1000. It is a period, and PoB multiplies it as it is; for the gem it is 1 s, so the value is the same as a frequency.
+  - `inc` is the `Speed` and `BrandActivationFrequency` INC sums: cast speed reaches the brand (`additive_cast_speed_modifiers_apply_to_sigil_repeat_frequency`), and so does its quality, `sigil_repeat_frequency_+%` (the new `Poe1Quantity::BrandActivationFrequency`).
+  - `more` is the `BrandActivationFrequency` MORE product.
+  - `attached` is PoB's `attachedBrandCount` (`CalcPerform.lua` 1322 to 1326): the brand's attach limit (its gems' `base_number_of_sigils_allowed_per_target` and the character's) at most the active brand limit (3 and the additions), or the config's `BrandsAttachedToEnemy` at most that.
+- **The rotation.** The config has `triggeredSkillCond`, so PoB always simulates the rotation, with no trigger cooldown and a chance of 100 (809). Its charge branch (792) is never taken for such a config: it compares two tables by identity. The cap is not read.
+- **The spell:**
+  - PoB turns its `TriggeredDamage` into `Damage`: `support_brand_damage_+%_final` (`TRIGGERED_DAMAGE`), and `trigger_brand_support_hit_damage_+%_final_vs_branded_enemy` with the config's `targetBrandedEnemy`, on unless set off (the new state `TRIGGERED_DAMAGE_BRANDED`).
+  - The support adds the `brand` skill flag, so PoB's `KeywordFlag.Brand` reaches the spell ("Brand Damage"). The engine's `Flags::SKILL_BRAND` stands for both the keyword and the `SkillType.Brand` tag. The one tag row, cast speed with brand skills, reaches only the cast rate, which a triggered spell does not read.
+- **Rows:** `NoEffect` for the brand's markers (`triggered_by_brand_support`, `base_sigil_repeat_frequency_ms`, `additive_cast_speed_modifiers_apply_to_sigil_repeat_frequency`, `base_number_of_sigils_allowed_per_target`, `base_deal_no_damage`), the support's less area and projectile range. Arcanist Brand is an inert skill (`BrandSupport`) and its support part a support without a global stat.
+
+**Cast on Death** (`CalcTriggers.lua` 1342, `CalcPerform.lua` 1438 to 1447), `triggers::Config::CastOnDeath`:
+- PoB's config returns none. The support's `triggeredOnDeath` sets the skill's `triggerTime` to `60 x 1000` ("technically any large value would do"), which `CalcOffence.lua` 2214 to 2221 reads as seconds over the skill's `CooldownRecovery` INC. The engine ports that stand-in: the rate is `(1 + inc / 100) / 60000`, without action speed or the tick cap.
+- `showAverage` stays: the support's `base_skill_show_average_damage_instead_of_dps`, not cleared as a trigger rate's is (2227). The combined DPS is the average damage.
+- `cast_on_death_damage_+%_final_while_dead` is `Damage` MORE (PoB applies it unconditionally). The other stats are markers or no slice field (`cast_on_death_%`, `spell_only_castable_on_death`, `no_cost`, the area while dead); the cost is 0 from the level's mana multiplier.
+- **Not modelled:** the damaging ailments. PoB counts an ignite's stacks without the rate (4909) and a poison or a bleed by its average (4767, 6032). Each such field of a Cast on Death spell is not computed (`cast-on-death-ailment`).
+
+**Mark On Hit and Hextouch** (1275, 1278) trigger a mark or a hex. Their effects apply as any curse's (P6-9g), and the engine computes no field from a curse's rate, so their configs give nothing to port.
+
+**Mirage Archer** is not a trigger config in PoB (`CalcMirages.lua`). It is in since P6-8b (`docs/phase-6/mirages.md`).
+
+**Full DPS with `showAverage`.** The full DPS inferred a skill's cull multiplier from its combined DPS over its parts. For a skill that shows its average damage, the combined DPS has no rate, so that ratio is not a cull. `full_dps` now skips the inference when the combined DPS is the average damage. PoB's full DPS takes such a skill's `TotalDPS` (`Calcs.lua` 287 to 289).
+
+### Evidence
+
+Run on the main workstation, 2026-11-26, with the pinned oracle (PoB v2.67.2, `b32759a`, clean) and the evidence bundle `local/p6/packs/b-ct` (build 26530219). The baseline is `dev` at `eb2e8c79`, built in a worktree and run the same way.
+
+- **Fixtures** (new, all original; each run three times by PoB, identical). Every compared field equals PoB's:
+  - `trigger-arcanist-ice-nova-witch.xml`: Ice Nova with Arcanist Brand. The rate 1, the average damage 429.27 (the support's less damage and its more damage against the branded enemy), the mana cost per second.
+  - `trigger-arcanist-two-spells-witch.xml`: Ice Nova and Arc with Arcanist Brand and Faster Casting, the brand at 20% quality. The activations 1.49 per second (the quality's 10% and Faster Casting's cast speed in the brand's context), Ice Nova's share 0.74649 from PoB's rotation. The full DPS is partial for Arc's own reasons.
+  - `trigger-cast-on-death-ice-nova-witch.xml`: Ice Nova with Cast on Death. The speed 1/60,000, the average damage 1,833.26 as the combined DPS, the mana cost 0, the full DPS 0.0306 (the hit's DPS).
+- **Public `calc-parity`** (539 builds, the calc scope): 0 unexpected, as on the baseline. `Complete` fields went from 39,540 to 39,769, the new fixtures' 229.
+  - 5 fields of `kinetic-fusillade-ballista-hierophant.xml` moved toward PoB (average damage, hit, ignite, combined, and full DPS). Its Arcanist Brand is now a known gem, no longer `unmodelled-gem`.
+  - Nothing moved away from PoB.
+- **A sorting bug caught on the way:** an out-of-order support entry hid Cast On Critical Strike from the binary search and moved the Cast On Critical Strike fixtures away from PoB. The new test `the_gem_tables_should_be_sorted_by_id` guards both gem tables.
+- **Corpus** (21 builds, local): 1 build changed, a Detonate Dead build with an Arcanist Brand in another group. Its `unmodelled-gem` reason is gone (76 fields). Five of its damage values moved (hit DPS 27,845 to 46,592) and its own reasons now show, all fields `indeterminate`. There is no oracle run of the corpus here.
+- **`data-parity`:** 753 differences, `uncategorized` 0, the same as `dev`. `gem_effects` allows Arcanist Brand's `Brand` type, its support's `Triggered` type and `triggeredByBrand`, and Cast on Death's `Triggered` type and marks.
+- **Tests:** the workspace's 1,860 tests, clippy, and fmt pass.
+
+**Left for S3:** Manaforged Arrows (a triggered bow attack: the attack path takes no triggered attack yet, and the rate needs both skills' raw mana costs), the item triggers (`trigger_socketed_spell_on_skill_use_%`, the game-truth list), and `spellslinger_cooldown_duration_+%` (no build has it). The item lines that trigger a socketed spell are part 5.
+
+## Part 5: the item lines that trigger a socketed spell (open items S3)
+
+Built on branch `feat/s3-triggers`, PR #188 (2026-11-26), after part 4.
+
+**What PoB does.** An item line such as Mjolner's "Trigger a Socketed Lightning Spell on Hit, with a 0.25 second Cooldown" is an `ExtraSupport` of a trigger support at level 1, for the item's slot (`ModParser.lua` 3148 to 3176 and 5276 to 5286). The support joins the socketed spell's group, makes it `Triggered`, and its name is the config (`calcs.triggers`, 1592 to 1617, `triggerNameLower`).
+
+**The lines** (`item_supports::TRIGGER_ROWS`, served by `item_supports::row` at level 1 like the "Supported by" rows):
+
+| Stat | Support | Config (`CalcTriggers.lua`) |
+|---|---|---|
+| `trigger_socketed_spell_on_attack_%` | `SupportTriggerSpellOnAttack` | Poet's Pen (1009): a wand attack, on use; the spells of the item's slot |
+| `chance_to_trigger_socketed_spell_on_bow_attack_%` | `SupportTriggerSpellOnBowAttack` | Asenath's Chant (1031): a bow attack, on use; the spells of the item's slot |
+| `local_unique_attacks_cast_socketed_lightning_spells_%` | `SupportUniqueMjolnerLightningSpellsCastOnHit` | Mjolner (1109): an attack with a mace or a one-handed weapon in another group; the group's lightning spells |
+| `local_unique_cast_socketed_cold_skills_on_melee_critical_strike` | `SupportUniqueCosprisMaliceColdSpellsCastOnMeleeCriticalStrike` | Cospri's Malice (1125): a melee attack with a sword or a one-handed weapon, on crit; the cold spells of the item's slot |
+| `main_hand_trigger_socketed_spell_on_freezing_hit` | `SupportTriggerSpellOnBowAttackFreezeHit` | Wing of the Wyvern (1117): a bow attack in another group; the group's spells |
+| `body_armour_trigger_socketed_spell_on_unarmed_melee_critical_hit_cooldown` | `SupportTriggerSpellOnUnarmedMeleeCriticalHit` | Seven Teachings (1131): an unarmed melee attack, on crit; the group's spells |
+| `local_shield_trigger_socketed_elemental_spell_on_block_display_cooldown` | `SupportTriggerElementalSpellOnBlock` | Svalinn (1498): a global trigger; the group's spells |
+| `local_unique_cast_socketed_spell_on_block` | `SupportUniqueVirulenceSpellsCastOnBlock` | Festering Resentment (1505): the same |
+| `local_weapon_trigger_socketed_fire_spell_on_hit_display_cooldown` | `SupportTriggerFireSpellOnHit` | the enchantment (1521): a melee attack; the group's spells |
+
+- **A chance below 100.** The three `%` stats carry the chance to trigger. PoB ignores it (its `ExtraSupport` has no chance, and its patterns for "#% chance to" forms do not all match the game's text), so a line below 100% leaves the rate unsupported (`item-trigger-chance`).
+- **The other stats are flags.** Their value is a cooldown shown in seconds, which reads back as a range (`unsettled-value`); PoB does not read it, and neither does the engine (`gem_levels`: the row's `ItemSupport` is a flag).
+- **Left out:** "Trigger Socketed Spell on Kill" (Squirming Terror: at 100% the game's text has no "% chance" prefix, which PoB's pattern 3160 needs, so PoB applies nothing); Focus (`helmetFocusHandler`); the lines that trigger a bow skill or a curse; Seven Teachings is ported but finds no source, as the engine computes no unarmed attack.
+
+**The handler**, `triggers::Config` with the eight new configs:
+- **The source** is any active attack, not triggered and not the main skill, that meets the config's rule. Its weapon flags are the main hand's (PoB's `skillCfg.flags`, `CalcActiveSkill.lua` 293 to 309 and 455, from `hit::weapon_type_flags`; an empty hand is `Unarmed` without `Weapon1H`). The highest rate wins, as for the other configs.
+- **On use** (Poet's Pen, Asenath's Chant): the source's hit chance is not a factor. **On crit** (Cospri's Malice, Seven Teachings): its crit chance is.
+- **The trigger cooldown** is the support's level cooldown from the bundle (0.25 s; Asenath's Chant 0.3 s).
+- **Dual wielding** (441 to 449): an item's trigger from an attack halves the source rate, unless the attack hits with both weapons (`hit::double_hits`, lifted out of the attack path). A hand that is not known leaves the rate unsupported.
+- **The rotation** is the triggered spells PoB's `triggeredSkillCond` picks: of the main skill's group (`slotMatch`), or of its item's slot (Poet's Pen, Asenath's Chant, Cospri's Malice).
+- **Cast on block** is a global trigger with `triggeredSkillCond`: the effective rate is the cap, and PoB simulates the rotation at it (809), with PoB's `TriggeredDamage` as `Damage`.
+
+**Rows and tables:**
+- `NoEffect`: the supports' markers `skill_has_trigger_from_unique_item`, `socketed_triggered_skills_use_weapon_attack_time_for_pvp_scaling`, `unique_cospris_malice_cold_spells_triggered`, `unique_mjolner_lightning_spells_triggered`, `trigger_effect_group_on_block`, `spell_is_triggered_on_hit`.
+- `gems::SUPPORTS`: the nine supports, no global stat. `gems::SKILLS`: Spark as an inert skill (PoB's export: no global effect).
+- **`data-parity`, table `gem_effects`:** allows the supports' `Triggered` type and their `SkillData` marks. 753 differences, `uncategorized` 0, the same as `dev`.
+
+### Evidence
+
+Run on the main workstation, 2026-11-26, with the pinned oracle (PoB v2.67.2, `b32759a`, clean) and the evidence bundle `local/p6/packs/b-ct` (build 26530219). The baseline is part 4's run.
+
+- **Fixtures** (new, all original; each run three times by PoB, identical; the bases have whole-millisecond attack times, so Q11 does not enter). Every compared field equals PoB's:
+  - `trigger-poets-pen-ice-nova-witch.xml`: the rate 1.84, Kinetic Blast's use rate under the 0.25 s cooldown.
+  - `trigger-poets-pen-dual-wield-witch.xml`: a second wand in the off hand, the rate 1.012, half the source rate (Kinetic Blast's 1.84 with dual wielding's 10% more attack speed, 2.024).
+  - `trigger-asenaths-chant-ice-nova-ranger.xml`: Ice Nova in the helmet, Burning Arrow with a bow, the rate 0.8759 from 0.875 under the 0.3 s cooldown.
+  - `trigger-wing-of-the-wyvern-ice-nova-ranger.xml`: the line PoB joins from two, the rate 0.2188 (the hit chance applies).
+  - `trigger-mjolner-spark-templar.xml`: Spark and Smite, the rate 0.23375, Spark's cost 0 from the support's cost multiplier. Spark's own fields stay partial for its PoB data (`pob-skill-data`), so 69 fields are targets; no lightning spell in the gem tables is free of its own reasons.
+  - `trigger-cospris-ice-nova-templar.xml`: Smite's hit and crit chance, the rate 0.00362.
+  - `trigger-svalinn-ice-nova-templar.xml` and `trigger-festering-resentment-ice-nova-witch.xml`: the rate 3.7803, PoB's rotation at the 3.7879 cap.
+  - `trigger-fire-spell-on-hit-fireball-templar.xml`: Fireball and Smite, the rate 0.23375, the ignite too.
+  - 686 fields are targets in all.
+- **Public `calc-parity`** (551 builds, the calc scope): 0 unexpected. `Complete` fields went from 39,769 to 40,455, the new fixtures' 686. No other value moved. One document changed in its reasons only: `poisonous-concoction-of-bouncing-pathfinder.xml` lost its Svalinn line's `unmapped-stat`.
+- **The evidence oracle** now holds the three Spellslinger fixtures' outputs (run again here), which part 3's run had added only on CI, so the local `calc-parity` no longer reports them missing.
+- **Corpus** (21 builds, local): no document changed.
+- **Tests:** `trigger_rows_should_be_sorted_at_level_one`; the gem tables' sort test covers the new entries; the workspace's 1,861 tests, clippy, fmt, and the wasm32 check pass.
+
+**Left for S3:** Manaforged Arrows and the skills items grant and trigger (Molten Burst, Starfall, Bone Nova, and kin), all attacks: the attack path takes no trigger rate yet. Then Focus, Squirming Terror (the game-truth list, with `trigger_socketed_spell_on_skill_use_%`), and `spellslinger_cooldown_duration_+%` (no build has it). Part 6 gives the attack path a trigger rate and ports Manaforged Arrows.
+
+## Part 6: a trigger rate in the attack path, and Manaforged Arrows (open items S3)
+
+Built on branch `feat/s3-triggers`, PR #188 (2026-11-26), after part 5.
+
+**The attack path** (`hit::attack_skill`, `hit::attack_hit`): a triggered attack is computed when the engine ports its trigger (`triggers::computable`), as a triggered spell is. PoB gives every pass the trigger rate as its speed (`CalcOffence.lua` 2223 to 2227), so the engine replaces each hand's speed with the rate, carrying the trigger's reasons; a dual wielder's combined speed is then the rate too. A rate that cannot be computed leaves the attack's fields not computed. The triggered damage state is settled from the trigger, as in the spell path.
+
+**The costs before the hit.** PoB computes a skill's costs before the passes' damage (1677 to 1800). The engine's cost phase ran after the hit, since the costs per second read its speed. It is now two phases: `costs` before `hit`, and `cost-per-second` after `dot` (`costs::per_second_phase`). Only the graph's node numbers change: on the public builds and the corpus, no document changed in a value, a state, or a reason (`local/p6/doc_cmp.py`, which ignores node numbers).
+
+**Manaforged Arrows** (`CalcTriggers.lua` 1378, the handler's 522 to 556), `triggers::Config::ManaforgedArrows`:
+- **The source** is any bow attack (the main hand's weapon flags), not triggered and not the main skill, on use (no hit chance).
+- **The rate:** the source's rate over `ceil(threshold x triggered / source)`, the threshold the support's `support_manaforged_arrows_mana_cost_%_threshold` over 100 (3), each cost PoB's `ManaCostRaw`, the cost before its roundings (`costs::mana_cost_raw`, read from the store; the source's in its own collected context, as Arcanist Brand's). A triggered attack without a cost keeps the source's rate; a source without a cost gives a rate of 0, as PoB's.
+- **The rotation:** PoB's config has no `triggeredSkillCond`, so the main skill alone, as Spellslinger's, with the support's 0.5 s cooldown.
+- **The damage:** `support_manaforged_arrows_damage_+%_final` is `Damage` MORE. `support_manaforged_arrows_damage_+%_final_per_mana_spent` (PoB's `Damage` MORE with `PerStat` `ManaCost`) is `Poe1Quantity::DamageMorePerManaCost`: the attack path adds a `Damage` MORE effect of its value times `floor(cost + 0.0001)`, from the cost field, before the damage (`Calc::add_effect`, PoB's mid-calculation mod).
+- **`NoEffect`:** the threshold (read by the trigger) and `triggered_by_manaforged_arrows_support_%_chance` (100, no PoB stat map entry).
+
+### Evidence
+
+Run on the main workstation, 2026-11-26, with the pinned oracle (PoB v2.67.2, `b32759a`, clean) and the evidence bundle `local/p6/packs/b-ct` (build 26530219). The baseline is part 5's run (`local/p6/s3c`).
+
+- **Fixtures** (new, all original; a Recurve Bow, whose attack time is a whole number of milliseconds; each run three times by PoB, identical). Every compared field equals PoB's:
+  - `trigger-manaforged-burning-arrow-ranger.xml`: Burning Arrow with Manaforged Arrows, a second Burning Arrow the source. The triggered attack's cost is 28 (the support's multiplier), the source's 14: `ceil(3 x 28 / 14) = 6` uses, the rate 0.14583 from the source's 0.875; the damage with the support's less damage and its 28% more per mana spent.
+  - `trigger-manaforged-low-level-source-ranger.xml`: a level 1 source with its lower cost, the rate 0.07955.
+  - 158 fields are targets.
+- **Public `calc-parity`** (553 builds, the calc scope): 0 unexpected. `Complete` fields went from 40,455 to 40,613, the new fixtures' 158. No other document changed apart from node numbers.
+- **Corpus** (21 builds, local): no document changed apart from node numbers.
+- **`data-parity`:** 753 differences, `uncategorized` 0.
+- **Tests:** the phase order test (`costs` before `hit`, `cost-per-second` after `dot`); the workspace's 1,861 tests, clippy, fmt, and the wasm32 check pass.
+
+**Left for S3:** the skills items grant and trigger (Molten Burst, Starfall, Bone Nova, Icicle Burst, and kin): attacks with their own cooldowns, found by the unique's name in their saved group's source, each with its weapon data from the item; Focus; Squirming Terror and `trigger_socketed_spell_on_skill_use_%` (the game-truth list); `spellslinger_cooldown_duration_+%` (no build has it). The skills items grant and trigger are part 7.
+
+## Part 7: the skills items grant and trigger (open items S3)
+
+Built on branch `feat/s3-triggers`, PR #188 (2026-11-26), after part 6.
+
+**What PoB does.** A line such as Ngamahu's Flame's "20% chance to Trigger Level 16 Molten Burst on Melee Hit" is an `ExtraSkill` with `triggered` and the line's chance (`ModParser.lua` 2054 to 2071, 3278 to 3335). PoB builds a socket group for the skill and saves it in the build with its `source`, `Item:<id>:<Unique>, <base>`; the engine reads such groups since P6-11fe. The config is PoB's by the skill's ID (`TriggeredMoltenStrike`, 1566), else by the unique's name in the source (`getUniqueItemTriggerName`, 1575 to 1590).
+
+**The lines** (`triggers::GRANTED_TRIGGERS`, nine stats): each maps to `GrantsSkill` (the group must be there, as for the other granted skills) and to `Poe1Quantity::GrantedTriggerChance`, `Base` with the chance for the four `%` stats, else a flag (100%). A skill an item grants is triggered only with its item's line; without one it is used by hand, as in PoB.
+
+**The configs** (`triggers::Config`):
+
+| Config | Uniques (`CalcTriggers.lua`) | Source |
+|---|---|---|
+| `UniqueMeleeOrAttack` | Ngamahu's Flame (973) and Molten Burst by ID (1566), Limbsplit (947), The Cauteriser (950) | a melee or attack skill |
+| `Starcaller` | Starcaller (979) | the same, on crit (its line's `onCrit`) |
+| `MoonbendersWing` | Moonbender's Wing (968) | the same, PoB's cooldown of 1 s |
+| `UniqueDamageOrAttack` | Cameria's Avarice (976), Uul-Netol's Embrace (982), Duskblight (953), Mark of the Elder and of the Shaper (1003, 1006), Sporeguard (1000) | a damaging or attack skill |
+| `LioneyesPaws` | Lioneye's Paws (956) | a bow attack, on use, PoB's cooldown of 1 s |
+
+- No trigger support, so no trigger cooldown: the skill's own cooldown caps it, the main skill alone in the rotation, the line's chance with the source's hit chance (an attack's only, 732) and crit chance (Starcaller).
+- **The attack path** takes a triggered attack with its own cooldown when its trigger is ported (part 6 took the rate; the cooldown gate now lets it through).
+- **No cost:** PoB clears the cost of a skill an item grants and triggers (`SkillsTab.lua` 1161 to 1165); the game gives it none. `triggers::granted_and_triggered` zeroes the costs and the raw cost.
+- **Not listed:** the configs whose skill no slice field reads: the minions (Law of the Wilds, Rigwald's Crest, Jorrhast's Blacksteel, Ashcaller, Arakaali's Fang, Mark of the Shaper's anomaly), Shade Form (Replica Eternity Shroud, Shroud of the Lightless), Contaminate. Mark of the Shaper and Sporeguard are in the table, as PoB's config is the same as their kin's.
+
+**Rows and tables:**
+- `NoEffect`: the granted skills' trigger markers (`attack_trigger_on_*`, `trigger_on_hit_vs_frozen_enemy_%`, `attack_unusable_if_triggerable`), Icicle Burst's `never_freeze` (`freeze`), Rain of Arrows' `base_number_of_arrows` (`projectile-count`, as `number_of_additional_arrows`), `projectiles_nova` and `skill_art_variation` (no PoB entry).
+- `gems::SKILLS`: the eight granted skills as inert skills, so a source's own calculation does not count them as unknown gems.
+- **`data-parity`:** `gem_effects` allows their `Triggered` type and Bone Nova's and Icicle Burst's `triggered` mark: 753 differences, `uncategorized` 0.
+
+### Evidence
+
+Run on the main workstation, 2026-11-26, with the pinned oracle (PoB v2.67.2, `b32759a`, clean) and the evidence bundle `local/p6/packs/b-ct` (build 26530219). The baseline is part 6's run (`local/p6/s3d`).
+
+- **Fixtures** (new, all original, each run three times by PoB, identical; made by `local/p6/s3e_fixtures.py`; each item carries only its line). Every average damage equals PoB's, and the trigger rates:
+  - equal PoB's: Ngamahu's Flame (0.04675, the 20% chance), Starcaller (0.00257, on crit), Mark of the Elder (0.04298), Lioneye's Paws (0.87588, on use);
+  - Cameria's Avarice and Uul-Netol's Embrace (Gavel, Vaal Axe): PoB 0.21505, the engine 0.21499; Limbsplit (Woodsplitter): 0.19926 against 0.19947; Moonbender's Wing (Tomahawk): 0.23008 against 0.22997. Each is Q11: the same builds with Smite as the main skill have the same hit chance (22) on both sides, and Smite's attack rate differs only by Q11's floor (1.105 against 1.10533, 1.275 against 1.27436). PoB's rotation fed each side's rate (`local/p6/rotation_sim.py`, and the test `the_rotation_should_give_pobs_rate_for_limbsplit`) gives each side's value to the bit. Limbsplit's and Moonbender's fields are `Complete`, so their differences are registered: DIV-0700 to DIV-0708, `game-truth`, Q11. Cameria's Avarice's and Uul-Netol's Embrace's speed stays partial for their skills' PoB data (`pob-skill-data`), as does Icicle Burst's, Bone Nova's, Molten Burst's, and Rain of Arrows' damage; their values equal PoB's. (Bone Nova's, Molten Burst's, and Rain of Arrows' are `Complete` since 2026-11-26, Bone Nova's rate registered as DIV-0761 to DIV-0765: `docs/phase-6/skill-data.md`, "The agent list".)
+  - Moonbender's Wing's Lightning Warp costs 0, as PoB's.
+  - 583 fields are targets.
+- **Duskblight** is left out: the game's mod grants Stalking Pustule at level 1, but the bundle's granted effect has only a level 15 row, so the engine reports `no-level`. Which level the game uses is a question for the data (`dev/active/open-items/maintainer-follow-ups.md`).
+- **Public `calc-parity`** (561 builds): 0 unexpected. `Complete` fields went from 40,613 to 41,196, the new fixtures' 583. No other public document changed.
+- **Corpus** (21 builds, local): one document lost its `base_number_of_arrows` reason; no value or state changed.
+- **Tests:** `granted_triggers_should_be_found_by_line_and_unique`, `the_rotation_should_give_pobs_rate_for_limbsplit`; the workspace's tests, clippy, fmt, and the wasm32 check pass.
+
+## Part 8: Focus, Kitava's Thirst, Maloney's Mechanism, The Hidden Blade (open items S3)
+
+Built on branch `feat/s3-triggers`, PR #188 (2026-11-26), after part 7.
+
+**The crafted Focus line** ("Trigger Socketed Spells when you Focus, with a 0.25 second Cooldown", `trigger_socketed_spells_when_you_focus_%`, a chance row of `item_supports::TRIGGER_ROWS`; support `SupportTriggerSpellFromHelmet`). PoB's `helmetFocusHandler` (`CalcTriggers.lua` 135 to 217) assumes Focus is used as soon as its cooldown ends: the rate is `1 / (duration + cooldown / FocusCooldownRecovery)`, Focus's 4 s duration and 8 s cooldown from the bundle (`triggers::focus_period`), so 1/12 per second; the cap is shown, not applied; the triggered damage applies. No stat maps to `FocusCooldownRecovery`: "Focus has #% increased Cooldown Recovery Rate" stays a reason.
+
+**Kitava's Thirst** (1081; `ModParser.lua` 3166). Its two-stat line gives the support `SupportCastOnManaSpent` (`cast_socketed_spells_on_X_mana_spent`, which also carries the mana to spend, `Poe1Quantity::KitavaManaSpent`) and the chance (`cast_socketed_spells_on_mana_spent_%_chance`, `KitavaTriggerChance`), which PoB applies. The source is the fastest spell or attack, not triggered and not the main skill, whose mana cost reaches the amount (PoB's comparer, 1085 to 1089); a repeat spends no mana, so PoB divides the rate by the source's repeats (475 to 481): a source with any repeat modifier is not modelled (`kitava-repeats`). The main skill alone in the rotation, the support's 0.1 s cooldown.
+- **"+# to Total Mana Cost of Skills"** (`skill_mana_cost_+`, PoB's `ManaCost` BASE, `ModParser.lua` 190) is now mapped: it was unmapped, and the fixture needs it to reach Kitava's amount.
+
+**Maloney's Mechanism** (1018; `chance_to_trigger_socketed_bow_skill_on_bow_attack_%`, a chance row; support `SupportTriggerBowSkillOnBowAttack`): a bow attack on use; the rotation the ranged attacks of the quiver's slot; a triggered attack, through part 6's attack path. Its replica (spells, `useCastRate`) is not ported.
+
+**The Hidden Blade** (924; `local_display_grants_level_x_hidden_blade` in `triggers::GRANTED_TRIGGERS`): only while phasing (PoB disables the skill otherwise; the engine leaves it unsupported, `hidden-blade-phasing`); a global trigger at PoB's cap of 2 per second, or its cooldown's when it has one. `buffPhasing` is now a config check setting `Condition:Phasing` (`conditions::PHASING`, `ConfigOptions.lua` 1025), so other "while Phasing" lines are settled too.
+
+**A fix on the way:** a trigger on use, or from a spell, read the source's hit chance field before deciding not to use it; a spell has none, so the rate was unsupported. It now reads it only when it counts (part 7's damaging-skill sources and Kitava's spells).
+
+**Rows and tables:** `NoEffect` for `skill_triggered_when_you_focus_chance_%` (PoB's `chanceToTriggerOnFocus`, which no module reads) and `support_cast_on_mana_spent`; the three supports in `gems::SUPPORTS`, Unseen Strike in `gems::SKILLS`; `data-parity` allows their `Triggered` type and marks: 753 differences, `uncategorized` 0.
+
+### Evidence
+
+Run on the main workstation, 2026-11-26, with the pinned oracle (PoB v2.67.2, `b32759a`, clean) and the evidence bundle `local/p6/packs/b-ct`. The baseline is part 7's run (`local/p6/s3e`).
+
+- **Fixtures** (new, all original, each run three times by PoB, identical; made by `local/p6/s3f_fixtures.py`). Every compared field equals PoB's:
+  - `trigger-focus-ice-nova-witch.xml`: the rate 1/12 (0.08333).
+  - `trigger-kitavas-thirst-ice-nova-witch.xml`: Fireball with +100 total mana cost (120) the source at 1.333 casts per second, the 50% chance: 0.6667; Ice Nova's own cost 123.
+  - `trigger-maloneys-mechanism-burning-arrow-ranger.xml`: 0.87588 from the bow attack's 0.875 under the 1 s cooldown.
+  - `trigger-hidden-blade-unseen-strike-ranger.xml`: 2 per second, no cost; Unseen Strike's damage stays partial for its PoB skill data (`pob-skill-data`), equal to PoB's (`Complete` since 2026-11-26, `docs/phase-6/skill-data.md`, "The agent list").
+  - 302 fields are targets.
+- **Public `calc-parity`** (565 builds): 0 unexpected. `Complete` fields went from 41,196 to 41,498, the new fixtures' 302. One other document changed in its reasons only: `holy-flame-totem-hierophant.xml` lost its crafted Focus line's `unmapped-stat`.
+- **Corpus** (21 builds, local): no document changed.
+- **Tests:** the workspace's 1,863 tests, clippy, fmt, and the wasm32 check pass.
+
+## Part 9: Static Strike's beams and Shockwave (the agent list, 2026-11-26)
+
+Built on branch `feat/s3-triggers`, PR #188 (2026-11-26), after data schema 6. The agent list named this item "Static Strike part 1", for the three Smite Inquisitor builds' `FullDPS`. It turned out to be part 2: each build counts Static Strike in full DPS with `skillPart="2"`, "Beams", and PoB's full DPS also counts the attack of Shockwave Support in the same group. Both were needed.
+
+**Static Strike's beams** (`act_str.lua` 10642 to 10755; `hit::static_strike_beams`):
+- **The hit rate.** In part 2 PoB's `preDamageFunc` sets `hitTimeOverride = repeatFrequency / (1 + StaticStrikeFrequency INC / 100)`. The period is `static_strike_base_zap_frequency_ms` over 1000; the INC is `static_strike_zap_speed_+%`, which only the gem's quality gives. `HitSpeed = 1 / HitTime`, with no tick cap (`CalcOffence.lua` 2403 to 2405, 2474 to 2476).
+- **Where the hit rate is used.** It is the rate of the DPS (3712), the ailments (4325, 4607, 4914), leech (3211), and impale (6045). `Speed` stays the attack rate; a dual wielder's is still the hands' combined speed.
+- **A new field.** The engine now sets `HitSpeed`, a slice field until now never computed, which PoB has only when it sets it.
+- **The beams' damage.** `static_strike_beam_damage_+%_final` is `Damage` MORE tagged part 2, added by the same function.
+- **Part 1** reads none of the three; the mapping gives them no effect (`skill-rate`, `skill-part`).
+- **Vetting.** `hit::READ_PART_FUNCTIONS` (functions read in every part, with or without a cooldown), `READ_OWN_STATS` with the beam stat, and `PART_FIELDS` with `chaining`. The chain count reaches no slice field: `number_of_chains` and the per-chain lines are no-effect rows or guards.
+- **`AttackSkill::part_index`** carries the part's index.
+
+**Shockwave Support's attack** (`SupportBluntWeaponShockwave`, `sup_str.lua` 4837; `triggers::Config::Shockwave`). PoB finds its config by the skill's name, "shockwave" (1361 to 1363). The engine finds it by the granted effect (`triggers::SUPPORT_GRANTED`).
+- **The source** is the fastest melee skill of its group that is not triggered, with its `HitSpeed` or `Speed`. For Static Strike's beams that is the beams' hit rate.
+- **The chance** is the source's chance to hit.
+- **The rotation** is the main skill alone, with its own 1 s cooldown and its `base_cooldown_speed_+%`. More than one stored use ignores the server tick (PoB's `ignoresTickRate`).
+- **Rows.** The support's `support_blunt_chance_to_trigger_shockwave_on_hit_%` is 100 at every level (`constantStats`; PoB's stat map entry is empty) and `triggered_by_shockwave_support` is a marker. Both are `trigger` rows with no effect.
+
+**Found on the way: PoB's full DPS pass again** (`docs/phase-6/full-dps-levels.md`). With both skills computed, act5's and act10's `FullDPS` still differed from PoB's by 0.14% and 0.21%, while each skill's own `TotalDPS` matched PoB's main calculation. The S4 probe, rebuilt in a scratchpad copy of the adapter from the doc, was run on copies of the builds with Static Strike's group as the main group.
+- **What it shows.** PoB's full DPS lines are not its own main values: Static Strike 66,252.77 against 66,115.66 (act10), Shockwave 30,649.97 against 30,578.76.
+- **The cause is S4's.** Rage's more damage (36% in act10, 40% in act5), added during the calculation, and the frenzy charges' 12% (Base) round together in the main pass and apart in full DPS. act10: `Damage` MORE 0.70 x round(1.36 x 1.12, 2) = 1.064 against 0.70 x 1.36 x 1.12 = 1.06624.
+- **Registered** as `pob-bug` DIV-0780 (act10) and DIV-0782 (act5).
+- **act2** has no rage: its MOREs are equal in both passes. Its 0.18 difference is Static Strike's average damage, which carries the Q11 attack rate as the build's registered `AverageDamage` does: 0.16432 x 10/9, the cull, is the whole difference. Registered `game-truth` Q11 DIV-0781.
+
+### Evidence
+
+Run on the main workstation, 2026-11-26, with the pinned oracle (PoB v2.67.2, `b32759a`, clean) and the evidence bundle `local/p6/packs/b-pb`. The baseline is data schema 6's run (`local/p6/pb`); this run is `local/p6/ss`.
+- **Fixtures** (new, all original, each run three times by PoB, identical; made by `local/p6/ss_fixtures.py` and `ss_fixtures2.py`). Every compared field equals PoB's but the registered Q11 attack rate:
+  - `static-strike-beams-templar.xml`: `HitSpeed` 3.75 (0.32 s over 1.20 from quality 20), the DPS, and poison at it;
+  - `static-strike-beams-dual-wield-templar.xml`: `HitSpeed` 3.125 with the hands' combined `Speed`;
+  - `static-strike-melee-hit-templar.xml`: part 1, no beam stat;
+  - `shockwave-static-strike-melee-hit-templar.xml`: Shockwave level 1, the melee hit's rate times its chance to hit, under the tick-rounded 1 s cooldown;
+  - `shockwave-static-strike-beams-templar.xml`: Shockwave level 10, two stored uses: 1.18 per second, the cap from its 18% cooldown recovery, the source the beams' 3.125.
+  - 429 fields are targets.
+  - Q11: DIV-0766 to DIV-0779.
+- **Public `calc-parity`** (592 builds): 0 unexpected. `Complete` fields went from 48,924 to 49,370.
+  - The three Inquisitor builds' `FullDPS` are now `Complete`: 84,062 to 111,355 (PoB 111,591), 2,850 to 3,783 (PoB 3,783), 35,995 to 45,225 (PoB 45,163).
+  - `cyclone-shockwave-slayer.xml`'s `FullDPS` moved toward PoB, 37.9 to 42.9 million (PoB 68.4 million), partial on its other reasons.
+  - Four values moved, all toward PoB.
+- **Corpus** (21 builds, local): 0 unexpected; documents byte-identical.
+- **Tests:** `hit::static_strike_and_shockwave_should_be_vetted`, `triggers::shockwave_should_be_a_lone_trigger_on_hit`, the workspace tests, the real-bundle tests, clippy, rustfmt, and wasm32.
+
+## Where S3 stands
+
+Every trigger config PoB has that changes a slice field is ported, but these:
+- **The engine's data or model lacks something:** Seven Teachings (no unarmed attack), Duskblight (Stalking Pustule's level 1 row; maintainer follow-ups), the Holy Relic's Nova (skills' level requirements), Maloney's replica (spells by cast rate).
+- **PoB applies nothing, so they wait for an in-game check (the game-truth list):** Squirming Terror at 100% (`local_display_chance_to_trigger_socketed_spell_on_kill_%`), `trigger_socketed_spell_on_skill_use_%` (the crafted "Trigger a Socketed Spell on Using a Skill"), and `spellslinger_cooldown_duration_+%`, which no PoB file names.
+- **No slice field reads their rate:** the minions items trigger (Law of the Wilds, Rigwald's Crest, Jorrhast's Blacksteel, Ashcaller, Arakaali's Fang, Mark of the Shaper's anomaly), Shade Form, Contaminate, Mark On Hit, Hextouch, Vixen's Entrapment and the hex on trap (curses).
+- **Not item triggers, outside S3's list:** the skills' own triggers (Kinetic Instability, Battlemage's Cry, Autoexertion, General's Cry, Snipe, Shattershard, Doom Blast, and kin) stay `unmodelled` where builds use them.

@@ -1806,7 +1806,8 @@ fn fields(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         } else {
             None
         };
-        let (value, mut reasons) = phases::primary_defence(calc, defence, quantity, None, row)?;
+        let (value, mut reasons) =
+            phases::primary_defence(calc, defence, quantity, None, row.as_slice())?;
         if row.is_some() {
             reasons.extend(&life_reasons);
         }

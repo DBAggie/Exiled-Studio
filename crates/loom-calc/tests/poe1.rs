@@ -1165,7 +1165,7 @@ fn gems_config_and_choices_should_be_reasons() {
         attributes: Vec::new(),
     };
     config.inputs.push(ConfigInput {
-        name: "conditionEnemyBrittle".to_owned(),
+        name: "ignoreJewelLimits".to_owned(),
         value: ConfigValue::Boolean(false),
         kind: loom_domain::ConfigInputKind::Input,
         lines: Vec::new(),
@@ -1193,6 +1193,16 @@ fn gems_config_and_choices_should_be_reasons() {
         bandit: Some("None".to_owned()),
         pantheon_major: Some("None".to_owned()),
         pantheon_minor: Some("None".to_owned()),
+    }))
+    .unwrap();
+    assert_eq!(state(&run(&b), Field::Life), StateKind::Complete);
+    // A bandit PoB does not list applies nothing, whether the attribute
+    // counts or not (the agent list, S8).
+    let mut b = witch(1);
+    b.set_game_specific(GameSpecific::Poe1(Poe1Choices {
+        bandit: Some("Eramir".to_owned()),
+        pantheon_major: None,
+        pantheon_minor: None,
     }))
     .unwrap();
     assert_eq!(state(&run(&b), Field::Life), StateKind::Complete);
@@ -1247,29 +1257,31 @@ fn the_bandit_should_be_the_config_sets_choice() {
     let r = with(text("Oak"), None);
     assert_eq!(state(&r, Field::Life), StateKind::Complete);
     assert_eq!(value(&r, Field::Life), value(&bare, Field::Life) + 40.0);
-    // Kraityn, none, and a set without the input (PoB's default, "None",
-    // whatever the attribute) reach no slice field.
+    // Kraityn: 8% increased movement speed (the agent list, S8).
+    let movement = Field::Poe1(Poe1Field::MovementSpeedMod);
+    let r = with(text("Kraityn"), None);
+    assert_eq!(state(&r, movement), StateKind::Complete);
+    assert!((value(&r, movement) - (value(&bare, movement) + 0.08)).abs() < 1e-9);
+    assert_eq!(value(&r, Field::Life), value(&bare, Field::Life));
+    // None, a set without the input (PoB's default, "None", whatever the
+    // attribute), and any value PoB does not list (its `else` branch: one
+    // passive point; "Eramir", which older PoB versions saved) reach no
+    // slice field.
     for (choice, attribute) in [
-        (text("Kraityn"), None),
         (text("None"), Some("Alira")),
         (None, Some("Alira")),
+        (text("Eramir"), None),
+        (Some(ConfigValue::Boolean(true)), None),
+        (
+            Some(ConfigValue::Number(Sourced::new(loom_domain::Number(1.0)))),
+            None,
+        ),
     ] {
         let r = with(choice, attribute);
-        for f in [Field::Life, FIRE, COLD] {
+        for f in [Field::Life, FIRE, COLD, movement] {
             assert_eq!(state(&r, f), StateKind::Complete, "{f}");
             assert_eq!(value(&r, f), value(&bare, f), "{f}");
         }
-    }
-    // Another value is a reason under the input.
-    for choice in [
-        text("Eramir"),
-        Some(ConfigValue::Boolean(true)),
-        Some(ConfigValue::Number(Sourced::new(loom_domain::Number(1.0)))),
-    ] {
-        assert_eq!(
-            partial_reasons(&with(choice, None), Field::Life),
-            ["unmodelled-config"]
-        );
     }
 }
 
@@ -1884,7 +1896,7 @@ fn inputs_that_only_set_named_conditions_should_not_be_reasons() {
     // minions' full life and Feeding Frenzy left in RV-12
     // (`poe1::minion_actor`, `poe1::buffs`; checked below).
     {
-        let input = "conditionEnemyBrittle";
+        let input = "ignoreJewelLimits";
         let r = with(vec![("conditionFullLife", yes()), (input, yes())]);
         let FieldState::Partial(p) = &r.fields[&Field::Life].state else {
             panic!("{input}: not partial");
@@ -1968,7 +1980,7 @@ fn placeholders_should_be_classified_as_their_inputs() {
     assert_eq!(state(&r, Field::Life), StateKind::Complete);
     // Any other placeholder is a reason under its input's name; a
     // `resistancePenalty` placeholder is not the modelled input.
-    for name in ["conditionBrittleEffect", "resistancePenalty"] {
+    for name in ["overrideEmptyRedSockets", "resistancePenalty"] {
         let r = with(vec![(name, 20.0, placeholder)]);
         let FieldState::Partial(p) = &r.fields[&Field::Life].state else {
             panic!("{name}: not partial");
@@ -2758,25 +2770,22 @@ fn life_regeneration_per_fortification_should_follow_the_stacks() {
     assert_eq!(state(&r, life_regen), StateKind::Complete);
 }
 
-/// A field's reason marker reaches that field alone (P6-10b review).
+/// "#% increased Movement Speed if you have Equipped Boots with no Socketed
+/// Gems" (the agent list; P6-10b's movement marker before): with no boots
+/// equipped the state is settled false, so the line gives nothing and
+/// every field stays `Complete`. (The marker lists keep their own test in
+/// `poe1::mapping`; no marker stat is left for this build's fields.)
 #[test]
-fn a_field_marker_should_be_that_fields_reason_only() {
+fn the_boots_line_should_follow_its_settled_state() {
     let r = witch_with(&[("movement_velocity_+%_while_no_gems_in_boots", 5)]);
-    for field in [
-        Poe1Field::MovementSpeedMod,
-        Poe1Field::EffectiveMovementSpeedMod,
-    ] {
-        assert_eq!(
-            state(&r, Field::Poe1(field)),
-            StateKind::Partial,
-            "{field:?}"
-        );
-    }
+    assert_eq!(value_of(&r, Field::Poe1(Poe1Field::MovementSpeedMod)), 1.0);
     for field in [
         Field::Life,
         Field::Mana,
         Field::Poe1(Poe1Field::LifeRegen),
         Field::Poe1(Poe1Field::ManaRegen),
+        Field::Poe1(Poe1Field::MovementSpeedMod),
+        Field::Poe1(Poe1Field::EffectiveMovementSpeedMod),
     ] {
         assert_eq!(state(&r, field), StateKind::Complete, "{field}");
     }

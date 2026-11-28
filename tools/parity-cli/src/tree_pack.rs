@@ -201,8 +201,19 @@ fn fill(template: &str, numbers: &[&str]) -> String {
 /// numbers, as "15% increased Global Accuracy Rating" on a node the
 /// bundle prints "15% increased Accuracy Rating". A template two pairs
 /// map differently is left out.
-fn rewordings(pairs: &[(Vec<String>, Vec<String>)]) -> BTreeMap<String, String> {
+///
+/// Also the *loose* pairs (the agent list, S9): on a node whose lines
+/// differ in more than one line, every pair of a differing old line and
+/// a differing current line with the same numbers. GGG's data does not
+/// say which current line an old one became (Shaper of Flames' "All
+/// Damage can Ignite" sits beside a new "Always Ignite"), so a loose pair
+/// is applied only when the review accepts it, and is never listed as
+/// unreviewed.
+fn rewordings(
+    pairs: &[(Vec<String>, Vec<String>)],
+) -> (BTreeMap<String, String>, BTreeSet<(String, String)>) {
     let mut found: BTreeMap<String, String> = BTreeMap::new();
+    let mut loose = BTreeSet::new();
     let mut conflicts = BTreeSet::new();
     for (old, current) in pairs {
         let mut only_old: Vec<&String> = Vec::new();
@@ -215,6 +226,14 @@ fn rewordings(pairs: &[(Vec<String>, Vec<String>)]) -> BTreeMap<String, String> 
             }
         }
         let ([was], [now]) = (only_old.as_slice(), rest.as_slice()) else {
+            for was in &only_old {
+                for now in &rest {
+                    let ((was, a), (now, b)) = (template(was), template(now));
+                    if a == b && was != now {
+                        loose.insert((was, now));
+                    }
+                }
+            }
             continue;
         };
         let ((was, a), (now, b)) = (template(was), template(now));
@@ -229,7 +248,7 @@ fn rewordings(pairs: &[(Vec<String>, Vec<String>)]) -> BTreeMap<String, String> 
     for c in conflicts {
         found.remove(&c);
     }
-    found
+    (found, loose)
 }
 
 /// Reads the export's lines as stat IDs (module docs).
@@ -556,13 +575,20 @@ pub fn convert(
             pairs.extend(reader.pair(&texts(&e["stats"]), known));
         }
     }
-    let (accepted, unaccepted): (BTreeMap<_, _>, BTreeMap<_, _>) = rewordings(&pairs)
+    let (strict, loose) = rewordings(&pairs);
+    let (mut accepted, unaccepted): (BTreeMap<_, _>, BTreeMap<_, _>) = strict
         .into_iter()
         .partition(|(o, c)| Reviewed::has(&reviewed.accepted, o, c));
     let unreviewed = unaccepted
         .into_iter()
         .filter(|(o, c)| !Reviewed::has(&reviewed.rejected, o, c))
         .collect();
+    // A loose pair the review accepts, for a template no one-line pair maps.
+    for (o, c) in loose {
+        if Reviewed::has(&reviewed.accepted, &o, &c) {
+            accepted.entry(o).or_insert(c);
+        }
+    }
     reader.reworded = accepted;
     let ascendancies: BTreeSet<&str> = own.ascendancies.iter().map(|a| a.id.as_str()).collect();
     let characters: BTreeMap<i64, &str> = own
@@ -694,6 +720,8 @@ pub fn convert(
             ascendancy,
             ascendancy_start: flag(n, "isAscendancyStart"),
             characters,
+            // A pack's lines are the tree's text, a buff's lines with them.
+            buffs: Vec::new(),
         });
     }
     passives.sort_by_key(|p| p.node);
@@ -978,7 +1006,7 @@ mod tests {
             (s(&["3 X"]), s(&["3 Y"])),
             (s(&["4 X"]), s(&["4 Z"])),
         ];
-        let r = rewordings(&pairs);
+        let (r, loose) = rewordings(&pairs);
         assert_eq!(
             r,
             BTreeMap::from([(
@@ -986,6 +1014,35 @@ mod tests {
                 "#% increased Accuracy Rating".to_owned()
             )])
         );
+        // The two changed lines give loose pairs, of equal numbers only.
+        let p = |a: &str, b: &str| (a.to_owned(), b.to_owned());
+        assert_eq!(loose, BTreeSet::from([p("# A", "# C"), p("# B", "# D")]));
+    }
+
+    /// The agent list (S9): Shaper of Flames' "All Damage can Ignite" beside
+    /// a new line; the loose pairs offer both, and only an accepted one is
+    /// applied (never listed as unreviewed).
+    #[test]
+    fn loose_pairs_should_apply_only_when_accepted() {
+        let s = |v: &[&str]| v.iter().map(|x| (*x).to_owned()).collect::<Vec<_>>();
+        let pairs = vec![(
+            s(&["All Damage can Ignite", "40% of Old"]),
+            s(&[
+                "All Damage with Hits can Ignite",
+                "Always Ignite",
+                "40% of Old",
+            ]),
+        )];
+        let (strict, loose) = rewordings(&pairs);
+        assert!(strict.is_empty());
+        assert!(loose.contains(&(
+            "All Damage can Ignite".to_owned(),
+            "All Damage with Hits can Ignite".to_owned()
+        )));
+        assert!(loose.contains(&(
+            "All Damage can Ignite".to_owned(),
+            "Always Ignite".to_owned()
+        )));
     }
 
     #[test]
@@ -1059,6 +1116,25 @@ mod tests {
         let c = convert(&data, &bundle, "3_28", source(), &rejected).unwrap();
         assert!(c.unreviewed.is_empty() && c.reworded.is_empty());
         assert!(life(&c).is_empty());
+
+        // A loose pair (the agent list, S9): node 10000 has a second changed
+        // line, so the pair is not learned one to one; it is never listed,
+        // and applied once the review accepts it.
+        data["nodes"]["10000"]["stats"] =
+            serde_json::json!(["+5 to Old Test Life", "An Old Line Gone"]);
+        let c = convert(&data, &bundle, "3_28", source(), &Reviewed::default()).unwrap();
+        assert!(c.unreviewed.is_empty() && c.reworded.is_empty());
+        assert!(life(&c).is_empty());
+        let reviewed = Reviewed {
+            accepted: vec![Rewording {
+                old: pair.0.clone(),
+                current: pair.1.clone(),
+            }],
+            rejected: Vec::new(),
+        };
+        let c = convert(&data, &bundle, "3_28", source(), &reviewed).unwrap();
+        assert_eq!(c.reworded, BTreeMap::from([pair]));
+        assert_eq!(life(&c), [("test_passive_life".to_owned(), 8)]);
     }
 
     #[test]
